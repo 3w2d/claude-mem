@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { T } from '../lib/theme.js';
 import { I } from '../components/Icons.jsx';
+import { aiEnabled, chatCompletion } from '../lib/ai.js';
+import { localResponse, buildContext } from '../lib/localMatcher.js';
 
 export default function AIAssistant({ files, events, tasks, selectedDay, aiHistory, setAiHistory }) {
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
+  const [remoteBroken, setRemoteBroken] = useState(false);
   const chatEnd = useRef(null);
 
   useEffect(() => {
@@ -13,88 +16,51 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
 
   const quickActions = ['وش مواعيدي اليوم؟', 'وش المهام العاجلة؟', 'ساعدني أكتب إيميل'];
 
-  const getAIResponse = (msg) => {
-    const m = msg.toLowerCase();
-    const pendingTasks = tasks.filter((t) => !t.done);
-    const highTasks = pendingTasks.filter((t) => t.priority === 'high');
-    const todayEvents = events.filter((e) => e.day === selectedDay);
-
-    if (m.includes('ملف') || m.includes('لخص') || m.includes('حالة')) {
-      const starred = files.filter((f) => f.starred);
-      const withNotes = files.filter((f) => f.aiNote);
-      return (
-        `📁 عندك ${files.length} ملف:\n` +
-        `• ${starred.length} ملفات مميزة${starred.length ? ` (${starred.map((f) => f.name).slice(0, 3).join('، ')})` : ''}\n` +
-        `• ${withNotes.length} ملفات تحتاج مراجعة`
-      );
+  const getResponse = async (msg) => {
+    const context = buildContext({ files, events, tasks, selectedDay });
+    if (aiEnabled && !remoteBroken) {
+      try {
+        const history = aiHistory
+          .filter((m) => m.role === 'user' || m.role === 'ai')
+          .slice(-8)
+          .map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }));
+        const text = await chatCompletion({
+          messages: [...history, { role: 'user', content: msg }],
+          context,
+        });
+        if (text) return text;
+      } catch (err) {
+        console.warn('AI proxy failed, falling back to local matcher:', err);
+        setRemoteBroken(true);
+      }
     }
-
-    if (m.includes('موعد') || m.includes('جدول') || m.includes('مواعيد') || m.includes('اليوم')) {
-      if (todayEvents.length === 0) return '📅 ما عندك مواعيد اليوم — يوم فاضي تقدر تركز على مهامك ✨';
-      const sorted = todayEvents.slice().sort((a, b) => a.time.localeCompare(b.time));
-      return (
-        `📅 مواعيدك اليوم (${todayEvents.length}):\n` +
-        sorted.map((e) => `• ${e.time} — ${e.title} (${e.duration} دقيقة)`).join('\n')
-      );
-    }
-
-    if (m.includes('مهم') || m.includes('عاجل') || m.includes('مهام') || m.includes('مهمة')) {
-      if (pendingTasks.length === 0) return '✅ كل مهامك مكتملة. استمر، ما شاء الله!';
-      let resp = `📝 عندك ${pendingTasks.length} مهمة متبقية:\n`;
-      if (highTasks.length > 0) resp += `\n🔴 عاجل (${highTasks.length}):\n${highTasks.map((t) => `• ${t.text}`).join('\n')}`;
-      const medTasks = pendingTasks.filter((t) => t.priority === 'medium');
-      if (medTasks.length > 0) resp += `\n\n🟡 متوسط (${medTasks.length}):\n${medTasks.map((t) => `• ${t.text}`).join('\n')}`;
-      const lowTasks = pendingTasks.filter((t) => t.priority === 'low');
-      if (lowTasks.length > 0) resp += `\n\n🟢 عادي (${lowTasks.length}):\n${lowTasks.map((t) => `• ${t.text}`).join('\n')}`;
-      return resp;
-    }
-
-    if (m.includes('إيميل') || m.includes('ايميل') || m.includes('رسال') || m.includes('بريد')) {
-      return 'أكيد! عطني التفاصيل:\n\nلمن الرسالة؟\nوش الموضوع؟\nرسمية ولا ودية؟';
-    }
-
-    if (m.includes('شكر') || m.includes('ممتاز') || m.includes('حلو') || m.includes('يعطيك')) {
-      return 'العفو! دايم حاضر لك. فيه شيء ثاني أساعدك فيه؟';
-    }
-
-    if (m.includes('مرحب') || m.includes('هلا') || m.includes('السلام')) {
-      return (
-        `أهلاً وسهلاً! 👋\n\n` +
-        `عندك اليوم:\n` +
-        `• ${todayEvents.length} مواعيد\n` +
-        `• ${pendingTasks.length} مهام متبقية`
-      );
-    }
-
-    return (
-      `فهمت طلبك 🤔\n\n` +
-      `حالياً عندك:\n` +
-      `• ${files.length} ملف\n` +
-      `• ${todayEvents.length} موعد اليوم\n` +
-      `• ${pendingTasks.length} مهمة متبقية\n\n` +
-      `جرب تسأل عن ملفاتك، مواعيدك، أو مهامك.`
-    );
+    return localResponse(msg, { files, events, tasks, selectedDay });
   };
 
-  const handleSend = (text) => {
+  const handleSend = async (text) => {
     const msg = text || input;
     if (!msg.trim()) return;
     const newMsgs = [...aiHistory, { role: 'user', text: msg.trim() }];
     setAiHistory(newMsgs);
     setInput('');
     setTyping(true);
-    setTimeout(() => {
-      setAiHistory([...newMsgs, { role: 'ai', text: getAIResponse(msg) }]);
-      setTyping(false);
-    }, 600 + Math.random() * 500);
+    const reply = await getResponse(msg);
+    setAiHistory([...newMsgs, { role: 'ai', text: reply }]);
+    setTyping(false);
   };
+
+  const modeLabel = !aiEnabled
+    ? 'وضع محلي (بدون GPT-4)'
+    : remoteBroken
+    ? 'رجعت للوضع المحلي — تعذّر الوصول للـ AI'
+    : 'متصل مع GPT-4';
 
   return (
     <div style={{ direction: 'rtl', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 110px)' }}>
       <div style={{ marginBottom: 12, paddingTop: 8 }}>
         <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>المساعد الذكي</h2>
-        <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 13, marginTop: 4 }}>
-          اسألني عن ملفاتك، مواعيدك، أو مهامك
+        <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 12, marginTop: 4 }}>
+          {modeLabel}
         </p>
       </div>
 
@@ -186,7 +152,7 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => e.key === 'Enter' && !typing && handleSend()}
           placeholder="اكتب رسالتك..."
           style={{
             flex: 1,
@@ -202,7 +168,8 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
           }}
         />
         <button
-          onClick={() => handleSend()}
+          onClick={() => !typing && handleSend()}
+          disabled={typing}
           style={{
             width: 46,
             height: 46,
@@ -210,7 +177,8 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
             background: `linear-gradient(135deg, ${T.primary}, ${T.accent1})`,
             color: '#fff',
             border: 'none',
-            cursor: 'pointer',
+            cursor: typing ? 'not-allowed' : 'pointer',
+            opacity: typing ? 0.6 : 1,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

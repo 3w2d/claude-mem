@@ -73,14 +73,81 @@ smartflow-app/
 | 9 | Scroll position kept on page change | `scrollRef.current.scrollTo(0,0)` on `page` change |
 | 10 | No notification counter | Badge on bell + nav tab |
 
-## Next Steps (per the project brief)
+## Integrations
 
-### Phase 1 — Foundation
-- Swap `localStorage` for Supabase/Firebase (`src/lib/storage.js` is the single integration point)
-- Add authentication
-- Wrap for mobile via React Native/Capacitor
+All three integrations are **opt-in via environment variables**. If a key is
+missing, the feature silently falls back to the offline behavior. Copy
+`.env.example` → `.env.local` and fill in only what you want.
 
-### Phase 2 — Microsoft 365 Integration
-- Register app in Azure AD → get Graph API scopes
-- Replace mock Outlook/Excel/Word status cards with live sync
-- Connect `AIAssistant` to OpenAI GPT-4 (Arabic) instead of local keyword matching
+### 1. Supabase (persistent backend)
+
+Replaces `localStorage` with a cloud-synced key/value table. Same
+`store.get` / `store.set` API — the adapter lives in
+`src/lib/storage.js`.
+
+1. Create a Supabase project → copy the `Project URL` and `anon` key.
+2. Run the SQL in `supabase/schema.sql` once in the SQL editor.
+3. Set in `.env.local`:
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJ...
+   ```
+
+The adapter writes to both `localStorage` (instant UI) **and** Supabase
+(cross-device), and reads remote-first with a local fallback.
+
+### 2. Microsoft 365 (Outlook + OneDrive via Graph)
+
+Pulls real calendar events and recent files into the app.
+
+1. Go to **Azure Portal → Azure AD → App registrations → New**.
+   - Supported account types: *Accounts in any organizational directory
+     and personal Microsoft accounts*.
+   - Redirect URI (SPA): `http://localhost:5173` for dev, plus your
+     production origin.
+2. Under **API permissions → Add a permission → Microsoft Graph →
+   Delegated**, grant: `User.Read`, `Calendars.Read`, `Files.Read`.
+3. Copy the **Application (client) ID** and **Directory (tenant) ID**.
+4. Set in `.env.local`:
+   ```
+   VITE_AZURE_CLIENT_ID=<application-id>
+   VITE_AZURE_TENANT_ID=common
+   VITE_AZURE_REDIRECT_URI=http://localhost:5173
+   ```
+
+Once set, the Dashboard shows a **ربط Microsoft 365** button. After
+login, **مزامنة** pulls the next 7 days of events + 25 most-recent
+files into the app. Manually-added items are preserved; Graph items use
+a `graph-` id prefix.
+
+### 3. OpenAI (GPT-4 Arabic assistant)
+
+Replaces the local keyword matcher in the AI Assistant with a real
+GPT-4 conversation. The key stays **server-side** — it's never exposed
+to the browser.
+
+1. Get an API key from https://platform.openai.com.
+2. Set in `.env.local`:
+   ```
+   VITE_AI_ENABLED=true
+   OPENAI_API_KEY=sk-...
+   OPENAI_MODEL=gpt-4o
+   ```
+3. Restart `npm run dev`. The assistant now proxies through
+   `POST /api/chat` (defined in `api/chat.js`, mounted on Vite's dev
+   server via `vitePlugins.js`). If the proxy fails for any reason,
+   the UI transparently falls back to the local matcher and shows a
+   notice.
+
+**Production deploy:** `api/chat.js` is written to be drop-in
+compatible with Vercel/Netlify serverless functions. Deploy the static
+`dist/` from `npm run build` plus the `api/` folder to a platform that
+supports Node serverless handlers, or front it with a small Express
+server that calls the same default-exported handler.
+
+## Roadmap
+
+- Replace `device_id` in `supabase/schema.sql` with `auth.uid()` once
+  Supabase Auth is wired up; tighten RLS accordingly.
+- Wrap for mobile via Capacitor or React Native.
+- Two-way sync for Graph (create events from the app back to Outlook).

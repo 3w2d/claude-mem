@@ -1,10 +1,21 @@
 import React from 'react';
 import { T, priorityColor } from '../lib/theme.js';
-import { todayLabel, MONTHS_AR, TODAY } from '../lib/date.js';
+import { todayLabel } from '../lib/date.js';
 import Card from '../components/Card.jsx';
 import { I } from '../components/Icons.jsx';
 
-export default function Dashboard({ files, events, tasks, setPage, selectedDay }) {
+export default function Dashboard({
+  files,
+  events,
+  tasks,
+  setPage,
+  selectedDay,
+  msAccount,
+  onMsLogin,
+  onMsLogout,
+  onMsSync,
+  msConfigured,
+}) {
   const todayEvents = events.filter((e) => e.day === selectedDay);
   const pendingTasks = tasks.filter((t) => !t.done);
   const highTasks = pendingTasks.filter((t) => t.priority === 'high');
@@ -132,24 +143,56 @@ export default function Dashboard({ files, events, tasks, setPage, selectedDay }
       </div>
 
       <div style={{ marginBottom: 100 }}>
-        <span style={{ fontFamily: T.font, color: T.text, fontSize: 15, fontWeight: 600, display: 'block', marginBottom: 10 }}>
-          حالة الاتصال
-        </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ fontFamily: T.font, color: T.text, fontSize: 15, fontWeight: 600 }}>
+            حالة الاتصال
+          </span>
+          {msConfigured && (
+            msAccount ? (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={onMsSync}
+                  style={{ background: T.primaryBg, color: T.primary, border: 'none', borderRadius: 8, padding: '5px 10px', fontFamily: T.font, fontSize: 11, cursor: 'pointer' }}
+                >
+                  مزامنة
+                </button>
+                <button
+                  onClick={onMsLogout}
+                  style={{ background: 'none', color: T.textMuted, border: 'none', fontFamily: T.font, fontSize: 11, cursor: 'pointer' }}
+                >
+                  خروج
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onMsLogin}
+                style={{ background: `linear-gradient(135deg, ${T.primary}, ${T.accent1})`, color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', fontFamily: T.font, fontSize: 11, cursor: 'pointer' }}
+              >
+                ربط Microsoft 365
+              </button>
+            )
+          )}
+        </div>
         <div style={{ display: 'flex', gap: 10 }}>
           {[
             { icon: I.outlook, name: 'Outlook' },
             { icon: I.excel,   name: 'Excel' },
             { icon: I.word,    name: 'Word' },
-          ].map((s, i) => (
-            <Card key={i} style={{ flex: 1, padding: 12, textAlign: 'center', borderRadius: T.radiusSm }}>
-              <div style={{ marginBottom: 6, display: 'flex', justifyContent: 'center' }}>{s.icon}</div>
-              <div style={{ fontFamily: T.fontEn, color: T.text, fontSize: 12, fontWeight: 500 }}>{s.name}</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, marginTop: 4 }}>
-                {I.check}
-                <span style={{ fontFamily: T.font, color: T.accent3, fontSize: 10 }}>متصل</span>
-              </div>
-            </Card>
-          ))}
+          ].map((s, i) => {
+            const connected = Boolean(msAccount);
+            return (
+              <Card key={i} style={{ flex: 1, padding: 12, textAlign: 'center', borderRadius: T.radiusSm }}>
+                <div style={{ marginBottom: 6, display: 'flex', justifyContent: 'center', opacity: connected ? 1 : 0.5 }}>{s.icon}</div>
+                <div style={{ fontFamily: T.fontEn, color: T.text, fontSize: 12, fontWeight: 500 }}>{s.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, marginTop: 4 }}>
+                  {connected && I.check}
+                  <span style={{ fontFamily: T.font, color: connected ? T.accent3 : T.textMuted, fontSize: 10 }}>
+                    {connected ? 'متصل' : msConfigured ? 'غير متصل' : 'غير مُهيّأ'}
+                  </span>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>

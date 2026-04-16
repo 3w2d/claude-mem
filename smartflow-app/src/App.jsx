@@ -3,6 +3,8 @@ import { T } from './lib/theme.js';
 import { TODAY_DAY } from './lib/date.js';
 import { STORAGE_KEYS, store } from './lib/storage.js';
 import { DEFAULT_FILES, DEFAULT_EVENTS, DEFAULT_TASKS } from './lib/defaults.js';
+import { hasAzure, initMsal, getActiveAccount, login, logout } from './lib/msal.js';
+import { getUpcomingEvents, getRecentFiles } from './lib/graph.js';
 
 import Background from './components/Background.jsx';
 import Loading from './components/Loading.jsx';
@@ -31,6 +33,7 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(TODAY_DAY);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [msAccount, setMsAccount] = useState(null);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -49,6 +52,16 @@ export default function App() {
       if (se) setEvents(se);
       if (st) setTasks(st);
       if (sai) setAiHistory(sai);
+
+      if (hasAzure) {
+        try {
+          await initMsal();
+          setMsAccount(getActiveAccount());
+        } catch (err) {
+          console.warn('MSAL init failed:', err);
+        }
+      }
+
       setLoaded(true);
       setLoading(false);
     })();
@@ -58,6 +71,49 @@ export default function App() {
   useEffect(() => { if (loaded) store.set(STORAGE_KEYS.EVENTS, events); }, [events, loaded]);
   useEffect(() => { if (loaded) store.set(STORAGE_KEYS.TASKS, tasks); }, [tasks, loaded]);
   useEffect(() => { if (loaded) store.set(STORAGE_KEYS.AI_HISTORY, aiHistory); }, [aiHistory, loaded]);
+
+  const handleMsLogin = async () => {
+    try {
+      const acc = await login();
+      setMsAccount(acc);
+      if (acc) await handleMsSync();
+    } catch (err) {
+      console.error('Login failed:', err);
+      alert('تعذّر تسجيل الدخول إلى Microsoft 365');
+    }
+  };
+
+  const handleMsLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      setMsAccount(null);
+    }
+  };
+
+  const handleMsSync = async () => {
+    try {
+      const [graphEvents, graphFiles] = await Promise.all([
+        getUpcomingEvents(7),
+        getRecentFiles(25),
+      ]);
+      if (graphEvents.length > 0) {
+        setEvents((prev) => {
+          const manual = prev.filter((e) => !String(e.id).startsWith('graph-'));
+          return [...manual, ...graphEvents];
+        });
+      }
+      if (graphFiles.length > 0) {
+        setFiles((prev) => {
+          const manual = prev.filter((f) => !String(f.id).startsWith('graph-'));
+          return [...graphFiles, ...manual];
+        });
+      }
+    } catch (err) {
+      console.error('Graph sync failed:', err);
+      alert('تعذّرت المزامنة مع Microsoft 365');
+    }
+  };
 
   const pendingCount = tasks.filter((t) => !t.done).length;
 
@@ -74,6 +130,11 @@ export default function App() {
             tasks={tasks}
             setPage={setPage}
             selectedDay={selectedDay}
+            msAccount={msAccount}
+            msConfigured={hasAzure}
+            onMsLogin={handleMsLogin}
+            onMsLogout={handleMsLogout}
+            onMsSync={handleMsSync}
           />
         );
       case 'files':
@@ -108,6 +169,11 @@ export default function App() {
             tasks={tasks}
             setPage={setPage}
             selectedDay={selectedDay}
+            msAccount={msAccount}
+            msConfigured={hasAzure}
+            onMsLogin={handleMsLogin}
+            onMsLogout={handleMsLogout}
+            onMsSync={handleMsSync}
           />
         );
     }
