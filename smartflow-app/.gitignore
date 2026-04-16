@@ -5,3 +5,7 @@ dist/
 .env
 .env.local
 .vite/
+
+# Root .gitignore excludes package-lock.json repo-wide; re-include it here
+# so CI (`npm ci`) can resolve deps reproducibly.
+!package-lock.json
