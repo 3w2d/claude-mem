@@ -3,8 +3,10 @@ import { T } from '../lib/theme.js';
 import Card from '../components/Card.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import { I, extIcon } from '../components/Icons.jsx';
+import { useT } from '../lib/i18n.js';
 
 export default function FilesPage({ files, setFiles }) {
+  const { t, dir } = useT();
   const [tab, setTab] = useState('all');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
@@ -15,11 +17,11 @@ export default function FilesPage({ files, setFiles }) {
   const [editName, setEditName] = useState('');
 
   const tabs = [
-    { id: 'all',     label: 'الكل' },
-    { id: 'docs',    label: 'مستندات' },
-    { id: 'sheets',  label: 'جداول' },
-    { id: 'emails',  label: 'رسائل' },
-    { id: 'starred', label: 'مميزة' },
+    { id: 'all',     label: t('files.tab.all') },
+    { id: 'docs',    label: t('files.tab.docs') },
+    { id: 'sheets',  label: t('files.tab.sheets') },
+    { id: 'emails',  label: t('files.tab.emails') },
+    { id: 'starred', label: t('files.tab.starred') },
   ];
 
   const filtered = files.filter((f) => {
@@ -42,7 +44,7 @@ export default function FilesPage({ files, setFiles }) {
         name: newName.trim(),
         ext: newExt,
         size: '0 KB',
-        date: 'الآن',
+        date: t('files.now'),
         category,
         starred: false,
         aiNote: null,
@@ -64,10 +66,10 @@ export default function FilesPage({ files, setFiles }) {
   };
 
   return (
-    <div style={{ direction: 'rtl' }}>
+    <div style={{ direction: dir }}>
       {confirmDel && (
         <ConfirmDialog
-          message={`هل تبي تحذف "${confirmDel.name}"؟`}
+          message={t('files.confirmDelete', { name: confirmDel.name })}
           onConfirm={() => {
             setFiles((prev) => prev.filter((f) => f.id !== confirmDel.id));
             setConfirmDel(null);
@@ -77,8 +79,8 @@ export default function FilesPage({ files, setFiles }) {
       )}
 
       <div style={{ marginBottom: 16, paddingTop: 8 }}>
-        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>الملفات</h2>
-        <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 13, marginTop: 4 }}>{files.length} ملف</p>
+        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>{t('files.title')}</h2>
+        <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 13, marginTop: 4 }}>{t('files.count', { n: files.length })}</p>
       </div>
 
       <div
@@ -97,7 +99,7 @@ export default function FilesPage({ files, setFiles }) {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="ابحث في ملفاتك..."
+          placeholder={t('files.search')}
           style={{
             flex: 1,
             background: 'none',
@@ -106,7 +108,7 @@ export default function FilesPage({ files, setFiles }) {
             color: T.text,
             fontFamily: T.font,
             fontSize: 14,
-            direction: 'rtl',
+            direction: dir,
           }}
         />
       </div>
@@ -141,7 +143,7 @@ export default function FilesPage({ files, setFiles }) {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addFile()}
-            placeholder="اسم الملف..."
+            placeholder={t('files.namePlaceholder')}
             autoFocus
             style={{
               width: '100%',
@@ -152,7 +154,7 @@ export default function FilesPage({ files, setFiles }) {
               color: T.text,
               fontFamily: T.font,
               fontSize: 14,
-              direction: 'rtl',
+              direction: dir,
               outline: 'none',
               marginBottom: 10,
             }}
@@ -192,7 +194,7 @@ export default function FilesPage({ files, setFiles }) {
                 cursor: 'pointer',
               }}
             >
-              إضافة
+              {t('common.add')}
             </button>
             <button
               onClick={() => setShowAdd(false)}
@@ -207,7 +209,7 @@ export default function FilesPage({ files, setFiles }) {
                 cursor: 'pointer',
               }}
             >
-              إلغاء
+              {t('common.cancel')}
             </button>
           </div>
         </Card>
@@ -226,7 +228,7 @@ export default function FilesPage({ files, setFiles }) {
           }}
         >
           <span style={{ color: T.primary }}>{I.plus}</span>
-          <span style={{ fontFamily: T.font, color: T.primary, fontSize: 14 }}>إضافة ملف</span>
+          <span style={{ fontFamily: T.font, color: T.primary, fontSize: 14 }}>{t('files.add')}</span>
         </Card>
       )}
 
@@ -274,7 +276,7 @@ export default function FilesPage({ files, setFiles }) {
                   color: T.text,
                   fontFamily: T.font,
                   fontSize: 14,
-                  direction: 'rtl',
+                  direction: dir,
                   outline: 'none',
                 }}
               />
@@ -349,7 +351,7 @@ export default function FilesPage({ files, setFiles }) {
 
       {filtered.length === 0 && (
         <p style={{ fontFamily: T.font, color: T.textMuted, textAlign: 'center', padding: 32, fontSize: 13 }}>
-          ما فيه ملفات مطابقة
+          {t('files.none')}
         </p>
       )}
       <div style={{ height: 90 }} />

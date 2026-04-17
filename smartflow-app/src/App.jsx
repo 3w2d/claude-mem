@@ -20,20 +20,15 @@ import AIAssistant from './pages/AIAssistant.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import { initAuth, onAuthChange, getCurrentUser } from './lib/auth.js';
-
-const DEFAULT_AI_GREETING = [
-  {
-    role: 'ai',
-    text: 'مرحباً! أنا مساعدك الذكي في SmartFlow. اسألني عن ملفاتك، مواعيدك، أو مهامك.',
-  },
-];
+import { useT, t } from './lib/i18n.js';
 
 export default function App() {
+  const { lang } = useT();
   const [page, setPage] = useState('splash');
   const [files, setFiles] = useState(DEFAULT_FILES);
   const [events, setEvents] = useState(DEFAULT_EVENTS);
   const [tasks, setTasks] = useState(DEFAULT_TASKS);
-  const [aiHistory, setAiHistory] = useState(DEFAULT_AI_GREETING);
+  const [aiHistory, setAiHistory] = useState(() => [{ role: 'ai', text: t('ai.greeting') }]);
   const [selectedDay, setSelectedDay] = useState(TODAY_DAY);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -99,7 +94,7 @@ export default function App() {
       if (acc) await handleMsSync();
     } catch (err) {
       console.error('Login failed:', err);
-      alert('تعذّر تسجيل الدخول إلى Microsoft 365');
+      alert(t('profile.msLoginFail'));
     }
   };
 
@@ -131,11 +126,11 @@ export default function App() {
       }
     } catch (err) {
       console.error('Graph sync failed:', err);
-      alert('تعذّرت المزامنة مع Microsoft 365');
+      alert(t('profile.msSyncFail'));
     }
   };
 
-  const pendingCount = tasks.filter((t) => !t.done).length;
+  const pendingCount = tasks.filter((x) => !x.done).length;
 
   const dashboardProps = {
     files,

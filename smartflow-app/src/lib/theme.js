@@ -24,9 +24,3 @@ export const priorityColor = {
   medium: T.accent2,
   low: T.accent3,
 };
-
-export const priorityLabel = {
-  high: 'عاجل',
-  medium: 'متوسط',
-  low: 'عادي',
-};

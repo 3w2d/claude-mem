@@ -1,23 +1,31 @@
-export const WEEKDAYS_AR = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
-export const MONTHS_AR = [
-  'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-  'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
-];
+import { getLang, WEEKDAYS, MONTHS } from './i18n.js';
+
+export const WEEKDAYS_AR = WEEKDAYS.ar;
+export const MONTHS_AR = MONTHS.ar;
 
 export const TODAY = new Date();
 export const TODAY_DAY = TODAY.getDate();
 
-export const todayLabel = `${WEEKDAYS_AR[TODAY.getDay()]} ${TODAY_DAY} ${MONTHS_AR[TODAY.getMonth()]}`;
+export function getTodayLabel() {
+  const lang = getLang();
+  const wd = WEEKDAYS[lang][TODAY.getDay()];
+  const mo = MONTHS[lang][TODAY.getMonth()];
+  return lang === 'ar' ? `${wd} ${TODAY_DAY} ${mo}` : `${wd}, ${mo} ${TODAY_DAY}`;
+}
 
-export const buildWeek = () => {
+export const todayLabel = getTodayLabel();
+
+export function buildWeek() {
+  const lang = getLang();
+  const weekdays = WEEKDAYS[lang];
   const dow = TODAY.getDay();
   const week = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(TODAY);
     d.setDate(TODAY_DAY - dow + i);
-    week.push({ name: WEEKDAYS_AR[d.getDay()], num: d.getDate(), full: d });
+    week.push({ name: weekdays[d.getDay()], num: d.getDate(), full: d });
   }
   return week;
-};
+}
 
 export const WEEK = buildWeek();

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { T } from '../lib/theme.js';
+import { useT } from '../lib/i18n.js';
 
 export default function Splash({ onEnter }) {
+  const { t, dir } = useT();
   const [show, setShow] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setShow(true), 300);
@@ -53,14 +55,14 @@ export default function Splash({ onEnter }) {
       >
         SmartFlow
       </h1>
-      <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 15, textAlign: 'center', marginBottom: 40, direction: 'rtl' }}>
-        مساعدك الذكي لإدارة ملفاتك ومواعيدك ومهامك
+      <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 15, textAlign: 'center', marginBottom: 40, direction: dir }}>
+        {t('splash.tagline')}
       </p>
       <button
         onClick={onEnter}
         style={{
           fontFamily: T.font,
-          direction: 'rtl',
+          direction: dir,
           background: `linear-gradient(135deg, ${T.primary}, ${T.accent1})`,
           color: '#fff',
           border: 'none',
@@ -75,7 +77,7 @@ export default function Splash({ onEnter }) {
         onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
         onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
       >
-        ابدأ الآن
+        {t('splash.start')}
       </button>
     </div>
   );

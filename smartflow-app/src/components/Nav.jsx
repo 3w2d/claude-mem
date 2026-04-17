@@ -1,14 +1,16 @@
 import React from 'react';
 import { T } from '../lib/theme.js';
 import { I } from './Icons.jsx';
+import { useT } from '../lib/i18n.js';
 
 export default function Nav({ active, setPage, pendingCount }) {
+  const { t } = useT();
   const items = [
-    { id: 'home',     icon: I.home,  label: 'الرئيسية', badge: 0 },
-    { id: 'files',    icon: I.files, label: 'الملفات',  badge: 0 },
-    { id: 'schedule', icon: I.cal,   label: 'الجدول',   badge: 0 },
-    { id: 'tasks',    icon: I.tasks, label: 'المهام',   badge: pendingCount },
-    { id: 'ai',       icon: I.ai,    label: 'المساعد',  badge: 0 },
+    { id: 'home',     icon: I.home,  label: t('nav.home'),     badge: 0 },
+    { id: 'files',    icon: I.files, label: t('nav.files'),    badge: 0 },
+    { id: 'schedule', icon: I.cal,   label: t('nav.schedule'), badge: 0 },
+    { id: 'tasks',    icon: I.tasks, label: t('nav.tasks'),    badge: pendingCount },
+    { id: 'ai',       icon: I.ai,    label: t('nav.ai'),       badge: 0 },
   ];
 
   return (

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { T } from '../lib/theme.js';
-import { WEEK, TODAY_DAY, TODAY, MONTHS_AR } from '../lib/date.js';
+import { buildWeek, TODAY_DAY, TODAY } from '../lib/date.js';
 import Card from '../components/Card.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import { I } from '../components/Icons.jsx';
+import { useT, MONTHS } from '../lib/i18n.js';
 
 export default function SchedulePage({ events, setEvents, selectedDay, setSelectedDay }) {
+  const { t, lang, dir } = useT();
+  const WEEK = buildWeek();
+  const MONTHS_L = MONTHS[lang];
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newTime, setNewTime] = useState('10:00');
@@ -31,7 +35,7 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
         duration: parseInt(newDuration) || 60,
         color: colors[Math.floor(Math.random() * colors.length)],
         day: selectedDay,
-        source: 'يدوي',
+        source: t('sched.source.manual'),
         icon: '📌',
       },
     ]);
@@ -49,10 +53,10 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
   };
 
   return (
-    <div style={{ direction: 'rtl' }}>
+    <div style={{ direction: dir }}>
       {confirmDel && (
         <ConfirmDialog
-          message={`هل تبي تحذف "${confirmDel.title}"؟`}
+          message={t('sched.confirmDelete', { name: confirmDel.title })}
           onConfirm={() => {
             setEvents((prev) => prev.filter((e) => e.id !== confirmDel.id));
             setConfirmDel(null);
@@ -62,9 +66,9 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
       )}
 
       <div style={{ marginBottom: 16, paddingTop: 8 }}>
-        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>الجدول</h2>
+        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>{t('sched.title')}</h2>
         <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 13, marginTop: 4 }}>
-          {MONTHS_AR[TODAY.getMonth()]} {TODAY.getFullYear()}
+          {MONTHS_L[TODAY.getMonth()]} {TODAY.getFullYear()}
         </p>
       </div>
 
@@ -124,7 +128,7 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addEvent()}
-            placeholder="عنوان الموعد..."
+            placeholder={t('sched.title.placeholder')}
             autoFocus
             style={{
               width: '100%',
@@ -135,7 +139,7 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
               color: T.text,
               fontFamily: T.font,
               fontSize: 14,
-              direction: 'rtl',
+              direction: dir,
               outline: 'none',
               marginBottom: 10,
             }}
@@ -173,11 +177,11 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
                 colorScheme: 'dark',
               }}
             >
-              <option value="15">١٥ دقيقة</option>
-              <option value="30">٣٠ دقيقة</option>
-              <option value="60">ساعة</option>
-              <option value="90">ساعة ونصف</option>
-              <option value="120">ساعتين</option>
+              <option value="15">{t('sched.duration.15')}</option>
+              <option value="30">{t('sched.duration.30')}</option>
+              <option value="60">{t('sched.duration.60')}</option>
+              <option value="90">{t('sched.duration.90')}</option>
+              <option value="120">{t('sched.duration.120')}</option>
             </select>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -195,7 +199,7 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
                 cursor: 'pointer',
               }}
             >
-              إضافة
+              {t('common.add')}
             </button>
             <button
               onClick={() => setShowAdd(false)}
@@ -210,7 +214,7 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
                 cursor: 'pointer',
               }}
             >
-              إلغاء
+              {t('common.cancel')}
             </button>
           </div>
         </Card>
@@ -229,17 +233,17 @@ export default function SchedulePage({ events, setEvents, selectedDay, setSelect
           }}
         >
           <span style={{ color: T.primary }}>{I.plus}</span>
-          <span style={{ fontFamily: T.font, color: T.primary, fontSize: 14 }}>إضافة موعد</span>
+          <span style={{ fontFamily: T.font, color: T.primary, fontSize: 14 }}>{t('sched.add')}</span>
         </Card>
       )}
 
       <span style={{ fontFamily: T.font, color: T.text, fontSize: 15, fontWeight: 600, display: 'block', marginBottom: 10 }}>
-        مواعيد يوم {selectedDay} {MONTHS_AR[TODAY.getMonth()]}
+        {t('sched.dayEvents', { day: selectedDay, month: MONTHS_L[TODAY.getMonth()] })}
       </span>
 
       {dayEvents.length === 0 ? (
         <p style={{ fontFamily: T.font, color: T.textMuted, textAlign: 'center', padding: 32, fontSize: 13 }}>
-          ما فيه مواعيد لهذا اليوم
+          {t('sched.none')}
         </p>
       ) : (
         dayEvents.map((e) => (

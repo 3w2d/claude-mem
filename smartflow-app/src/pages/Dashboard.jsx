@@ -1,8 +1,9 @@
 import React from 'react';
 import { T, priorityColor } from '../lib/theme.js';
-import { todayLabel } from '../lib/date.js';
+import { getTodayLabel } from '../lib/date.js';
 import Card from '../components/Card.jsx';
 import { I } from '../components/Icons.jsx';
+import { useT } from '../lib/i18n.js';
 
 export default function Dashboard({
   files,
@@ -17,44 +18,48 @@ export default function Dashboard({
   msConfigured,
   user,
 }) {
+  const { t, dir } = useT();
   const todayEvents = events.filter((e) => e.day === selectedDay);
-  const pendingTasks = tasks.filter((t) => !t.done);
-  const highTasks = pendingTasks.filter((t) => t.priority === 'high');
+  const pendingTasks = tasks.filter((x) => !x.done);
+  const highTasks = pendingTasks.filter((x) => x.priority === 'high');
 
   const stats = [
-    { label: 'ملفات',        val: files.length,        color: T.primary },
-    { label: 'مواعيد اليوم', val: todayEvents.length,  color: T.accent1 },
-    { label: 'مهام متبقية',  val: pendingTasks.length, color: T.accent2 },
+    { label: t('dash.stat.files'),   val: files.length,        color: T.primary },
+    { label: t('dash.stat.events'),  val: todayEvents.length,  color: T.accent1 },
+    { label: t('dash.stat.pending'), val: pendingTasks.length, color: T.accent2 },
   ];
 
   const suggestions = [];
   if (highTasks.length > 0) {
-    suggestions.push({ text: `عندك ${highTasks.length} مهام عاجلة: ${highTasks.map((t) => t.text).slice(0, 2).join('، ')}` });
+    suggestions.push({ text: t('dash.suggestHighTasks', { n: highTasks.length, names: highTasks.map((x) => x.text).slice(0, 2).join('، ') }) });
   }
   if (todayEvents.length > 0) {
     const first = todayEvents.slice().sort((a, b) => a.time.localeCompare(b.time))[0];
-    suggestions.push({ text: `عندك ${todayEvents.length} موعد اليوم — أقربهم "${first.title}" الساعة ${first.time}` });
+    suggestions.push({ text: t('dash.suggestEvents', { n: todayEvents.length, title: first.title, time: first.time }) });
   }
   if (todayEvents.length === 0) {
-    suggestions.push({ text: 'ما عندك مواعيد اليوم — يوم فاضي للتركيز على المهام' });
+    suggestions.push({ text: t('dash.suggestNoEvents') });
   }
   const staleFiles = files.filter((f) => f.aiNote);
   if (staleFiles.length > 0) {
-    suggestions.push({ text: `${staleFiles.length} ملفات تحتاج انتباهك` });
+    suggestions.push({ text: t('dash.suggestStale', { n: staleFiles.length }) });
   }
   if (pendingTasks.length === 0) {
-    suggestions.push({ text: 'كل مهامك مكتملة! ما شاء الله 👏' });
+    suggestions.push({ text: t('dash.suggestAllDone') });
   }
 
+  const prioBadge = (p) =>
+    p === 'high' ? t('dash.urgentBadge') : p === 'medium' ? t('dash.mediumBadge') : t('dash.lowBadge');
+
   return (
-    <div style={{ direction: 'rtl' }}>
+    <div style={{ direction: dir }}>
       <div style={{ marginBottom: 20, paddingTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>
-            أهلاً بك
+            {t('dash.hello')}
           </h2>
           <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 13, marginTop: 4 }}>
-            {todayLabel}
+            {getTodayLabel()}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -141,7 +146,7 @@ export default function Dashboard({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <span style={{ color: T.primary }}>{I.ai}</span>
           <span style={{ fontFamily: T.font, color: T.text, fontSize: 15, fontWeight: 600 }}>
-            اقتراحات ذكية
+            {t('dash.suggestions')}
           </span>
         </div>
         {suggestions.map((s, i) => (
@@ -155,25 +160,25 @@ export default function Dashboard({
 
       <div style={{ marginBottom: 22 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontFamily: T.font, color: T.text, fontSize: 15, fontWeight: 600 }}>المهام العاجلة</span>
+          <span style={{ fontFamily: T.font, color: T.text, fontSize: 15, fontWeight: 600 }}>{t('dash.urgent')}</span>
           <button
             onClick={() => setPage('tasks')}
             style={{ background: 'none', border: 'none', color: T.primary, fontFamily: T.font, fontSize: 12, cursor: 'pointer' }}
           >
-            عرض الكل
+            {t('dash.viewAll')}
           </button>
         </div>
         {pendingTasks.length === 0 ? (
           <p style={{ fontFamily: T.font, color: T.textMuted, textAlign: 'center', padding: 20, fontSize: 13 }}>
-            لا توجد مهام متبقية 🎉
+            {t('dash.noPending')}
           </p>
         ) : (
-          pendingTasks.slice(0, 3).map((t) => (
-            <Card key={t.id} style={{ marginBottom: 6, padding: '12px 14px', borderRadius: T.radiusSm, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: priorityColor[t.priority] }} />
-              <span style={{ fontFamily: T.font, color: T.text, fontSize: 13, flex: 1 }}>{t.text}</span>
-              <span style={{ fontFamily: T.font, fontSize: 10, color: priorityColor[t.priority], background: `${priorityColor[t.priority]}20`, padding: '2px 8px', borderRadius: 6 }}>
-                {t.priority === 'high' ? 'عاجل' : t.priority === 'medium' ? 'متوسط' : 'عادي'}
+          pendingTasks.slice(0, 3).map((x) => (
+            <Card key={x.id} style={{ marginBottom: 6, padding: '12px 14px', borderRadius: T.radiusSm, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: priorityColor[x.priority] }} />
+              <span style={{ fontFamily: T.font, color: T.text, fontSize: 13, flex: 1 }}>{x.text}</span>
+              <span style={{ fontFamily: T.font, fontSize: 10, color: priorityColor[x.priority], background: `${priorityColor[x.priority]}20`, padding: '2px 8px', borderRadius: 6 }}>
+                {prioBadge(x.priority)}
               </span>
             </Card>
           ))
@@ -183,7 +188,7 @@ export default function Dashboard({
       <div style={{ marginBottom: 100 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ fontFamily: T.font, color: T.text, fontSize: 15, fontWeight: 600 }}>
-            حالة الاتصال
+            {t('dash.connections')}
           </span>
           {msConfigured ? (
             msAccount ? (
@@ -192,13 +197,13 @@ export default function Dashboard({
                   onClick={onMsSync}
                   style={{ background: T.primaryBg, color: T.primary, border: 'none', borderRadius: 8, padding: '5px 10px', fontFamily: T.font, fontSize: 11, cursor: 'pointer' }}
                 >
-                  مزامنة
+                  {t('dash.sync')}
                 </button>
                 <button
                   onClick={onMsLogout}
                   style={{ background: 'none', color: T.textMuted, border: 'none', fontFamily: T.font, fontSize: 11, cursor: 'pointer' }}
                 >
-                  خروج
+                  {t('dash.exit')}
                 </button>
               </div>
             ) : (
@@ -206,7 +211,7 @@ export default function Dashboard({
                 onClick={onMsLogin}
                 style={{ background: `linear-gradient(135deg, ${T.primary}, ${T.accent1})`, color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', fontFamily: T.font, fontSize: 11, cursor: 'pointer' }}
               >
-                ربط Microsoft 365
+                {t('dash.linkMs')}
               </button>
             )
           ) : (
@@ -214,7 +219,7 @@ export default function Dashboard({
               onClick={() => setPage('settings')}
               style={{ background: `linear-gradient(135deg, ${T.primary}, ${T.accent1})`, color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', fontFamily: T.font, fontSize: 11, cursor: 'pointer' }}
             >
-              اضبط الآن
+              {t('dash.configure')}
             </button>
           )}
         </div>
@@ -232,7 +237,7 @@ export default function Dashboard({
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, marginTop: 4 }}>
                   {connected && I.check}
                   <span style={{ fontFamily: T.font, color: connected ? T.accent3 : T.textMuted, fontSize: 10 }}>
-                    {connected ? 'متصل' : msConfigured ? 'غير متصل' : 'غير مُهيّأ'}
+                    {connected ? t('dash.connected') : msConfigured ? t('dash.disconnected') : t('dash.notConfigured')}
                   </span>
                 </div>
               </Card>
