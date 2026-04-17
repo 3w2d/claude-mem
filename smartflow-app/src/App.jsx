@@ -5,6 +5,7 @@ import { STORAGE_KEYS, store } from './lib/storage.js';
 import { DEFAULT_FILES, DEFAULT_EVENTS, DEFAULT_TASKS } from './lib/defaults.js';
 import { hasAzure, initMsal, getActiveAccount, login, logout } from './lib/msal.js';
 import { getUpcomingEvents, getRecentFiles } from './lib/graph.js';
+import { onConfigChange } from './lib/runtimeConfig.js';
 
 import Background from './components/Background.jsx';
 import Loading from './components/Loading.jsx';
@@ -16,6 +17,7 @@ import FilesPage from './pages/FilesPage.jsx';
 import SchedulePage from './pages/SchedulePage.jsx';
 import TasksPage from './pages/TasksPage.jsx';
 import AIAssistant from './pages/AIAssistant.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 
 const DEFAULT_AI_GREETING = [
   {
@@ -34,11 +36,33 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [msAccount, setMsAccount] = useState(null);
+  const [azureReady, setAzureReady] = useState(hasAzure());
   const scrollRef = useRef(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
   }, [page]);
+
+  useEffect(() => {
+    const off = onConfigChange(() => {
+      setAzureReady(hasAzure());
+    });
+    return () => off();
+  }, []);
+
+  useEffect(() => {
+    if (!azureReady) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await initMsal();
+        if (!cancelled) setMsAccount(getActiveAccount());
+      } catch (err) {
+        console.warn('MSAL init failed:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [azureReady]);
 
   useEffect(() => {
     (async () => {
@@ -52,16 +76,6 @@ export default function App() {
       if (se) setEvents(se);
       if (st) setTasks(st);
       if (sai) setAiHistory(sai);
-
-      if (hasAzure) {
-        try {
-          await initMsal();
-          setMsAccount(getActiveAccount());
-        } catch (err) {
-          console.warn('MSAL init failed:', err);
-        }
-      }
-
       setLoaded(true);
       setLoading(false);
     })();
@@ -117,26 +131,26 @@ export default function App() {
 
   const pendingCount = tasks.filter((t) => !t.done).length;
 
+  const dashboardProps = {
+    files,
+    events,
+    tasks,
+    setPage,
+    selectedDay,
+    msAccount,
+    msConfigured: azureReady,
+    onMsLogin: handleMsLogin,
+    onMsLogout: handleMsLogout,
+    onMsSync: handleMsSync,
+  };
+
   const render = () => {
     if (loading) return <Loading />;
     switch (page) {
       case 'splash':
         return <Splash onEnter={() => setPage('home')} />;
       case 'home':
-        return (
-          <Dashboard
-            files={files}
-            events={events}
-            tasks={tasks}
-            setPage={setPage}
-            selectedDay={selectedDay}
-            msAccount={msAccount}
-            msConfigured={hasAzure}
-            onMsLogin={handleMsLogin}
-            onMsLogout={handleMsLogout}
-            onMsSync={handleMsSync}
-          />
-        );
+        return <Dashboard {...dashboardProps} />;
       case 'files':
         return <FilesPage files={files} setFiles={setFiles} />;
       case 'schedule':
@@ -161,21 +175,10 @@ export default function App() {
             setAiHistory={setAiHistory}
           />
         );
+      case 'settings':
+        return <SettingsPage setPage={setPage} />;
       default:
-        return (
-          <Dashboard
-            files={files}
-            events={events}
-            tasks={tasks}
-            setPage={setPage}
-            selectedDay={selectedDay}
-            msAccount={msAccount}
-            msConfigured={hasAzure}
-            onMsLogin={handleMsLogin}
-            onMsLogout={handleMsLogout}
-            onMsSync={handleMsSync}
-          />
-        );
+        return <Dashboard {...dashboardProps} />;
     }
   };
 

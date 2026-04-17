@@ -12,6 +12,7 @@ export const T = {
   accent2: '#f59e0b',
   accent3: '#10b981',
   danger: '#ef4444',
+  warning: '#f59e0b',
   font: "'Readex Pro', 'Outfit', sans-serif",
   fontEn: "'Outfit', sans-serif",
   radius: '16px',

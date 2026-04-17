@@ -1,10 +1,31 @@
 import { createClient } from '@supabase/supabase-js';
+import { getRuntimeConfig } from './runtimeConfig.js';
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+let _client = null;
+let _builtFor = '';
 
-export const hasSupabase = Boolean(url && anonKey);
-export const supabase = hasSupabase ? createClient(url, anonKey) : null;
+function build() {
+  const { supabaseUrl, supabaseAnonKey } = getRuntimeConfig();
+  if (!supabaseUrl || !supabaseAnonKey) {
+    _client = null;
+    _builtFor = '';
+    return null;
+  }
+  const fingerprint = `${supabaseUrl}|${supabaseAnonKey}`;
+  if (_client && _builtFor === fingerprint) return _client;
+  _builtFor = fingerprint;
+  _client = createClient(supabaseUrl, supabaseAnonKey);
+  return _client;
+}
+
+export function hasSupabase() {
+  const cfg = getRuntimeConfig();
+  return Boolean(cfg.supabaseUrl && cfg.supabaseAnonKey);
+}
+
+export function getSupabase() {
+  return build();
+}
 
 const DEVICE_KEY = 'smartflow-v3:device-id';
 

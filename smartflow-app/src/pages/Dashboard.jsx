@@ -56,33 +56,38 @@ export default function Dashboard({
             {todayLabel}
           </p>
         </div>
-        <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setPage('tasks')}>
-          <svg width="22" height="22" fill="none" stroke={T.textMuted} strokeWidth="1.8" viewBox="0 0 24 24">
-            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 01-3.46 0" />
-          </svg>
-          {highTasks.length > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                top: -4,
-                right: -4,
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                background: T.danger,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 9,
-                color: '#fff',
-                fontWeight: 700,
-                fontFamily: T.fontEn,
-              }}
-            >
-              {highTasks.length}
-            </div>
-          )}
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          <div style={{ cursor: 'pointer', color: T.textMuted, display: 'flex' }} onClick={() => setPage('settings')}>
+            {I.settings}
+          </div>
+          <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setPage('tasks')}>
+            <svg width="22" height="22" fill="none" stroke={T.textMuted} strokeWidth="1.8" viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 01-3.46 0" />
+            </svg>
+            {highTasks.length > 0 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  width: 16,
+                  height: 16,
+                  borderRadius: '50%',
+                  background: T.danger,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 9,
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontFamily: T.fontEn,
+                }}
+              >
+                {highTasks.length}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -147,7 +152,7 @@ export default function Dashboard({
           <span style={{ fontFamily: T.font, color: T.text, fontSize: 15, fontWeight: 600 }}>
             حالة الاتصال
           </span>
-          {msConfigured && (
+          {msConfigured ? (
             msAccount ? (
               <div style={{ display: 'flex', gap: 6 }}>
                 <button
@@ -171,6 +176,13 @@ export default function Dashboard({
                 ربط Microsoft 365
               </button>
             )
+          ) : (
+            <button
+              onClick={() => setPage('settings')}
+              style={{ background: `linear-gradient(135deg, ${T.primary}, ${T.accent1})`, color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', fontFamily: T.font, fontSize: 11, cursor: 'pointer' }}
+            >
+              اضبط الآن
+            </button>
           )}
         </div>
         <div style={{ display: 'flex', gap: 10 }}>

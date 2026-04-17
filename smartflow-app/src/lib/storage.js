@@ -1,4 +1,4 @@
-import { hasSupabase, supabase, getDeviceId } from './supabase.js';
+import { hasSupabase, getSupabase, getDeviceId } from './supabase.js';
 
 export const STORAGE_KEYS = {
   FILES: 'smartflow-v3:files',
@@ -29,8 +29,10 @@ const local = {
 
 const remote = {
   async get(key) {
+    const sb = getSupabase();
+    if (!sb) return null;
     const deviceId = getDeviceId();
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('smartflow_state')
       .select('value')
       .eq('device_id', deviceId)
@@ -40,8 +42,10 @@ const remote = {
     return data.value;
   },
   async set(key, val) {
+    const sb = getSupabase();
+    if (!sb) return false;
     const deviceId = getDeviceId();
-    const { error } = await supabase
+    const { error } = await sb
       .from('smartflow_state')
       .upsert({ device_id: deviceId, key, value: val }, { onConflict: 'device_id,key' });
     return !error;
@@ -50,7 +54,7 @@ const remote = {
 
 export const store = {
   async get(key) {
-    if (hasSupabase) {
+    if (hasSupabase()) {
       try {
         const v = await remote.get(key);
         if (v !== null) return v;
@@ -62,7 +66,7 @@ export const store = {
   },
   async set(key, val) {
     const lok = await local.set(key, val);
-    if (hasSupabase) {
+    if (hasSupabase()) {
       try {
         await remote.set(key, val);
       } catch {

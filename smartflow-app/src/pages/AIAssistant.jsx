@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { T } from '../lib/theme.js';
 import { I } from '../components/Icons.jsx';
-import { aiEnabled, chatCompletion } from '../lib/ai.js';
+import { aiAvailable, chatCompletion } from '../lib/ai.js';
 import { localResponse, buildContext } from '../lib/localMatcher.js';
 
 export default function AIAssistant({ files, events, tasks, selectedDay, aiHistory, setAiHistory }) {
@@ -15,6 +15,8 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
   }, [aiHistory, typing]);
 
   const quickActions = ['وش مواعيدي اليوم؟', 'وش المهام العاجلة؟', 'ساعدني أكتب إيميل'];
+
+  const aiEnabled = aiAvailable();
 
   const getResponse = async (msg) => {
     const context = buildContext({ files, events, tasks, selectedDay });
