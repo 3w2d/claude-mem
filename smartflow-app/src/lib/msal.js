@@ -1,65 +1,87 @@
 import { PublicClientApplication } from '@azure/msal-browser';
+import { getRuntimeConfig } from './runtimeConfig.js';
 
-const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
-const tenantId = import.meta.env.VITE_AZURE_TENANT_ID || 'common';
-const redirectUri =
-  import.meta.env.VITE_AZURE_REDIRECT_URI ||
-  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
-
-export const hasAzure = Boolean(clientId);
 export const GRAPH_SCOPES = ['User.Read', 'Calendars.Read', 'Files.Read'];
 
-export const msal = hasAzure
-  ? new PublicClientApplication({
-      auth: { clientId, authority: `https://login.microsoftonline.com/${tenantId}`, redirectUri },
-      cache: { cacheLocation: 'localStorage' },
-    })
-  : null;
+let _client = null;
+let _builtFor = '';
+let _initPromise = null;
 
-let initPromise = null;
+function build() {
+  const cfg = getRuntimeConfig();
+  if (!cfg.azureClientId) {
+    _client = null;
+    _builtFor = '';
+    _initPromise = null;
+    return null;
+  }
+  const tenant = cfg.azureTenantId || 'common';
+  const redirect =
+    cfg.azureRedirectUri ||
+    (typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '');
+  const fingerprint = `${cfg.azureClientId}|${tenant}|${redirect}`;
+  if (_client && _builtFor === fingerprint) return _client;
+  _builtFor = fingerprint;
+  _initPromise = null;
+  _client = new PublicClientApplication({
+    auth: { clientId: cfg.azureClientId, authority: `https://login.microsoftonline.com/${tenant}`, redirectUri: redirect },
+    cache: { cacheLocation: 'localStorage' },
+  });
+  return _client;
+}
+
+export function hasAzure() {
+  return Boolean(getRuntimeConfig().azureClientId);
+}
+
 export function initMsal() {
-  if (!msal) return Promise.resolve();
-  if (!initPromise) initPromise = msal.initialize().then(() => msal.handleRedirectPromise());
-  return initPromise;
+  const c = build();
+  if (!c) return Promise.resolve();
+  if (!_initPromise) _initPromise = c.initialize().then(() => c.handleRedirectPromise());
+  return _initPromise;
 }
 
 export function getActiveAccount() {
-  if (!msal) return null;
-  const active = msal.getActiveAccount();
+  const c = build();
+  if (!c) return null;
+  const active = c.getActiveAccount();
   if (active) return active;
-  const all = msal.getAllAccounts();
+  const all = c.getAllAccounts();
   if (all.length > 0) {
-    msal.setActiveAccount(all[0]);
+    c.setActiveAccount(all[0]);
     return all[0];
   }
   return null;
 }
 
 export async function login() {
-  if (!msal) throw new Error('Azure AD is not configured');
+  const c = build();
+  if (!c) throw new Error('Azure AD is not configured');
   await initMsal();
-  const result = await msal.loginPopup({ scopes: GRAPH_SCOPES, prompt: 'select_account' });
-  if (result?.account) msal.setActiveAccount(result.account);
+  const result = await c.loginPopup({ scopes: GRAPH_SCOPES, prompt: 'select_account' });
+  if (result?.account) c.setActiveAccount(result.account);
   return result?.account || null;
 }
 
 export async function logout() {
-  if (!msal) return;
+  const c = build();
+  if (!c) return;
   await initMsal();
   const account = getActiveAccount();
-  await msal.logoutPopup({ account });
+  await c.logoutPopup({ account });
 }
 
 export async function getAccessToken() {
-  if (!msal) throw new Error('Azure AD is not configured');
+  const c = build();
+  if (!c) throw new Error('Azure AD is not configured');
   await initMsal();
   const account = getActiveAccount();
   if (!account) throw new Error('No active account — call login() first');
   try {
-    const res = await msal.acquireTokenSilent({ scopes: GRAPH_SCOPES, account });
+    const res = await c.acquireTokenSilent({ scopes: GRAPH_SCOPES, account });
     return res.accessToken;
   } catch {
-    const res = await msal.acquireTokenPopup({ scopes: GRAPH_SCOPES, account });
+    const res = await c.acquireTokenPopup({ scopes: GRAPH_SCOPES, account });
     return res.accessToken;
   }
 }
