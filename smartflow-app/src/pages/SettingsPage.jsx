@@ -115,6 +115,13 @@ export default function SettingsPage({ onSaved, setPage }) {
             Supabase
           </a>
           ، شغّل ملف <span style={{ fontFamily: T.fontEn }}>supabase/schema.sql</span> في الـ SQL Editor، ثم انسخ القيم من Project Settings → API.
+          <br />
+          <br />
+          لتفعيل <b>تسجيل الدخول بـ Google</b>: في Supabase Dashboard → Authentication → Providers → فعّل Google. تحتاج Client ID + Secret من{' '}
+          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{ color: T.primary }}>
+            Google Cloud Console
+          </a>
+          .
         </div>
       </Card>
 
