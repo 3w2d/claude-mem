@@ -18,6 +18,8 @@ import SchedulePage from './pages/SchedulePage.jsx';
 import TasksPage from './pages/TasksPage.jsx';
 import AIAssistant from './pages/AIAssistant.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import { initAuth, onAuthChange, getCurrentUser } from './lib/auth.js';
 
 const DEFAULT_AI_GREETING = [
   {
@@ -37,6 +39,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [msAccount, setMsAccount] = useState(null);
   const [azureReady, setAzureReady] = useState(hasAzure());
+  const [user, setUser] = useState(getCurrentUser());
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -44,10 +47,13 @@ export default function App() {
   }, [page]);
 
   useEffect(() => {
-    const off = onConfigChange(() => {
+    const offCfg = onConfigChange(() => {
       setAzureReady(hasAzure());
+      initAuth();
     });
-    return () => off();
+    const offAuth = onAuthChange((u) => setUser(u));
+    initAuth();
+    return () => { offCfg(); offAuth(); };
   }, []);
 
   useEffect(() => {
@@ -142,6 +148,7 @@ export default function App() {
     onMsLogin: handleMsLogin,
     onMsLogout: handleMsLogout,
     onMsSync: handleMsSync,
+    user,
   };
 
   const render = () => {
@@ -177,6 +184,18 @@ export default function App() {
         );
       case 'settings':
         return <SettingsPage setPage={setPage} />;
+      case 'profile':
+        return (
+          <ProfilePage
+            user={user}
+            setPage={setPage}
+            files={files}
+            events={events}
+            tasks={tasks}
+            msAccount={msAccount}
+            onMsLogout={handleMsLogout}
+          />
+        );
       default:
         return <Dashboard {...dashboardProps} />;
     }

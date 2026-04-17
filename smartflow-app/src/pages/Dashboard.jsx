@@ -15,6 +15,7 @@ export default function Dashboard({
   onMsLogout,
   onMsSync,
   msConfigured,
+  user,
 }) {
   const todayEvents = events.filter((e) => e.day === selectedDay);
   const pendingTasks = tasks.filter((t) => !t.done);
@@ -57,6 +58,38 @@ export default function Dashboard({
           </p>
         </div>
         <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          <div onClick={() => setPage('profile')} style={{ cursor: 'pointer' }}>
+            {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+              <img
+                src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                alt=""
+                style={{ width: 32, height: 32, borderRadius: '50%', border: `1.5px solid ${T.primary}` }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: user
+                    ? `linear-gradient(135deg, ${T.primary}, ${T.accent1})`
+                    : T.surface,
+                  border: `1.5px solid ${user ? T.primary : T.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: user ? '#fff' : T.textMuted,
+                  fontFamily: T.font,
+                  fontSize: user ? 14 : 18,
+                  fontWeight: 700,
+                }}
+              >
+                {user
+                  ? (user.user_metadata?.full_name || user.user_metadata?.name || user.email || 'U').charAt(0).toUpperCase()
+                  : '👤'}
+              </div>
+            )}
+          </div>
           <div style={{ cursor: 'pointer', color: T.textMuted, display: 'flex' }} onClick={() => setPage('settings')}>
             {I.settings}
           </div>
