@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { T } from './lib/theme.js';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { C, F } from './lib/theme.js';
 import { TODAY_DAY } from './lib/date.js';
 import { STORAGE_KEYS, store } from './lib/storage.js';
 import { DEFAULT_FILES, DEFAULT_EVENTS, DEFAULT_TASKS } from './lib/defaults.js';
@@ -12,6 +12,7 @@ import Loading from './components/Loading.jsx';
 import Nav from './components/Nav.jsx';
 
 import Splash from './pages/Splash.jsx';
+import Landing from './pages/Landing.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import FilesPage from './pages/FilesPage.jsx';
 import SchedulePage from './pages/SchedulePage.jsx';
@@ -21,6 +22,28 @@ import SettingsPage from './pages/SettingsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import { initAuth, onAuthChange, getCurrentUser } from './lib/auth.js';
 import { useT, t } from './lib/i18n.js';
+
+const FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Markazi+Text:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap';
+
+function ensureFontsLoaded() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('irtah-fonts')) return;
+  const pre1 = document.createElement('link');
+  pre1.rel = 'preconnect';
+  pre1.href = 'https://fonts.googleapis.com';
+  document.head.appendChild(pre1);
+  const pre2 = document.createElement('link');
+  pre2.rel = 'preconnect';
+  pre2.href = 'https://fonts.gstatic.com';
+  pre2.crossOrigin = '';
+  document.head.appendChild(pre2);
+  const link = document.createElement('link');
+  link.id = 'irtah-fonts';
+  link.rel = 'stylesheet';
+  link.href = FONTS_HREF;
+  document.head.appendChild(link);
+}
 
 export default function App() {
   const { lang } = useT();
@@ -36,6 +59,13 @@ export default function App() {
   const [azureReady, setAzureReady] = useState(hasAzure());
   const [user, setUser] = useState(getCurrentUser());
   const scrollRef = useRef(null);
+
+  const isDark = false;
+  const isStandalonePage = page === 'splash' || page === 'landing';
+
+  useEffect(() => {
+    ensureFontsLoaded();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
@@ -130,7 +160,7 @@ export default function App() {
     }
   };
 
-  const pendingCount = tasks.filter((x) => !x.done).length;
+  const pendingCount = useMemo(() => tasks.filter((x) => !x.done).length, [tasks]);
 
   const dashboardProps = {
     files,
@@ -150,7 +180,9 @@ export default function App() {
     if (loading) return <Loading />;
     switch (page) {
       case 'splash':
-        return <Splash onEnter={() => setPage('home')} />;
+        return <Splash onEnter={() => setPage('home')} onLanding={() => setPage('landing')} />;
+      case 'landing':
+        return <Landing onEnter={() => setPage('home')} onBack={() => setPage('splash')} />;
       case 'home':
         return <Dashboard {...dashboardProps} />;
       case 'files':
@@ -196,30 +228,45 @@ export default function App() {
     }
   };
 
+  const isLanding = page === 'landing';
+
   return (
-    <div style={{ minHeight: '100vh', position: 'relative', maxWidth: 430, margin: '0 auto' }}>
-      <Background />
+    <div
+      style={{
+        minHeight: '100vh',
+        position: 'relative',
+        maxWidth: isLanding ? '100%' : 430,
+        margin: '0 auto',
+      }}
+    >
+      <Background dark={isDark} />
       <div
         ref={scrollRef}
         style={{
           position: 'relative',
           zIndex: 1,
-          padding: page === 'splash' ? 0 : '16px 20px',
+          padding: isStandalonePage ? 0 : '16px 20px',
           minHeight: '100vh',
         }}
       >
         {render()}
       </div>
-      {page !== 'splash' && !loading && (
-        <Nav active={page} setPage={setPage} pendingCount={pendingCount} />
+      {!isStandalonePage && !loading && (
+        <Nav active={page} setPage={setPage} pendingCount={pendingCount} isDark={isDark} />
       )}
       <style>{`
         *{margin:0;padding:0;box-sizing:border-box}
-        html,body,#root{min-height:100%;background:${T.bg};color:${T.text}}
-        body{font-family:'Readex Pro','Outfit',sans-serif}
+        html,body,#root{min-height:100%;background:${C.sand50};color:${C.ink900};-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+        body{font-family:${F.ui};}
         ::-webkit-scrollbar{width:0;height:0}
-        input::placeholder{color:rgba(255,255,255,0.25)}
-        select option{background:#1e293b;color:#f1f5f9}
+        input,textarea{caret-color:${C.terra500}}
+        input::placeholder,textarea::placeholder{color:${C.sand400}}
+        select option{background:${C.paper};color:${C.ink900}}
+        :focus-visible{outline:2px solid ${C.terra300};outline-offset:2px;border-radius:6px}
+        button{font-family:inherit}
+        @media (prefers-reduced-motion: reduce){
+          *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important}
+        }
       `}</style>
     </div>
   );

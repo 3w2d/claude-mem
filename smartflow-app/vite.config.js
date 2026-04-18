@@ -11,5 +11,19 @@ export default defineConfig({
   base,
   plugins: [react(), apiPlugin()],
   server: { port: 5173, host: true },
-  build: { outDir: 'dist', sourcemap: false },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'msal': ['@azure/msal-browser'],
+          'supabase': ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
 });

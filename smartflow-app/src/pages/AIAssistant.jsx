@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { T } from '../lib/theme.js';
+import { C, T } from '../lib/theme.js';
 import { I } from '../components/Icons.jsx';
 import { aiAvailable, chatCompletion } from '../lib/ai.js';
 import { localResponse, buildContext } from '../lib/localMatcher.js';
@@ -77,12 +77,12 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
               fontFamily: T.font,
               padding: '7px 12px',
               borderRadius: 10,
-              border: 'none',
+              border: `1px solid ${T.border}`,
               fontSize: 12,
               whiteSpace: 'nowrap',
               cursor: 'pointer',
               background: T.surface,
-              color: 'rgba(255,255,255,0.65)',
+              color: C.ink700,
               transition: 'all 0.2s',
             }}
           >
@@ -108,10 +108,10 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
                 borderRadius: m.role === 'user' ? '14px 4px 14px 14px' : '4px 14px 14px 14px',
                 background:
                   m.role === 'user'
-                    ? `linear-gradient(135deg, ${T.primary}, #4f46e5)`
+                    ? C.terra500
                     : T.surface,
                 fontFamily: T.font,
-                color: 'rgba(255,255,255,0.9)',
+                color: m.role === 'user' ? C.paper : C.ink900,
                 fontSize: 14,
                 lineHeight: 1.7,
                 border: m.role === 'ai' ? `1px solid ${T.border}` : 'none',

@@ -56,8 +56,10 @@ if (typeof document !== 'undefined') {
 
 const STRINGS = {
   // splash
-  'splash.tagline': { ar: 'مساعدك الذكي لإدارة ملفاتك ومواعيدك ومهامك', en: 'Your AI assistant for files, schedule, and tasks' },
-  'splash.start':   { ar: 'ابدأ الآن', en: 'Get started' },
+  'splash.tagline':   { ar: 'مساعدك الذكي لإدارة ملفاتك ومواعيدك ومهامك — بهدوء وتركيز.', en: 'Your calm, focused assistant for files, schedule, and tasks.' },
+  'splash.start':     { ar: 'ابدأ الآن', en: 'Get started' },
+  'splash.brandline': { ar: 'هدوء · تركيز · ذكاء', en: 'Calm · Focus · Intelligence' },
+  'splash.learnMore': { ar: 'تعرّف على التطبيق', en: 'Learn about the app' },
 
   // nav
   'nav.home':      { ar: 'الرئيسية', en: 'Home' },
@@ -150,11 +152,68 @@ const STRINGS = {
   'ai.placeholder':   { ar: 'اكتب رسالتك...', en: 'Type your message...' },
 
   // common
-  'common.add':    { ar: 'إضافة', en: 'Add' },
-  'common.cancel': { ar: 'إلغاء', en: 'Cancel' },
-  'common.delete': { ar: 'حذف', en: 'Delete' },
-  'common.save':   { ar: 'حفظ', en: 'Save' },
-  'common.back':   { ar: 'رجوع', en: 'Back' },
+  'common.add':     { ar: 'إضافة', en: 'Add' },
+  'common.cancel':  { ar: 'إلغاء', en: 'Cancel' },
+  'common.delete':  { ar: 'حذف', en: 'Delete' },
+  'common.save':    { ar: 'حفظ', en: 'Save' },
+  'common.back':    { ar: 'رجوع', en: 'Back' },
+  'common.loading': { ar: 'جاري التحميل…', en: 'Loading…' },
+
+  // landing page
+  'landing.nav.features':  { ar: 'المميزات', en: 'Features' },
+  'landing.nav.screens':   { ar: 'الشاشات', en: 'Screens' },
+  'landing.nav.contact':   { ar: 'تواصل', en: 'Contact' },
+  'landing.cta.open':      { ar: 'افتح التطبيق', en: 'Open app' },
+  'landing.cta.start':     { ar: 'ابدأ مجاناً', en: 'Start free' },
+  'landing.cta.learn':     { ar: 'تعرّف أكثر', en: 'Learn more' },
+  'landing.hero.eyebrow':  { ar: 'ارتَح — مساعدك اليومي', en: 'Irtah — your daily assistant' },
+  'landing.hero.title':    { ar: 'كل يومك في مكان واحد — بهدوء، وبلغتك.', en: 'Your whole day in one calm place.' },
+  'landing.hero.subtitle': {
+    ar: 'ارتَح يجمع ملفاتك ومواعيدك ومهامك مع مساعد ذكي يلخّص يومك ويقترح خطواتك — مع دعم كامل للعربية والإنجليزية، وحفظ محلي لخصوصيتك.',
+    en: 'Irtah brings your files, schedule, and tasks together with an AI that summarizes your day — bilingual (Arabic + English) and private by default.',
+  },
+  'landing.stat.local':    { ar: 'خصوصية محلية', en: 'Local-first privacy' },
+  'landing.stat.ai':       { ar: 'مساعد ذكي', en: 'AI assistant' },
+  'landing.stat.bilingual':{ ar: 'لغتان', en: 'Bilingual' },
+  'landing.features.eyebrow':  { ar: 'كل ما تحتاجه', en: 'Everything you need' },
+  'landing.features.title':    { ar: 'بسيط من برّا، ذكي من جوّا.', en: 'Simple on the surface, smart underneath.' },
+  'landing.features.subtitle': {
+    ar: 'صمّمنا ارتَح ليبقى هادئاً ومركّزاً — بدون إشعارات صاخبة ولا واجهات مزدحمة.',
+    en: 'Irtah is built to stay calm and focused — no noise, no clutter, just flow.',
+  },
+  'landing.feat.files.title':    { ar: 'ملفاتك', en: 'Your files' },
+  'landing.feat.files.desc':     { ar: 'كل ملفاتك من Outlook و OneDrive في مكان واحد — مع ملاحظات ذكية.', en: 'All your Outlook + OneDrive files in one place, with smart notes.' },
+  'landing.feat.schedule.title': { ar: 'جدولك', en: 'Your schedule' },
+  'landing.feat.schedule.desc':  { ar: 'مواعيدك من Microsoft 365 مع تقويم أسبوعي أنيق وسهل.', en: 'Events from Microsoft 365 with a clean weekly calendar.' },
+  'landing.feat.tasks.title':    { ar: 'مهامك', en: 'Your tasks' },
+  'landing.feat.tasks.desc':     { ar: 'أولويات ملوّنة وتقدّم واضح — بدون تعقيد.', en: 'Color-coded priorities with clear progress, no clutter.' },
+  'landing.feat.ai.title':       { ar: 'مساعد ذكي', en: 'AI assistant' },
+  'landing.feat.ai.desc':        { ar: 'يلخّص يومك، يقترح الخطوات، ويساعدك تكتب ردود أسرع.', en: 'Summarizes your day, suggests next steps, and drafts replies.' },
+  'landing.feat.notify.title':   { ar: 'تنبيهات هادئة', en: 'Quiet notifications' },
+  'landing.feat.notify.desc':    { ar: 'تذكيرات بالمهام العاجلة والمواعيد القريبة — بدون إزعاج.', en: 'Gentle reminders for urgent tasks and upcoming events.' },
+  'landing.feat.security.title': { ar: 'أمان وخصوصية', en: 'Security & privacy' },
+  'landing.feat.security.desc':  { ar: 'بياناتك تُحفظ محلياً. مفاتيح OpenAI و Supabase تبقى في جهازك فقط.', en: 'Data stays on device. OpenAI and Supabase keys never leave your browser.' },
+  'landing.screens.eyebrow': { ar: 'واجهات التطبيق', en: 'Product screens' },
+  'landing.screens.title':   { ar: 'تصميم يريح العين — ويبقى واضحاً.', en: 'A design that rests the eye, and stays clear.' },
+  'landing.screens.dash':    { ar: 'لوحة اليوم', en: 'Today dashboard' },
+  'landing.screens.ai':      { ar: 'المساعد الذكي', en: 'AI assistant' },
+  'landing.screens.schedule':{ ar: 'جدول اليوم', en: 'Today schedule' },
+  'landing.mock.aiTitle':    { ar: 'خلاصة يومك', en: 'Your day in a line' },
+  'landing.mock.aiLine':     { ar: 'لديك ٣ مواعيد و ٢ مهام عاجلة — أقربهم "مراجعة العرض" الساعة ١١:٠٠.', en: 'You have 3 events and 2 urgent tasks — next up: "Deck review" at 11:00.' },
+  'landing.mock.userLine':   { ar: 'لخّص لي مواعيد اليوم', en: 'Summarize today for me' },
+  'landing.mock.task1':      { ar: 'مراجعة عرض الاجتماع', en: 'Review meeting deck' },
+  'landing.mock.task2':      { ar: 'إرسال ردّ العميل', en: 'Send client reply' },
+  'landing.mock.task3':      { ar: 'تحضير تقرير الأسبوع', en: 'Prepare weekly report' },
+  'landing.mock.ev1':        { ar: '١٠:٠٠ مكالمة المنتج', en: '10:00 Product call' },
+  'landing.mock.ev2':        { ar: '١٢:٣٠ غداء العميل', en: '12:30 Client lunch' },
+  'landing.mock.ev3':        { ar: '١٥:٠٠ مراجعة التصميم', en: '15:00 Design review' },
+  'landing.contact.title':   { ar: 'جاهز تبدأ؟', en: 'Ready to start?' },
+  'landing.contact.subtitle':{ ar: 'افتح التطبيق مباشرة من المتصفح — بدون تثبيت. متوفّر على الجوال والكمبيوتر.', en: 'Open the app right in your browser — no install. Works on mobile and desktop.' },
+  'landing.footer.tagline':  { ar: 'صُمِّم بهدوء، ومبني على المتصفح.', en: 'Designed calmly. Built on the web.' },
+
+  // notifications
+  'notify.urgent':   { ar: '{n} مهمة عاجلة تنتظرك', en: '{n} urgent tasks waiting' },
+  'notify.upcoming': { ar: 'موعد قريب: {title} الساعة {time}', en: 'Upcoming: {title} at {time}' },
 
   // settings
   'settings.title':       { ar: 'الإعدادات', en: 'Settings' },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { T, priorityColor } from '../lib/theme.js';
+import { C, F, T, priorityColor } from '../lib/theme.js';
 import { getTodayLabel } from '../lib/date.js';
 import Card from '../components/Card.jsx';
 import { I } from '../components/Icons.jsx';
@@ -151,7 +151,7 @@ export default function Dashboard({
         </div>
         {suggestions.map((s, i) => (
           <Card key={i} style={{ marginBottom: 8, padding: '12px 14px', borderRadius: T.radiusSm }}>
-            <p style={{ fontFamily: T.font, color: 'rgba(255,255,255,0.75)', fontSize: 13, margin: 0, lineHeight: 1.7 }}>
+            <p style={{ fontFamily: F.ui, color: C.ink700, fontSize: 13, margin: 0, lineHeight: 1.7 }}>
               {s.text}
             </p>
           </Card>

@@ -1,36 +1,51 @@
 import React from 'react';
-import { T } from '../lib/theme.js';
+import { C, GRAIN } from '../lib/theme.js';
 
-export default function Background() {
-  const blobs = [
-    { top: '-25%', right: '-15%', w: 700, color: '99,102,241', opacity: 0.07, dur: '18s', idx: 0 },
-    { bottom: '-20%', left: '-10%', w: 500, color: '14,165,233', opacity: 0.05, dur: '22s', idx: 1 },
-    { top: '50%', left: '40%', w: 350, color: '245,158,11', opacity: 0.04, dur: '14s', idx: 2 },
-  ];
+export default function Background({ dark }) {
+  const base = dark ? C.ink900 : C.sand50;
+  const glow1 = dark ? 'rgba(107,82,184,0.18)' : 'rgba(208,106,66,0.10)';
+  const glow2 = dark ? 'rgba(61,122,158,0.12)' : 'rgba(149,132,212,0.08)';
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: T.bg, overflow: 'hidden' }}>
-      {blobs.map((b) => (
-        <div
-          key={b.idx}
-          style={{
-            position: 'absolute',
-            ...(b.top !== undefined && { top: b.top }),
-            ...(b.bottom !== undefined && { bottom: b.bottom }),
-            ...(b.left !== undefined && { left: b.left }),
-            ...(b.right !== undefined && { right: b.right }),
-            width: b.w,
-            height: b.w,
-            background: `radial-gradient(circle, rgba(${b.color},${b.opacity}) 0%, transparent 70%)`,
-            borderRadius: '50%',
-            filter: 'blur(60px)',
-            animation: `f${b.idx} ${b.dur} ease-in-out infinite`,
-          }}
-        />
-      ))}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: base, overflow: 'hidden' }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: '-20%',
+          right: '-15%',
+          width: 520,
+          height: 520,
+          background: `radial-gradient(circle, ${glow1} 0%, transparent 65%)`,
+          borderRadius: '50%',
+          filter: 'blur(70px)',
+          animation: 'floatA 22s ease-in-out infinite',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-15%',
+          left: '-10%',
+          width: 420,
+          height: 420,
+          background: `radial-gradient(circle, ${glow2} 0%, transparent 65%)`,
+          borderRadius: '50%',
+          filter: 'blur(70px)',
+          animation: 'floatB 26s ease-in-out infinite',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: GRAIN,
+          opacity: dark ? 0.35 : 0.5,
+          mixBlendMode: 'multiply',
+          pointerEvents: 'none',
+        }}
+      />
       <style>{`
-        @keyframes f0 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-50px,30px) } }
-        @keyframes f1 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(40px,-50px) } }
-        @keyframes f2 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-30px,-40px) } }
+        @keyframes floatA { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-40px,30px) } }
+        @keyframes floatB { 0%,100% { transform: translate(0,0) } 50% { transform: translate(30px,-40px) } }
       `}</style>
     </div>
   );

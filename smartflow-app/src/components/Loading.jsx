@@ -1,7 +1,10 @@
 import React from 'react';
-import { T } from '../lib/theme.js';
+import { C, F } from '../lib/theme.js';
+import IrtahMark from './IrtahMark.jsx';
+import { useT } from '../lib/i18n.js';
 
 export default function Loading() {
+  const { t } = useT();
   return (
     <div
       style={{
@@ -11,24 +14,16 @@ export default function Loading() {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 16,
+        background: C.sand50,
       }}
     >
-      <div
-        style={{
-          width: 50,
-          height: 50,
-          borderRadius: 14,
-          background: `linear-gradient(135deg, ${T.primary}, ${T.accent1})`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          animation: 'loadPulse 1.5s ease-in-out infinite',
-        }}
-      >
-        <span style={{ color: '#fff', fontSize: 22, fontWeight: 800, fontFamily: T.fontEn }}>SF</span>
+      <div style={{ animation: 'loadPulse 1.6s ease-in-out infinite' }}>
+        <IrtahMark size={56} />
       </div>
-      <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 14 }}>جاري التحميل...</p>
-      <style>{`@keyframes loadPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:0.8}}`}</style>
+      <p style={{ fontFamily: F.ui, color: C.sand500, fontSize: 14 }}>
+        {t('common.loading')}
+      </p>
+      <style>{`@keyframes loadPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:0.82}}`}</style>
     </div>
   );
 }
