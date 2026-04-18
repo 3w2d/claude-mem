@@ -1,73 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NAZM AI | نَظْم</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700;900&display=swap');
-        body { background-color: #030303; font-family: 'Noto Sans Arabic', sans-serif; color: white; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .neon-border { border: 1px solid rgba(139, 92, 246, 0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); }
-    </style>
-</head>
-<body class="p-6 pb-32">
-
-    <div class="flex justify-between items-center mb-10">
-        <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-gradient-to-tr from-violet-600 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-                <i class="fas fa-brain text-xl"></i>
-            </div>
-            <h1 class="text-2xl font-black tracking-widest">NAZM</h1>
-        </div>
-        <div class="w-10 h-10 glass rounded-full flex items-center justify-center"><i class="fas fa-adjust"></i></div>
-    </div>
-
-    <div class="glass p-8 rounded-[40px] mb-6 relative overflow-hidden neon-border">
-        <div class="absolute -top-10 -right-10 w-32 h-32 bg-violet-600/20 blur-3xl"></div>
-        <p class="text-violet-400 font-bold text-xs uppercase tracking-widest mb-2">مدير المشروع</p>
-        <h2 class="text-4xl font-black mb-2">مرحباً م. عوض</h2>
-        <p class="text-gray-400 text-sm">32 مكتباً ميدانياً تحت إشرافك الآن.</p>
-    </div>
-
-    <div class="grid grid-cols-3 gap-4 mb-6">
-        <div class="glass p-5 rounded-3xl text-center">
-            <span class="block text-2xl font-black text-violet-400">142</span>
-            <span class="text-[10px] text-gray-500 font-bold">مطالبة</span>
-        </div>
-        <div class="glass p-5 rounded-3xl text-center border-b-2 border-violet-500">
-            <span class="block text-2xl font-black text-white">32</span>
-            <span class="text-[10px] text-gray-500 font-bold">مكتب</span>
-        </div>
-        <div class="glass p-5 rounded-3xl text-center">
-            <span class="block text-2xl font-black text-violet-400">63</span>
-            <span class="text-[10px] text-gray-500 font-bold">موظف</span>
-        </div>
-    </div>
-
-    <div class="glass p-6 rounded-[35px] bg-gradient-to-b from-white/[0.05] to-transparent border-l-4 border-violet-600">
-        <div class="flex items-center gap-3 mb-4">
-            <i class="fas fa-bolt-lightning text-violet-500 text-xl"></i>
-            <h3 class="font-bold">تحليل الذكاء الميداني</h3>
-        </div>
-        <p class="text-gray-400 text-sm leading-relaxed mb-6">
-            تم رصد تداخل في مواعيد الصيانة بـ 3 مواقع بمكة. هل ترغب في إعادة التوزيع التلقائي للفرق؟
-        </p>
-        <button class="w-full py-4 bg-violet-600 rounded-2xl font-black text-sm shadow-xl shadow-violet-900/40 active:scale-95 transition-all">
-            تفعيل الجدولة الذكية
-        </button>
-    </div>
-
-    <nav class="fixed bottom-8 left-6 right-6 h-20 glass rounded-[30px] flex items-center justify-around px-2 border-white/20">
-        <button class="w-14 h-14 bg-violet-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-violet-500/40">
-            <i class="fas fa-home-lg-alt text-xl"></i>
-        </button>
-        <button class="text-gray-500"><i class="fas fa-file-invoice-dollar text-xl"></i></button>
-        <button class="text-gray-500"><i class="fas fa-chart-pie-simple text-xl"></i></button>
-        <button class="text-gray-500"><i class="fas fa-user-gear text-xl"></i></button>
-    </nav>
-
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#070A12" />
+    <meta name="description" content="NAZM — نَظْم · Intelligence Hub. ذكاء يرتّب حياتك." />
+    <title>NAZM — نَظْم · Intelligence Hub</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
