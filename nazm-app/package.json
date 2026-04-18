@@ -1,7 +1,7 @@
 {
-  "name": "smartflow-app",
-  "version": "3.0.0",
-  "description": "SmartFlow - Personal AI assistant for files, schedule, and tasks (Arabic RTL)",
+  "name": "nazm-app",
+  "version": "1.0.0",
+  "description": "NAZM — نَظْم · Intelligence Hub · bilingual productivity app",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,8 +9,6 @@
     "preview": "vite preview --port 4173"
   },
   "dependencies": {
-    "@azure/msal-browser": "^3.24.0",
-    "@supabase/supabase-js": "^2.45.4",
     "lucide-react": "^1.8.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

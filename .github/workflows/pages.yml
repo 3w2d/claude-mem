@@ -1,4 +1,4 @@
-name: Deploy landing + SmartFlow app to GitHub Pages
+name: Deploy NAZM app + landing to GitHub Pages
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - claude/smartflow-app-development-dKLqM
     paths:
       - 'landing/**'
-      - 'smartflow-app/**'
+      - 'nazm-app/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -30,17 +30,16 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: smartflow-app/package-lock.json
+          cache-dependency-path: nazm-app/package-lock.json
 
       - name: Install app dependencies
-        working-directory: smartflow-app
+        working-directory: nazm-app
         run: npm ci
 
-      - name: Build SmartFlow app
-        working-directory: smartflow-app
+      - name: Build NAZM app
+        working-directory: nazm-app
         env:
           BASE: /${{ github.event.repository.name }}/app/
-          VITE_AI_ENABLED: 'false'
         run: npm run build
 
       - name: Assemble site
@@ -48,7 +47,7 @@ jobs:
           mkdir -p _site
           cp -r landing/. _site/
           mkdir -p _site/app
-          cp -r smartflow-app/dist/. _site/app/
+          cp -r nazm-app/dist/. _site/app/
 
       - uses: actions/upload-pages-artifact@v3
         with:
