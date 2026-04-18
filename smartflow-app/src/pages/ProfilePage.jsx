@@ -3,6 +3,7 @@ import { T } from '../lib/theme.js';
 import Card from '../components/Card.jsx';
 import { I } from '../components/Icons.jsx';
 import { hasAuth, signInWithGoogle, signOut, getUserDisplay } from '../lib/auth.js';
+import { useT } from '../lib/i18n.js';
 
 function GoogleIcon() {
   return (
@@ -13,12 +14,13 @@ function GoogleIcon() {
 }
 
 export default function ProfilePage({ user, setPage, files, events, tasks, msAccount, onMsLogout }) {
+  const { t, dir } = useT();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
   const display = getUserDisplay(user);
-  const pendingTasks = tasks.filter((t) => !t.done).length;
-  const completedTasks = tasks.filter((t) => t.done).length;
+  const pendingTasks = tasks.filter((x) => !x.done).length;
+  const completedTasks = tasks.filter((x) => x.done).length;
   const supabaseReady = hasAuth();
 
   const handleGoogle = async () => {
@@ -27,7 +29,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
     try {
       await signInWithGoogle();
     } catch (e) {
-      setErr(e.message || 'تعذّر تسجيل الدخول');
+      setErr(e.message || t('profile.signInError'));
       setBusy(false);
     }
   };
@@ -60,14 +62,14 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
   );
 
   return (
-    <div style={{ direction: 'rtl', paddingBottom: 100 }}>
+    <div style={{ direction: dir, paddingBottom: 100 }}>
       <div style={{ marginBottom: 16, paddingTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>الملف الشخصي</h2>
+        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>{t('profile.title')}</h2>
         <button
           onClick={() => setPage('home')}
           style={{ background: 'none', border: 'none', color: T.primary, fontFamily: T.font, fontSize: 13, cursor: 'pointer' }}
         >
-          رجوع
+          {t('common.back')}
         </button>
       </div>
 
@@ -104,7 +106,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
             <div style={{ fontFamily: T.fontEn, fontSize: 12, color: T.textMuted, marginTop: 2 }}>{display.email}</div>
             <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, background: T.primaryBg, padding: '3px 10px', borderRadius: 8 }}>
               <span style={{ fontFamily: T.font, fontSize: 11, color: T.primary }}>
-                مُسجَّل عبر {display.provider === 'google' ? 'Google' : display.provider}
+                {t('profile.signedVia', { provider: display.provider === 'google' ? 'Google' : display.provider })}
               </span>
             </div>
           </>
@@ -126,27 +128,27 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
             >
               👤
             </div>
-            <div style={{ fontFamily: T.font, fontSize: 16, fontWeight: 600, color: T.text }}>زائر</div>
+            <div style={{ fontFamily: T.font, fontSize: 16, fontWeight: 600, color: T.text }}>{t('profile.guest')}</div>
             <div style={{ fontFamily: T.font, fontSize: 12, color: T.textMuted, marginTop: 4 }}>
-              سجّل دخول لحفظ بياناتك ومزامنتها بين أجهزتك
+              {t('profile.guestHint')}
             </div>
           </>
         )}
       </Card>
 
       <Card style={{ padding: 16, marginBottom: 14, borderRadius: T.radiusSm }}>
-        <div style={{ fontFamily: T.font, fontSize: 13, color: T.textMuted, marginBottom: 12 }}>إحصائيات</div>
+        <div style={{ fontFamily: T.font, fontSize: 13, color: T.textMuted, marginBottom: 12 }}>{t('profile.stats')}</div>
         <div style={{ display: 'flex' }}>
-          {statItem(files.length, 'ملفات', T.primary)}
-          {statItem(events.length, 'مواعيد', T.accent1)}
-          {statItem(pendingTasks, 'متبقية', T.accent2)}
-          {statItem(completedTasks, 'مكتملة', T.accent3)}
+          {statItem(files.length, t('profile.stat.files'), T.primary)}
+          {statItem(events.length, t('profile.stat.events'), T.accent1)}
+          {statItem(pendingTasks, t('profile.stat.pending'), T.accent2)}
+          {statItem(completedTasks, t('profile.stat.done'), T.accent3)}
         </div>
       </Card>
 
       {!display && (
         <Card style={{ padding: 16, marginBottom: 14, borderRadius: T.radiusSm }}>
-          <div style={{ fontFamily: T.font, fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 10 }}>تسجيل الدخول</div>
+          <div style={{ fontFamily: T.font, fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 10 }}>{t('profile.signIn')}</div>
           {supabaseReady ? (
             <>
               <button
@@ -171,7 +173,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
                 }}
               >
                 <GoogleIcon />
-                <span>تسجيل الدخول بـ Google</span>
+                <span>{t('profile.signInGoogle')}</span>
               </button>
               {err && (
                 <div style={{ fontFamily: T.font, fontSize: 11, color: T.danger, marginTop: 8, lineHeight: 1.6 }}>
@@ -182,7 +184,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
           ) : (
             <>
               <div style={{ fontFamily: T.font, fontSize: 12, color: T.textMuted, lineHeight: 1.7, marginBottom: 10 }}>
-                تسجيل الدخول يحتاج Supabase مُهيّأ.
+                {t('profile.supabaseHint')}
               </div>
               <button
                 onClick={() => setPage('settings')}
@@ -199,7 +201,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
                   cursor: 'pointer',
                 }}
               >
-                اضبط Supabase أولاً
+                {t('profile.configSb')}
               </button>
             </>
           )}
@@ -227,7 +229,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
               cursor: 'pointer',
             }}
           >
-            فصل Microsoft
+            {t('profile.msDisconnect')}
           </button>
         </Card>
       )}
@@ -248,7 +250,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
             marginBottom: 8,
           }}
         >
-          ⚙️ الإعدادات
+          {t('profile.settings')}
         </button>
         <button
           onClick={handleExport}
@@ -264,7 +266,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
             cursor: 'pointer',
           }}
         >
-          📤 تصدير بياناتي (JSON)
+          {t('profile.export')}
         </button>
       </Card>
 
@@ -286,7 +288,7 @@ export default function ProfilePage({ user, setPage, files, events, tasks, msAcc
             opacity: busy ? 0.6 : 1,
           }}
         >
-          تسجيل الخروج
+          {t('profile.signOut')}
         </button>
       )}
     </div>

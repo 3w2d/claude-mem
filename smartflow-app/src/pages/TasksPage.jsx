@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { T, priorityColor, priorityLabel } from '../lib/theme.js';
+import { T, priorityColor } from '../lib/theme.js';
 import Card from '../components/Card.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import { I } from '../components/Icons.jsx';
+import { useT } from '../lib/i18n.js';
 
 export default function TasksPage({ tasks, setTasks }) {
+  const { t, dir } = useT();
   const [showAdd, setShowAdd] = useState(false);
   const [newText, setNewText] = useState('');
   const [newPrio, setNewPrio] = useState('medium');
@@ -13,8 +15,10 @@ export default function TasksPage({ tasks, setTasks }) {
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState('');
 
+  const prioLabel = (p) => t(`tasks.prio.${p}`);
+
   const toggle = (id) =>
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+    setTasks((prev) => prev.map((x) => (x.id === id ? { ...x, done: !x.done } : x)));
 
   const add = () => {
     if (!newText.trim()) return;
@@ -31,7 +35,7 @@ export default function TasksPage({ tasks, setTasks }) {
       setEditId(null);
       return;
     }
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, text: editText.trim() } : t)));
+    setTasks((prev) => prev.map((x) => (x.id === id ? { ...x, text: editText.trim() } : x)));
     setEditId(null);
   };
 
@@ -39,16 +43,16 @@ export default function TasksPage({ tasks, setTasks }) {
     filter === 'all'
       ? tasks
       : filter === 'done'
-      ? tasks.filter((t) => t.done)
-      : tasks.filter((t) => !t.done);
+      ? tasks.filter((x) => x.done)
+      : tasks.filter((x) => !x.done);
 
   return (
-    <div style={{ direction: 'rtl' }}>
+    <div style={{ direction: dir }}>
       {confirmDel && (
         <ConfirmDialog
-          message={`هل تبي تحذف "${confirmDel.text}"؟`}
+          message={t('tasks.confirmDelete', { name: confirmDel.text })}
           onConfirm={() => {
-            setTasks((prev) => prev.filter((t) => t.id !== confirmDel.id));
+            setTasks((prev) => prev.filter((x) => x.id !== confirmDel.id));
             setConfirmDel(null);
           }}
           onCancel={() => setConfirmDel(null)}
@@ -56,17 +60,17 @@ export default function TasksPage({ tasks, setTasks }) {
       )}
 
       <div style={{ marginBottom: 16, paddingTop: 8 }}>
-        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>المهام</h2>
+        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>{t('tasks.title')}</h2>
         <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 13, marginTop: 4 }}>
-          {tasks.filter((t) => !t.done).length} مهمة متبقية
+          {t('tasks.countLeft', { n: tasks.filter((x) => !x.done).length })}
         </p>
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
         {[
-          { id: 'all',     l: 'الكل' },
-          { id: 'pending', l: 'متبقية' },
-          { id: 'done',    l: 'مكتملة' },
+          { id: 'all',     l: t('tasks.tab.all') },
+          { id: 'pending', l: t('tasks.tab.pending') },
+          { id: 'done',    l: t('tasks.tab.done') },
         ].map((f) => (
           <button
             key={f.id}
@@ -94,7 +98,7 @@ export default function TasksPage({ tasks, setTasks }) {
             value={newText}
             onChange={(e) => setNewText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
-            placeholder="وصف المهمة..."
+            placeholder={t('tasks.placeholder')}
             autoFocus
             style={{
               width: '100%',
@@ -105,7 +109,7 @@ export default function TasksPage({ tasks, setTasks }) {
               color: T.text,
               fontFamily: T.font,
               fontSize: 14,
-              direction: 'rtl',
+              direction: dir,
               outline: 'none',
               marginBottom: 10,
             }}
@@ -126,7 +130,7 @@ export default function TasksPage({ tasks, setTasks }) {
                   color: newPrio === p ? priorityColor[p] : T.textMuted,
                 }}
               >
-                {priorityLabel[p]}
+                {prioLabel(p)}
               </button>
             ))}
           </div>
@@ -145,7 +149,7 @@ export default function TasksPage({ tasks, setTasks }) {
                 cursor: 'pointer',
               }}
             >
-              إضافة
+              {t('common.add')}
             </button>
             <button
               onClick={() => setShowAdd(false)}
@@ -160,7 +164,7 @@ export default function TasksPage({ tasks, setTasks }) {
                 cursor: 'pointer',
               }}
             >
-              إلغاء
+              {t('common.cancel')}
             </button>
           </div>
         </Card>
@@ -179,18 +183,18 @@ export default function TasksPage({ tasks, setTasks }) {
           }}
         >
           <span style={{ color: T.primary }}>{I.plus}</span>
-          <span style={{ fontFamily: T.font, color: T.primary, fontSize: 14 }}>إضافة مهمة</span>
+          <span style={{ fontFamily: T.font, color: T.primary, fontSize: 14 }}>{t('tasks.add')}</span>
         </Card>
       )}
 
       {filtered.length === 0 ? (
         <p style={{ fontFamily: T.font, color: T.textMuted, textAlign: 'center', padding: 32, fontSize: 13 }}>
-          {filter === 'done' ? 'ما فيه مهام مكتملة' : filter === 'pending' ? 'أضف أول مهمة' : 'لا توجد مهام بعد'}
+          {filter === 'done' ? t('tasks.empty.done') : filter === 'pending' ? t('tasks.empty.pending') : t('tasks.empty.all')}
         </p>
       ) : (
-        filtered.map((t) => (
+        filtered.map((x) => (
           <Card
-            key={t.id}
+            key={x.id}
             style={{
               marginBottom: 6,
               padding: '12px 14px',
@@ -201,13 +205,13 @@ export default function TasksPage({ tasks, setTasks }) {
             }}
           >
             <button
-              onClick={() => toggle(t.id)}
+              onClick={() => toggle(x.id)}
               style={{
                 width: 22,
                 height: 22,
                 borderRadius: 6,
-                border: `2px solid ${t.done ? T.accent3 : T.textDim}`,
-                background: t.done ? `${T.accent3}20` : 'none',
+                border: `2px solid ${x.done ? T.accent3 : T.textDim}`,
+                background: x.done ? `${T.accent3}20` : 'none',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -216,14 +220,14 @@ export default function TasksPage({ tasks, setTasks }) {
                 flexShrink: 0,
               }}
             >
-              {t.done && I.check}
+              {x.done && I.check}
             </button>
-            {editId === t.id ? (
+            {editId === x.id ? (
               <input
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && saveEdit(t.id)}
-                onBlur={() => saveEdit(t.id)}
+                onKeyDown={(e) => e.key === 'Enter' && saveEdit(x.id)}
+                onBlur={() => saveEdit(x.id)}
                 autoFocus
                 style={{
                   flex: 1,
@@ -234,7 +238,7 @@ export default function TasksPage({ tasks, setTasks }) {
                   color: T.text,
                   fontFamily: T.font,
                   fontSize: 14,
-                  direction: 'rtl',
+                  direction: dir,
                   outline: 'none',
                 }}
               />
@@ -245,36 +249,36 @@ export default function TasksPage({ tasks, setTasks }) {
                   color: T.text,
                   fontSize: 14,
                   flex: 1,
-                  textDecoration: t.done ? 'line-through' : 'none',
-                  opacity: t.done ? 0.5 : 1,
+                  textDecoration: x.done ? 'line-through' : 'none',
+                  opacity: x.done ? 0.5 : 1,
                 }}
               >
-                {t.text}
+                {x.text}
               </span>
             )}
             <span
               style={{
                 fontFamily: T.font,
                 fontSize: 10,
-                color: priorityColor[t.priority],
-                background: `${priorityColor[t.priority]}20`,
+                color: priorityColor[x.priority],
+                background: `${priorityColor[x.priority]}20`,
                 padding: '2px 8px',
                 borderRadius: 6,
               }}
             >
-              {priorityLabel[t.priority]}
+              {prioLabel(x.priority)}
             </span>
             <button
               onClick={() => {
-                setEditId(t.id);
-                setEditText(t.text);
+                setEditId(x.id);
+                setEditText(x.text);
               }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: T.textMuted }}
             >
               {I.edit}
             </button>
             <button
-              onClick={() => setConfirmDel(t)}
+              onClick={() => setConfirmDel(x)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: T.textMuted }}
             >
               {I.trash}

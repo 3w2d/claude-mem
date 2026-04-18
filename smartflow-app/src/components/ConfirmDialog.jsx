@@ -1,7 +1,9 @@
 import React from 'react';
 import { T } from '../lib/theme.js';
+import { useT } from '../lib/i18n.js';
 
 export default function ConfirmDialog({ message, onConfirm, onCancel }) {
+  const { t } = useT();
   return (
     <div
       onClick={onCancel}
@@ -48,7 +50,7 @@ export default function ConfirmDialog({ message, onConfirm, onCancel }) {
               cursor: 'pointer',
             }}
           >
-            حذف
+            {t('common.delete')}
           </button>
           <button
             onClick={onCancel}
@@ -64,7 +66,7 @@ export default function ConfirmDialog({ message, onConfirm, onCancel }) {
               cursor: 'pointer',
             }}
           >
-            إلغاء
+            {t('common.cancel')}
           </button>
         </div>
       </div>

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { T } from '../lib/theme.js';
 import Card from '../components/Card.jsx';
 import { getRuntimeConfig, saveRuntimeConfig } from '../lib/runtimeConfig.js';
+import { useT } from '../lib/i18n.js';
 
 export default function SettingsPage({ onSaved, setPage }) {
+  const { t, lang, dir, setLang } = useT();
   const initial = getRuntimeConfig();
   const [cfg, setCfg] = useState(initial);
   const [saved, setSaved] = useState(false);
@@ -49,37 +51,66 @@ export default function SettingsPage({ onSaved, setPage }) {
   const redirectExample = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
 
   return (
-    <div style={{ direction: 'rtl', paddingBottom: 100 }}>
+    <div style={{ direction: dir, paddingBottom: 100 }}>
       <div style={{ marginBottom: 16, paddingTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>الإعدادات</h2>
+          <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>{t('settings.title')}</h2>
           <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 13, marginTop: 4 }}>
-            ربط الخدمات الخارجية. كل المفاتيح تُحفظ في جهازك فقط.
+            {t('settings.subtitle')}
           </p>
         </div>
         <button
           onClick={() => setPage('home')}
           style={{ background: 'none', border: 'none', color: T.primary, fontFamily: T.font, fontSize: 13, cursor: 'pointer' }}
         >
-          رجوع
+          {t('common.back')}
         </button>
       </div>
 
       <Card style={{ padding: 16, marginBottom: 14, borderRadius: T.radiusSm }}>
-        <div style={sectionTitle}>Microsoft 365 (Outlook / Excel / Word)</div>
+        <div style={sectionTitle}>{t('settings.lang')}</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[
+            { id: 'ar', label: t('settings.lang.ar') },
+            { id: 'en', label: t('settings.lang.en') },
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => setLang(opt.id)}
+              style={{
+                flex: 1,
+                padding: '10px 12px',
+                borderRadius: 10,
+                border: `1px solid ${lang === opt.id ? T.primary : T.border}`,
+                background: lang === opt.id ? `linear-gradient(135deg, ${T.primary}, ${T.accent1})` : T.surface,
+                color: lang === opt.id ? '#fff' : T.textMuted,
+                fontFamily: T.font,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      <Card style={{ padding: 16, marginBottom: 14, borderRadius: T.radiusSm }}>
+        <div style={sectionTitle}>{t('settings.ms.title')}</div>
 
         <div style={fieldGap}>
-          <label style={labelStyle}>Application (client) ID</label>
+          <label style={labelStyle}>{t('settings.ms.clientId')}</label>
           <input style={inputStyle} value={cfg.azureClientId} onChange={(e) => update('azureClientId', e.target.value)} placeholder="00000000-0000-0000-0000-000000000000" />
         </div>
 
         <div style={fieldGap}>
-          <label style={labelStyle}>Directory (tenant) ID — اتركه common لو شخصي</label>
+          <label style={labelStyle}>{t('settings.ms.tenantId')}</label>
           <input style={inputStyle} value={cfg.azureTenantId} onChange={(e) => update('azureTenantId', e.target.value)} placeholder="common" />
         </div>
 
         <div style={fieldGap}>
-          <label style={labelStyle}>Redirect URI (اختياري — افتراضي عنوان الصفحة الحالية)</label>
+          <label style={labelStyle}>{t('settings.ms.redirect')}</label>
           <input style={inputStyle} value={cfg.azureRedirectUri} onChange={(e) => update('azureRedirectUri', e.target.value)} placeholder={redirectExample} />
         </div>
 
@@ -97,15 +128,15 @@ export default function SettingsPage({ onSaved, setPage }) {
       </Card>
 
       <Card style={{ padding: 16, marginBottom: 14, borderRadius: T.radiusSm }}>
-        <div style={sectionTitle}>Supabase (مزامنة سحابية)</div>
+        <div style={sectionTitle}>{t('settings.sb.title')}</div>
 
         <div style={fieldGap}>
-          <label style={labelStyle}>Project URL</label>
+          <label style={labelStyle}>{t('settings.sb.url')}</label>
           <input style={inputStyle} value={cfg.supabaseUrl} onChange={(e) => update('supabaseUrl', e.target.value)} placeholder="https://xxx.supabase.co" />
         </div>
 
         <div style={fieldGap}>
-          <label style={labelStyle}>anon public key</label>
+          <label style={labelStyle}>{t('settings.sb.key')}</label>
           <input style={inputStyle} value={cfg.supabaseAnonKey} onChange={(e) => update('supabaseAnonKey', e.target.value)} placeholder="eyJhbGciOi..." />
         </div>
 
@@ -126,15 +157,15 @@ export default function SettingsPage({ onSaved, setPage }) {
       </Card>
 
       <Card style={{ padding: 16, marginBottom: 14, borderRadius: T.radiusSm }}>
-        <div style={sectionTitle}>OpenAI (المساعد الذكي)</div>
+        <div style={sectionTitle}>{t('settings.oa.title')}</div>
 
         <div style={fieldGap}>
-          <label style={labelStyle}>API Key</label>
+          <label style={labelStyle}>{t('settings.oa.key')}</label>
           <input style={inputStyle} type="password" value={cfg.openaiApiKey} onChange={(e) => update('openaiApiKey', e.target.value)} placeholder="sk-..." />
         </div>
 
         <div style={fieldGap}>
-          <label style={labelStyle}>Model</label>
+          <label style={labelStyle}>{t('settings.oa.model')}</label>
           <input style={inputStyle} value={cfg.openaiModel} onChange={(e) => update('openaiModel', e.target.value)} placeholder="gpt-4o-mini" />
         </div>
 
@@ -145,7 +176,10 @@ export default function SettingsPage({ onSaved, setPage }) {
           </a>
           .
           <br />
-          <span style={{ color: T.warning || '#f59e0b' }}>تنبيه:</span> المفتاح يُخزّن في متصفحك ويُرسل من جهازك مباشرة لـ OpenAI. لا تشاركه ولا تستخدمه على جهاز عام.
+          <span style={{ color: T.warning || '#f59e0b' }}>{t('settings.oa.warning')}</span>{' '}
+          {lang === 'ar'
+            ? 'المفتاح يُخزّن في متصفحك ويُرسل من جهازك مباشرة لـ OpenAI. لا تشاركه ولا تستخدمه على جهاز عام.'
+            : 'Your key is stored in this browser and sent directly from your device to OpenAI. Do not share it or use it on a public machine.'}
         </div>
       </Card>
 
@@ -164,7 +198,7 @@ export default function SettingsPage({ onSaved, setPage }) {
           cursor: 'pointer',
         }}
       >
-        {saved ? 'تم الحفظ ✓' : 'حفظ الإعدادات'}
+        {saved ? t('settings.saved') : t('settings.save')}
       </button>
     </div>
   );

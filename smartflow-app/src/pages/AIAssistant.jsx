@@ -3,8 +3,10 @@ import { T } from '../lib/theme.js';
 import { I } from '../components/Icons.jsx';
 import { aiAvailable, chatCompletion } from '../lib/ai.js';
 import { localResponse, buildContext } from '../lib/localMatcher.js';
+import { useT } from '../lib/i18n.js';
 
 export default function AIAssistant({ files, events, tasks, selectedDay, aiHistory, setAiHistory }) {
+  const { t, dir } = useT();
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [remoteBroken, setRemoteBroken] = useState(false);
@@ -14,7 +16,7 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
     chatEnd.current?.scrollIntoView({ behavior: 'smooth' });
   }, [aiHistory, typing]);
 
-  const quickActions = ['وش مواعيدي اليوم؟', 'وش المهام العاجلة؟', 'ساعدني أكتب إيميل'];
+  const quickActions = [t('ai.quick.today'), t('ai.quick.urgent'), t('ai.quick.email')];
 
   const aiEnabled = aiAvailable();
 
@@ -52,15 +54,15 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
   };
 
   const modeLabel = !aiEnabled
-    ? 'وضع محلي (بدون GPT-4)'
+    ? t('ai.mode.offline')
     : remoteBroken
-    ? 'رجعت للوضع المحلي — تعذّر الوصول للـ AI'
-    : 'متصل مع GPT-4';
+    ? t('ai.mode.fallback')
+    : t('ai.mode.online');
 
   return (
-    <div style={{ direction: 'rtl', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 110px)' }}>
+    <div style={{ direction: dir, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 110px)' }}>
       <div style={{ marginBottom: 12, paddingTop: 8 }}>
-        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>المساعد الذكي</h2>
+        <h2 style={{ fontFamily: T.font, fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>{t('ai.title')}</h2>
         <p style={{ fontFamily: T.font, color: T.textMuted, fontSize: 12, marginTop: 4 }}>
           {modeLabel}
         </p>
@@ -155,7 +157,7 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && !typing && handleSend()}
-          placeholder="اكتب رسالتك..."
+          placeholder={t('ai.placeholder')}
           style={{
             flex: 1,
             padding: '13px 16px',
@@ -165,7 +167,7 @@ export default function AIAssistant({ files, events, tasks, selectedDay, aiHisto
             color: T.text,
             fontSize: 14,
             fontFamily: T.font,
-            direction: 'rtl',
+            direction: dir,
             outline: 'none',
           }}
         />
