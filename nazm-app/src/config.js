@@ -1,0 +1,29 @@
+// NAZM · نَظْم — central configuration
+// Edit numbers/labels here instead of touching the components.
+
+export const APP = {
+  brandAr: 'نَظْم',
+  brandEn: 'NAZM',
+  tagline: 'Intelligence Hub',
+  userName: 'User_142',
+  userRole: 'founder',
+  office365Connected: true,
+};
+
+export const FIELD_STATS = [
+  { key: 'claims',  labelAr: 'المطالبات المالية', labelEn: 'Claims',  value: 142, accent: 'cyan'   },
+  { key: 'offices', labelAr: 'المكاتب الميدانية', labelEn: 'Offices', value: 32,  accent: 'purple' },
+  { key: 'staff',   labelAr: 'إجمالي الموظفين',  labelEn: 'Staff',   value: 63,  accent: 'white'  },
+];
+
+export const AI_MESSAGE = {
+  ar: 'بناءً على 15 إيميلاً وردت في الـ 24 ساعة الماضية، قمت بتحديث ملف Excel للمطالبات المالية. هناك تداخل في مواعيد 3 مكاتب في منطقة مكة، هل تريد مني إعادة جدولة المواعيد؟',
+  en: 'Based on 15 emails in the last 24 hours, I updated the financial claims Excel file. There are scheduling conflicts for 3 offices in Makkah, should I reschedule?',
+};
+
+export const SECTIONS = [
+  { key: 'home',      labelAr: 'الرئيسية',       labelEn: 'Dashboard'    },
+  { key: 'mail',      labelAr: 'البريد والمهام', labelEn: 'Mail & Tasks' },
+  { key: 'sheets',    labelAr: 'جداول البيانات', labelEn: 'Spreadsheets' },
+  { key: 'analytics', labelAr: 'تقارير الأداء',  labelEn: 'Analytics'    },
+];

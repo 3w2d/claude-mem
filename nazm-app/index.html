@@ -1,110 +1,14 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NAZM AI | نَظْم الاحترافي</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root[data-theme="dark"] {
-            --bg: #050505; --card: #121218; --primary: #7c3aed; --accent: #a855f7; --text: #ffffff; --dim: #94a3b8; --border: #1e1e26;
-        }
-        :root[data-theme="light"] {
-            --bg: #f1f5f9; --card: #ffffff; --primary: #6d28d9; --accent: #7c3aed; --text: #0f172a; --dim: #475569; --border: #e2e8f0;
-        }
-
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Tajawal', sans-serif; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; }
-
-        /* Background Glow - لإضافة الفخامة التي تميز بها كلاود */
-        .glow { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; height: 300px; background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 70%); z-index: -1; }
-
-        header { padding: 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); sticky; top: 0; z-index: 100; }
-        .logo { font-size: 1.5rem; font-weight: 900; letter-spacing: 1px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-
-        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
-
-        /* Hero Card - الشغل الجبار */
-        .hero-card { background: linear-gradient(135deg, var(--card) 0%, #1e1b4b 100%); padding: 30px; border-radius: 30px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
-        .hero-card::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 50%); pointer-events: none; }
-        
-        .badge { background: var(--primary); color: white; padding: 5px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; margin-bottom: 15px; display: inline-block; }
-
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .stat-item { background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid var(--border); text-align: center; }
-        .stat-item i { color: var(--primary); margin-bottom: 8px; font-size: 1.2rem; }
-        .stat-num { display: block; font-size: 1.3rem; font-weight: 800; }
-        .stat-label { font-size: 0.65rem; color: var(--dim); }
-
-        /* AI Insight Box */
-        .ai-insight { background: rgba(124, 58, 237, 0.05); border: 1px solid var(--primary); padding: 20px; border-radius: 25px; position: relative; }
-        .ai-insight i { color: var(--primary); font-size: 1.5rem; margin-bottom: 10px; }
-
-        /* Bottom Menu */
-        .navbar { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(18, 18, 24, 0.8); backdrop-filter: blur(20px); border-radius: 25px; padding: 15px; display: flex; justify-content: space-around; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .nav-link { color: var(--dim); text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.7rem; cursor: pointer; }
-        .nav-link.active { color: var(--primary); }
-        .nav-link i { font-size: 1.3rem; }
-
-        .page { display: none; animation: fadeIn 0.5s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body>
-
-<div class="glow"></div>
-
-<header>
-    <div class="logo"><i class="fas fa-microchip"></i> NAZM</div>
-    <div onclick="toggleTheme()" style="cursor: pointer;"><i class="fas fa-adjust"></i></div>
-</header>
-
-<div class="container">
-    <div id="home" class="page active">
-        <div class="hero-card">
-            <span class="badge">نظام نَظْم الذكي</span>
-            <h1 style="font-size: 1.8rem; margin-bottom: 10px;">أهلاً م. عوض</h1>
-            <p style="color: var(--dim); font-size: 0.9rem;">إدارة العمليات لـ 32 مكتباً ميدانياً في مكة المكرمة.</p>
-        </div>
-
-        <div class="stats-row">
-            <div class="stat-item"><i class="fas fa-file-invoice"></i><span class="stat-num">142</span><span class="stat-label">مطالبة</span></div>
-            <div class="stat-item"><i class="fas fa-building"></i><span class="stat-num">32</span><span class="stat-label">مكتباً</span></div>
-            <div class="stat-item"><i class="fas fa-users"></i><span class="stat-num">63</span><span class="stat-label">موظفاً</span></div>
-        </div>
-
-        <div class="ai-insight">
-            <i class="fas fa-wand-magic-sparkles"></i>
-            <h3 style="margin-bottom: 5px;">توصية الذكاء الاصطناعي</h3>
-            <p style="font-size: 0.85rem; color: var(--dim); line-height: 1.5;">رصدنا تداخل مهام في 3 مواقع بصناعية مكة. هل ترغب في إعادة التوزيع الآلي للموظفين؟</p>
-        </div>
-    </div>
-
-    <div id="files" class="page">
-        <h2>الجداول والبيانات</h2>
-        </div>
-</div>
-
-<nav class="navbar">
-    <div class="nav-link active" onclick="nav('home', this)"><i class="fas fa-house-bolt"></i><span>الرئيسية</span></div>
-    <div class="nav-link" onclick="nav('files', this)"><i class="fas fa-folder-open"></i><span>الملفات</span></div>
-    <div class="nav-link"><i class="fas fa-chart-line"></i><span>التقارير</span></div>
-</nav>
-
-<script>
-    function nav(id, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    function toggleTheme() {
-        const h = document.documentElement;
-        h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-    }
-</script>
-
-</body>
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#070A12" />
+    <meta name="description" content="NAZM — نَظْم · Intelligence Hub. ذكاء يرتّب حياتك." />
+    <title>NAZM — نَظْم · Intelligence Hub</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
