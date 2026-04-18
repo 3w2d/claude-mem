@@ -1,110 +1,150 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" data-theme="dark">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NAZM AI | نَظْم الاحترافي</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>NAZM AI | نَظْم المطور</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root[data-theme="dark"] {
-            --bg: #050505; --card: #121218; --primary: #7c3aed; --accent: #a855f7; --text: #ffffff; --dim: #94a3b8; --border: #1e1e26;
-        }
-        :root[data-theme="light"] {
-            --bg: #f1f5f9; --card: #ffffff; --primary: #6d28d9; --accent: #7c3aed; --text: #0f172a; --dim: #475569; --border: #e2e8f0;
-        }
-
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Tajawal', sans-serif; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; }
-
-        /* Background Glow - لإضافة الفخامة التي تميز بها كلاود */
-        .glow { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; height: 300px; background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 70%); z-index: -1; }
-
-        header { padding: 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); sticky; top: 0; z-index: 100; }
-        .logo { font-size: 1.5rem; font-weight: 900; letter-spacing: 1px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-
-        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
-
-        /* Hero Card - الشغل الجبار */
-        .hero-card { background: linear-gradient(135deg, var(--card) 0%, #1e1b4b 100%); padding: 30px; border-radius: 30px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
-        .hero-card::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 50%); pointer-events: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Noto+Sans+Arabic:wght@400;700;900&display=swap');
         
-        .badge { background: var(--primary); color: white; padding: 5px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; margin-bottom: 15px; display: inline-block; }
+        body {
+            background-color: #050508;
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Arabic', sans-serif;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
 
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .stat-item { background: var(--card); padding: 15px; border-radius: 20px; border: 1px solid var(--border); text-align: center; }
-        .stat-item i { color: var(--primary); margin-bottom: 8px; font-size: 1.2rem; }
-        .stat-num { display: block; font-size: 1.3rem; font-weight: 800; }
-        .stat-label { font-size: 0.65rem; color: var(--dim); }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 32px;
+        }
 
-        /* AI Insight Box */
-        .ai-insight { background: rgba(124, 58, 237, 0.05); border: 1px solid var(--primary); padding: 20px; border-radius: 25px; position: relative; }
-        .ai-insight i { color: var(--primary); font-size: 1.5rem; margin-bottom: 10px; }
+        .purple-glow {
+            position: absolute;
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+            z-index: -1;
+        }
 
-        /* Bottom Menu */
-        .navbar { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(18, 18, 24, 0.8); backdrop-filter: blur(20px); border-radius: 25px; padding: 15px; display: flex; justify-content: space-around; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .nav-link { color: var(--dim); text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.7rem; cursor: pointer; }
-        .nav-link.active { color: var(--primary); }
-        .nav-link i { font-size: 1.3rem; }
+        .active-nav {
+            color: #a78bfa;
+            position: relative;
+        }
 
-        .page { display: none; animation: fadeIn 0.5s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .active-nav::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            width: 5px;
+            height: 5px;
+            background: #a78bfa;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #a78bfa;
+        }
+
+        .stat-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
     </style>
 </head>
-<body>
+<body class="min-h-screen">
 
-<div class="glow"></div>
+    <div class="purple-glow"></div>
 
-<header>
-    <div class="logo"><i class="fas fa-microchip"></i> NAZM</div>
-    <div onclick="toggleTheme()" style="cursor: pointer;"><i class="fas fa-adjust"></i></div>
-</header>
-
-<div class="container">
-    <div id="home" class="page active">
-        <div class="hero-card">
-            <span class="badge">نظام نَظْم الذكي</span>
-            <h1 style="font-size: 1.8rem; margin-bottom: 10px;">أهلاً م. عوض</h1>
-            <p style="color: var(--dim); font-size: 0.9rem;">إدارة العمليات لـ 32 مكتباً ميدانياً في مكة المكرمة.</p>
+    <header class="flex justify-between items-center p-6 sticky top-0 z-50 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.5)]">
+                <i class="fas fa-brain text-white"></i>
+            </div>
+            <span class="text-xl font-black tracking-tighter">NAZM</span>
         </div>
+        <button class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+            <i class="fas fa-bell text-sm"></i>
+        </button>
+    </header>
 
-        <div class="stats-row">
-            <div class="stat-item"><i class="fas fa-file-invoice"></i><span class="stat-num">142</span><span class="stat-label">مطالبة</span></div>
-            <div class="stat-item"><i class="fas fa-building"></i><span class="stat-num">32</span><span class="stat-label">مكتباً</span></div>
-            <div class="stat-item"><i class="fas fa-users"></i><span class="stat-num">63</span><span class="stat-label">موظفاً</span></div>
-        </div>
+    <main class="p-6 max-w-md mx-auto space-y-6">
+        
+        <section class="space-y-1">
+            <p class="text-violet-400 font-bold text-sm tracking-widest uppercase">Project Management</p>
+            <h1 class="text-4xl font-black tracking-tight">مرحباً م. عوض</h1>
+            <p class="text-gray-400 text-sm">إدارة عمليات مكة المكرمة</p>
+        </section>
 
-        <div class="ai-insight">
-            <i class="fas fa-wand-magic-sparkles"></i>
-            <h3 style="margin-bottom: 5px;">توصية الذكاء الاصطناعي</h3>
-            <p style="font-size: 0.85rem; color: var(--dim); line-height: 1.5;">رصدنا تداخل مهام في 3 مواقع بصناعية مكة. هل ترغب في إعادة التوزيع الآلي للموظفين؟</p>
-        </div>
-    </div>
+        <section class="grid grid-cols-3 gap-3">
+            <div class="glass-card p-4 text-center stat-shimmer">
+                <span class="block text-2xl font-black text-violet-400">142</span>
+                <span class="text-[10px] text-gray-500 uppercase font-bold">مطالبة</span>
+            </div>
+            <div class="glass-card p-4 text-center">
+                <span class="block text-2xl font-black text-violet-400">32</span>
+                <span class="text-[10px] text-gray-500 uppercase font-bold">مكتب</span>
+            </div>
+            <div class="glass-card p-4 text-center">
+                <span class="block text-2xl font-black text-violet-400">63</span>
+                <span class="text-[10px] text-gray-500 uppercase font-bold">موظف</span>
+            </div>
+        </section>
 
-    <div id="files" class="page">
-        <h2>الجداول والبيانات</h2>
-        </div>
-</div>
+        <section class="glass-card p-6 bg-gradient-to-br from-white/[0.05] to-transparent">
+            <div class="flex justify-between items-start mb-4">
+                <div class="p-3 bg-violet-500/20 rounded-2xl">
+                    <i class="fas fa-wand-magic-sparkles text-violet-400"></i>
+                </div>
+                <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-1 rounded-full font-bold">Live AI</span>
+            </div>
+            <h3 class="text-lg font-bold mb-2">تداخل في المواعيد</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">رصدنا تداخل مهام في 3 مواقع بصناعية مكة المكرمة. هل ترغب في إعادة التوزيع الآلي للموظفين؟</p>
+            <button class="w-full mt-6 py-4 bg-violet-600 hover:bg-violet-500 rounded-2xl font-bold text-sm transition-all shadow-[0_10px_20px_rgba(139,92,246,0.3)]">
+                تفعيل الجدولة الذكية
+            </button>
+        </section>
 
-<nav class="navbar">
-    <div class="nav-link active" onclick="nav('home', this)"><i class="fas fa-house-bolt"></i><span>الرئيسية</span></div>
-    <div class="nav-link" onclick="nav('files', this)"><i class="fas fa-folder-open"></i><span>الملفات</span></div>
-    <div class="nav-link"><i class="fas fa-chart-line"></i><span>التقارير</span></div>
-</nav>
+        <section>
+            <h4 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest">إجراءات سريعة</h4>
+            <div class="grid grid-cols-2 gap-3">
+                <button class="glass-card p-4 flex items-center gap-3 active:scale-95 transition-transform">
+                    <i class="fas fa-plus-circle text-violet-400"></i>
+                    <span class="text-sm font-bold">مطالبة جديدة</span>
+                </button>
+                <button class="glass-card p-4 flex items-center gap-3 active:scale-95 transition-transform">
+                    <i class="fas fa-map-location-dot text-violet-400"></i>
+                    <span class="text-sm font-bold">خريطة المكاتب</span>
+                </button>
+            </div>
+        </section>
 
-<script>
-    function nav(id, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        el.classList.add('active');
-    }
+    </main>
 
-    function toggleTheme() {
-        const h = document.documentElement;
-        h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-    }
-</script>
+    <nav class="fixed bottom-6 left-6 right-6 h-20 glass-card bg-black/40 border-white/5 flex items-center justify-around px-4 z-50">
+        <button class="active-nav flex flex-col items-center gap-1">
+            <i class="fas fa-grid-2 text-xl"></i>
+        </button>
+        <button class="text-gray-500 flex flex-col items-center gap-1">
+            <i class="fas fa-file-invoice-dollar text-xl"></i>
+        </button>
+        <button class="text-gray-500 flex flex-col items-center gap-1">
+            <i class="fas fa-chart-pie text-xl"></i>
+        </button>
+        <button class="text-gray-500 flex flex-col items-center gap-1">
+            <i class="fas fa-user-gear text-xl"></i>
+        </button>
+    </nav>
 
 </body>
 </html>
