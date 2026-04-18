@@ -1,17 +1,164 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#070A12" />
-    <title>NAZM — نَظْم · Intelligence Hub</title>
-    <meta name="description" content="نَظْم · ذكاء يرتّب حياتك — NAZM organizes your mail, files, schedule, and field reports with AI." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAZM | نَظْم - Intelligence Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root[data-theme="dark"] {
+            --bg-body: #0a0a0c;
+            --bg-card: #16161d;
+            --primary: #8b5cf6;
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+            --nav-bg: #111118;
+            --border: #2d2d39;
+        }
+
+        :root[data-theme="light"] {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --primary: #6d28d9;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --nav-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: all 0.3s ease; }
+
+        body { background-color: var(--bg-body); color: var(--text-main); overflow-x: hidden; }
+
+        /* Header */
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 1.2rem; }
+        .logo i { color: var(--primary); font-size: 1.5rem; }
+
+        .theme-toggle { cursor: pointer; background: var(--bg-card); border: 1px solid var(--border); padding: 8px 15px; border-radius: 20px; color: var(--text-main); }
+
+        /* Main Content */
+        .container { padding: 20px; padding-bottom: 100px; max-width: 600px; margin: 0 auto; }
+
+        .welcome-card { background: var(--bg-card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .user-id { color: var(--primary); font-size: 0.9rem; margin-bottom: 5px; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg-card); padding: 15px; border-radius: 15px; text-align: center; border: 1px solid var(--border); }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: var(--primary); display: block; }
+        .stat-label { font-size: 0.7rem; color: var(--text-dim); }
+
+        /* AI Suggestion Section */
+        .ai-card { background: linear-gradient(135deg, var(--bg-card) 0%, #1e1b4b 100%); padding: 20px; border-radius: 20px; border: 1px solid var(--primary); position: relative; overflow: hidden; }
+        .ai-card::before { content: 'AI'; position: absolute; left: -10px; top: -10px; font-size: 5rem; opacity: 0.05; font-weight: bold; }
+        .ai-title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: bold; }
+        .ai-desc { font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 15px; }
+
+        .btn-group { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 10px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text-main); }
+
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid var(--border); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-dim); cursor: pointer; font-size: 0.8rem; text-decoration: none; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 1.2rem; }
+
+        /* Page Management */
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><i class="fas fa-brain"></i> NAZM | نَظْم</div>
+    <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+</header>
+
+<div class="container">
+    <div id="home" class="page active">
+        <div class="welcome-card">
+            <div class="user-id">المؤسس: User_142</div>
+            <h2>أهلاً بك في نظام نَظْم</h2>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">142</span>
+                <span class="stat-label">مطالبات مالية</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">32</span>
+                <span class="stat-label">مكاتب الميدان</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">63</span>
+                <span class="stat-label">إجمالي الموظفين</span>
+            </div>
+        </div>
+
+        <div class="ai-card">
+            <div class="ai-title"><i class="fas fa-wand-magic-sparkles"></i> نَظْم يفكر معك الآن</div>
+            <p class="ai-desc">
+                بناءً على تحديثات الـ 24 ساعة الماضية، تم رصد تداخل في مواعيد الصيانة لـ 3 مكاتب في منطقة مكة المكرمة. هل تود إعادة جدولة الفرق الفنية؟
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-primary">نعم، نفذ</button>
+                <button class="btn btn-secondary">عرض التفاصيل</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tables" class="page">
+        <h2>سجل المطالبات المالية</h2>
+        <p style="color: var(--text-dim); margin-top: 10px;">عرض حي لبيانات الـ 142 مطالبة المعتمدة...</p>
+        <div style="background: var(--bg-card); height: 200px; border-radius: 15px; border: 1px dashed var(--border); margin-top: 20px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-table" style="font-size: 3rem; opacity: 0.2;"></i>
+        </div>
+    </div>
+
+    <div id="settings" class="page">
+        <h2>الإعدادات</h2>
+        <p style="margin-top: 20px;">تخصيص النظام وإدارة الصلاحيات.</p>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <div class="nav-item active" onclick="showPage('home', this)"><i class="fas fa-home"></i><span>الرئيسية</span></div>
+    <div class="nav-item" onclick="showPage('tables', this)"><i class="fas fa-table-list"></i><span>الجداول</span></div>
+    <div class="nav-item" onclick="showPage('settings', this)"><i class="fas fa-gear"></i><span>الإعدادات</span></div>
+</nav>
+
+<script>
+    // نظام التبديل بين الصفحات (Navigation)
+    function showPage(pageId, element) {
+        // إخفاء كل الصفحات
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        // إظهار الصفحة المختارة
+        document.getElementById(pageId).classList.add('active');
+        // تحديث حالة الأزرار
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // نظام تبديل الوضع (Dark/Light Mode)
+    function toggleTheme() {
+        const html = document.documentElement;
+        const icon = document.querySelector('.theme-toggle i');
+        
+        if (html.getAttribute('data-theme') === 'dark') {
+            html.setAttribute('data-theme', 'light');
+            icon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            icon.classList.replace('fa-sun', 'fa-moon');
+        }
+    }
+</script>
+
+</body>
 </html>
