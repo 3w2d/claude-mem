@@ -18,8 +18,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'lucide': ['lucide-react'],
+          'msal': ['@azure/msal-browser', '@azure/msal-react'],
         },
       },
     },
