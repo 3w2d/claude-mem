@@ -20,8 +20,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
-          'msal': ['@azure/msal-browser'],
-          'supabase': ['@supabase/supabase-js'],
+          'lucide': ['lucide-react'],
         },
       },
     },
