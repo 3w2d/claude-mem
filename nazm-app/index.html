@@ -3,147 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NAZM AI | نَظْم المطور</title>
+    <title>NAZM AI | نَظْم</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Noto+Sans+Arabic:wght@400;700;900&display=swap');
-        
-        body {
-            background-color: #050508;
-            font-family: 'Plus Jakarta Sans', 'Noto Sans Arabic', sans-serif;
-            color: #ffffff;
-            overflow-x: hidden;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 32px;
-        }
-
-        .purple-glow {
-            position: absolute;
-            top: -150px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
-            z-index: -1;
-        }
-
-        .active-nav {
-            color: #a78bfa;
-            position: relative;
-        }
-
-        .active-nav::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            width: 5px;
-            height: 5px;
-            background: #a78bfa;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #a78bfa;
-        }
-
-        .stat-shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 3s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700;900&display=swap');
+        body { background-color: #030303; font-family: 'Noto Sans Arabic', sans-serif; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .neon-border { border: 1px solid rgba(139, 92, 246, 0.5); box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="p-6 pb-32">
 
-    <div class="purple-glow"></div>
-
-    <header class="flex justify-between items-center p-6 sticky top-0 z-50 backdrop-blur-md">
+    <div class="flex justify-between items-center mb-10">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.5)]">
-                <i class="fas fa-brain text-white"></i>
+            <div class="w-12 h-12 bg-gradient-to-tr from-violet-600 to-fuchsia-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30">
+                <i class="fas fa-brain text-xl"></i>
             </div>
-            <span class="text-xl font-black tracking-tighter">NAZM</span>
+            <h1 class="text-2xl font-black tracking-widest">NAZM</h1>
         </div>
-        <button class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-            <i class="fas fa-bell text-sm"></i>
+        <div class="w-10 h-10 glass rounded-full flex items-center justify-center"><i class="fas fa-adjust"></i></div>
+    </div>
+
+    <div class="glass p-8 rounded-[40px] mb-6 relative overflow-hidden neon-border">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-violet-600/20 blur-3xl"></div>
+        <p class="text-violet-400 font-bold text-xs uppercase tracking-widest mb-2">مدير المشروع</p>
+        <h2 class="text-4xl font-black mb-2">مرحباً م. عوض</h2>
+        <p class="text-gray-400 text-sm">32 مكتباً ميدانياً تحت إشرافك الآن.</p>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="glass p-5 rounded-3xl text-center">
+            <span class="block text-2xl font-black text-violet-400">142</span>
+            <span class="text-[10px] text-gray-500 font-bold">مطالبة</span>
+        </div>
+        <div class="glass p-5 rounded-3xl text-center border-b-2 border-violet-500">
+            <span class="block text-2xl font-black text-white">32</span>
+            <span class="text-[10px] text-gray-500 font-bold">مكتب</span>
+        </div>
+        <div class="glass p-5 rounded-3xl text-center">
+            <span class="block text-2xl font-black text-violet-400">63</span>
+            <span class="text-[10px] text-gray-500 font-bold">موظف</span>
+        </div>
+    </div>
+
+    <div class="glass p-6 rounded-[35px] bg-gradient-to-b from-white/[0.05] to-transparent border-l-4 border-violet-600">
+        <div class="flex items-center gap-3 mb-4">
+            <i class="fas fa-bolt-lightning text-violet-500 text-xl"></i>
+            <h3 class="font-bold">تحليل الذكاء الميداني</h3>
+        </div>
+        <p class="text-gray-400 text-sm leading-relaxed mb-6">
+            تم رصد تداخل في مواعيد الصيانة بـ 3 مواقع بمكة. هل ترغب في إعادة التوزيع التلقائي للفرق؟
+        </p>
+        <button class="w-full py-4 bg-violet-600 rounded-2xl font-black text-sm shadow-xl shadow-violet-900/40 active:scale-95 transition-all">
+            تفعيل الجدولة الذكية
         </button>
-    </header>
+    </div>
 
-    <main class="p-6 max-w-md mx-auto space-y-6">
-        
-        <section class="space-y-1">
-            <p class="text-violet-400 font-bold text-sm tracking-widest uppercase">Project Management</p>
-            <h1 class="text-4xl font-black tracking-tight">مرحباً م. عوض</h1>
-            <p class="text-gray-400 text-sm">إدارة عمليات مكة المكرمة</p>
-        </section>
-
-        <section class="grid grid-cols-3 gap-3">
-            <div class="glass-card p-4 text-center stat-shimmer">
-                <span class="block text-2xl font-black text-violet-400">142</span>
-                <span class="text-[10px] text-gray-500 uppercase font-bold">مطالبة</span>
-            </div>
-            <div class="glass-card p-4 text-center">
-                <span class="block text-2xl font-black text-violet-400">32</span>
-                <span class="text-[10px] text-gray-500 uppercase font-bold">مكتب</span>
-            </div>
-            <div class="glass-card p-4 text-center">
-                <span class="block text-2xl font-black text-violet-400">63</span>
-                <span class="text-[10px] text-gray-500 uppercase font-bold">موظف</span>
-            </div>
-        </section>
-
-        <section class="glass-card p-6 bg-gradient-to-br from-white/[0.05] to-transparent">
-            <div class="flex justify-between items-start mb-4">
-                <div class="p-3 bg-violet-500/20 rounded-2xl">
-                    <i class="fas fa-wand-magic-sparkles text-violet-400"></i>
-                </div>
-                <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-1 rounded-full font-bold">Live AI</span>
-            </div>
-            <h3 class="text-lg font-bold mb-2">تداخل في المواعيد</h3>
-            <p class="text-gray-400 text-sm leading-relaxed">رصدنا تداخل مهام في 3 مواقع بصناعية مكة المكرمة. هل ترغب في إعادة التوزيع الآلي للموظفين؟</p>
-            <button class="w-full mt-6 py-4 bg-violet-600 hover:bg-violet-500 rounded-2xl font-bold text-sm transition-all shadow-[0_10px_20px_rgba(139,92,246,0.3)]">
-                تفعيل الجدولة الذكية
-            </button>
-        </section>
-
-        <section>
-            <h4 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest">إجراءات سريعة</h4>
-            <div class="grid grid-cols-2 gap-3">
-                <button class="glass-card p-4 flex items-center gap-3 active:scale-95 transition-transform">
-                    <i class="fas fa-plus-circle text-violet-400"></i>
-                    <span class="text-sm font-bold">مطالبة جديدة</span>
-                </button>
-                <button class="glass-card p-4 flex items-center gap-3 active:scale-95 transition-transform">
-                    <i class="fas fa-map-location-dot text-violet-400"></i>
-                    <span class="text-sm font-bold">خريطة المكاتب</span>
-                </button>
-            </div>
-        </section>
-
-    </main>
-
-    <nav class="fixed bottom-6 left-6 right-6 h-20 glass-card bg-black/40 border-white/5 flex items-center justify-around px-4 z-50">
-        <button class="active-nav flex flex-col items-center gap-1">
-            <i class="fas fa-grid-2 text-xl"></i>
+    <nav class="fixed bottom-8 left-6 right-6 h-20 glass rounded-[30px] flex items-center justify-around px-2 border-white/20">
+        <button class="w-14 h-14 bg-violet-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-violet-500/40">
+            <i class="fas fa-home-lg-alt text-xl"></i>
         </button>
-        <button class="text-gray-500 flex flex-col items-center gap-1">
-            <i class="fas fa-file-invoice-dollar text-xl"></i>
-        </button>
-        <button class="text-gray-500 flex flex-col items-center gap-1">
-            <i class="fas fa-chart-pie text-xl"></i>
-        </button>
-        <button class="text-gray-500 flex flex-col items-center gap-1">
-            <i class="fas fa-user-gear text-xl"></i>
-        </button>
+        <button class="text-gray-500"><i class="fas fa-file-invoice-dollar text-xl"></i></button>
+        <button class="text-gray-500"><i class="fas fa-chart-pie-simple text-xl"></i></button>
+        <button class="text-gray-500"><i class="fas fa-user-gear text-xl"></i></button>
     </nav>
 
 </body>
