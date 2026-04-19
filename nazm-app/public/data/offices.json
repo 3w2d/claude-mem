@@ -1,0 +1,8 @@
+[
+  { "id": "OFF-MKK-01", "nameAr": "مكة — المنطقة الصناعية",  "nameEn": "Makkah — Industrial Zone", "region": "Makkah",  "staff": 8, "activeTasks": 14, "status": "active" },
+  { "id": "OFF-MKK-02", "nameAr": "مكة — شمال",              "nameEn": "Makkah — North",           "region": "Makkah",  "staff": 5, "activeTasks": 9,  "status": "active" },
+  { "id": "OFF-JED-01", "nameAr": "جدة — الميناء",            "nameEn": "Jeddah — Port",             "region": "Jeddah",  "staff": 7, "activeTasks": 11, "status": "active" },
+  { "id": "OFF-JED-02", "nameAr": "جدة — حي الروضة",          "nameEn": "Jeddah — Al Rawdah",        "region": "Jeddah",  "staff": 4, "activeTasks": 6,  "status": "active" },
+  { "id": "OFF-RYD-01", "nameAr": "الرياض — المركز الرئيسي",  "nameEn": "Riyadh — Headquarters",     "region": "Riyadh",  "staff": 9, "activeTasks": 17, "status": "active" },
+  { "id": "OFF-MED-01", "nameAr": "المدينة — مكتب مركزي",    "nameEn": "Madinah — Central Office",  "region": "Madinah", "staff": 3, "activeTasks": 4,  "status": "maintenance" }
+]

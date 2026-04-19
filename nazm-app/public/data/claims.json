@@ -1,0 +1,7 @@
+[
+  { "id": "CLM-2026-0142", "titleAr": "مطالبة صيانة مكتب مكة 3",       "titleEn": "Maintenance claim Makkah Office 3",    "amount": 18750, "currency": "SAR", "status": "pending",  "submittedBy": "Awadh Alsamdani", "submittedAt": "2026-04-17T08:14:00Z", "region": "Makkah" },
+  { "id": "CLM-2026-0141", "titleAr": "استبدال معدات الفريق الميداني",  "titleEn": "Field team equipment replacement",     "amount": 42300, "currency": "SAR", "status": "approved", "submittedBy": "Finance",         "submittedAt": "2026-04-16T11:02:00Z", "region": "Riyadh" },
+  { "id": "CLM-2026-0140", "titleAr": "سفر المشرفين إلى الطائف",         "titleEn": "Supervisor travel to Taif",           "amount": 9600,  "currency": "SAR", "status": "pending",  "submittedBy": "Operations",      "submittedAt": "2026-04-15T17:45:00Z", "region": "Makkah" },
+  { "id": "CLM-2026-0139", "titleAr": "تدريب موظفي مكتب جدة",           "titleEn": "Jeddah office staff training",         "amount": 25000, "currency": "SAR", "status": "approved", "submittedBy": "HR",              "submittedAt": "2026-04-14T09:20:00Z", "region": "Jeddah" },
+  { "id": "CLM-2026-0138", "titleAr": "مصاريف تشغيلية — مكتب المدينة", "titleEn": "Operating expenses — Madinah office", "amount": 12400, "currency": "SAR", "status": "rejected", "submittedBy": "Finance",         "submittedAt": "2026-04-13T14:10:00Z", "region": "Madinah" }
+]

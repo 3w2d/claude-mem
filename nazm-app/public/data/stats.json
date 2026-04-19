@@ -1,0 +1,5 @@
+[
+  { "key": "claims",  "labelAr": "المطالبات المالية", "labelEn": "Claims",  "value": 142, "accent": "cyan"   },
+  { "key": "offices", "labelAr": "المكاتب الميدانية", "labelEn": "Offices", "value": 32,  "accent": "purple" },
+  { "key": "staff",   "labelAr": "إجمالي الموظفين",  "labelEn": "Staff",   "value": 63,  "accent": "white"  }
+]

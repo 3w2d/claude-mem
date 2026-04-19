@@ -1,0 +1,7 @@
+[
+  { "id": "EMP-001", "nameAr": "عوض الصمداني",   "nameEn": "Awadh Alsamdani",   "roleAr": "مهندس إدارة المشروع", "roleEn": "Project Management Engineer", "office": "OFF-RYD-01", "status": "active" },
+  { "id": "EMP-002", "nameAr": "سامي الشهري",     "nameEn": "Sami Al-Shehri",    "roleAr": "منسق ميداني",         "roleEn": "Field Coordinator",           "office": "OFF-MKK-01", "status": "active" },
+  { "id": "EMP-003", "nameAr": "محمد الزهراني",   "nameEn": "Mohammed Al-Zahrani","roleAr": "مشرف صيانة",          "roleEn": "Maintenance Supervisor",      "office": "OFF-MKK-02", "status": "active" },
+  { "id": "EMP-004", "nameAr": "خالد العتيبي",    "nameEn": "Khalid Al-Otaibi",  "roleAr": "محاسب",              "roleEn": "Accountant",                  "office": "OFF-JED-01", "status": "active" },
+  { "id": "EMP-005", "nameAr": "فهد الغامدي",     "nameEn": "Fahad Al-Ghamdi",   "roleAr": "فني ميداني",          "roleEn": "Field Technician",            "office": "OFF-JED-02", "status": "onLeave" }
+]
