@@ -13,7 +13,7 @@ import {
   Menu, X,
 } from 'lucide-react';
 import { APP, FIELD_STATS, AI_MESSAGE, SECTIONS } from './config.js';
-import { useFieldStats } from './data/useData.js';
+import { useFieldStats, useClaims, useOffices, useStaff } from './data/useData.js';
 import { useAuth } from './auth/AuthProvider.jsx';
 import { isAuthConfigured } from './auth/msalConfig.js';
 import { useGeolocation } from './lib/useGeolocation.js';
@@ -591,15 +591,118 @@ function MailSection({ T, isRtl }) {
 }
 
 function SheetsSection({ T, isRtl }) {
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const { data: claims, total, pageCount, loading, error } = useClaims({ page, pageSize: 10 });
+  const filtered = statusFilter === 'all' ? claims : claims.filter((c) => c.status === statusFilter);
+  const totalAmount = filtered.reduce((sum, c) => sum + (c.amount || 0), 0);
+
+  const statusBadge = {
+    pending:  'bg-amber-500/10 text-amber-500',
+    approved: 'bg-green-500/10 text-green-500',
+    rejected: 'bg-red-500/10 text-red-500',
+  };
+  const statusLabel = (s) => isRtl
+    ? ({ pending: 'قيد المراجعة', approved: 'معتمدة', rejected: 'مرفوضة' }[s] || s)
+    : ({ pending: 'Pending',      approved: 'Approved', rejected: 'Rejected' }[s] || s);
+
   return (
-    <SectionShell
-      T={T}
-      icon={<FileSpreadsheet className="text-[#8B5CF6]" size={28} />}
-      title={isRtl ? 'جداول البيانات' : 'Spreadsheets'}
-      desc={isRtl
-        ? 'مزامنة مباشرة مع Excel Live: تعديلاتك تنعكس فوراً على تقارير الميدان.'
-        : 'Live Excel sync: your edits reflect immediately across field reports.'}
-    />
+    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
+      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <div className="flex items-center gap-3">
+          <FileSpreadsheet className="text-[#8B5CF6]" size={28} />
+          <h2 className={`text-2xl font-black ${T.textMain}`}>
+            {isRtl ? 'جداول البيانات — المطالبات' : 'Spreadsheets — Claims'}
+          </h2>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {['all', 'pending', 'approved', 'rejected'].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => { setStatusFilter(s); setPage(1); }}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                statusFilter === s ? 'bg-[#8B5CF6] text-white' : T.chip
+              }`}
+            >
+              {s === 'all' ? (isRtl ? 'الكل' : 'All') : statusLabel(s)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading && <p className={`text-xs mb-4 ${T.textMuted}`}>{isRtl ? 'جاري التحميل…' : 'Loading…'}</p>}
+      {error && <p className="text-xs text-red-500 mb-4">{error}</p>}
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-xs">
+          <thead>
+            <tr className={`text-[10px] uppercase ${T.textFaint}`}>
+              <th className="text-start p-2">{isRtl ? 'المعرّف' : 'ID'}</th>
+              <th className="text-start p-2">{isRtl ? 'العنوان' : 'Title'}</th>
+              <th className="text-start p-2">{isRtl ? 'المنطقة' : 'Region'}</th>
+              <th className="text-end p-2">{isRtl ? 'المبلغ' : 'Amount'}</th>
+              <th className="text-start p-2">{isRtl ? 'الحالة' : 'Status'}</th>
+              <th className="text-start p-2">{isRtl ? 'التاريخ' : 'Date'}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((c) => (
+              <tr key={c.id} className={`border-t ${T.inputBorder}`}>
+                <td className={`p-2 font-mono ${T.textMuted}`}>{c.id}</td>
+                <td className={`p-2 ${T.textMain}`}>{isRtl ? c.titleAr : c.titleEn}</td>
+                <td className={`p-2 ${T.textMuted}`}>{c.region}</td>
+                <td className={`p-2 text-end font-bold ${T.textMain}`}>
+                  {c.amount.toLocaleString()} {c.currency}
+                </td>
+                <td className="p-2">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusBadge[c.status] || ''}`}>
+                    {statusLabel(c.status)}
+                  </span>
+                </td>
+                <td className={`p-2 ${T.textFaint}`}>
+                  {new Date(c.submittedAt).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+            {!loading && filtered.length === 0 && (
+              <tr>
+                <td colSpan={6} className={`p-6 text-center text-xs ${T.textMuted}`}>
+                  {isRtl ? 'لا توجد مطالبات مطابقة.' : 'No matching claims.'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between mt-4 flex-wrap gap-3">
+        <div className={`text-[11px] ${T.textMuted}`}>
+          {isRtl
+            ? `إجمالي المعروض: ${totalAmount.toLocaleString()} ر.س · ${total} مطالبة كلياً`
+            : `Visible total: ${totalAmount.toLocaleString()} SAR · ${total} claims overall`}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className={`px-3 py-1 rounded-full text-xs ${T.chip} ${page <= 1 ? 'opacity-40' : ''}`}
+          >
+            {isRtl ? 'السابق' : 'Prev'}
+          </button>
+          <span className={`text-[11px] ${T.textMuted}`}>{page} / {pageCount}</span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+            disabled={page >= pageCount}
+            className={`px-3 py-1 rounded-full text-xs ${T.chip} ${page >= pageCount ? 'opacity-40' : ''}`}
+          >
+            {isRtl ? 'التالي' : 'Next'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -778,6 +881,7 @@ function FieldSection({ T, isRtl }) {
   const { position, error, loading, capture } = useGeolocation();
   const [visits, setVisits] = useState([]);
   const online = useOnlineStatus();
+  const { data: offices, loading: officesLoading } = useOffices();
 
   const saveVisit = () => {
     if (!position) return;
@@ -869,6 +973,30 @@ function FieldSection({ T, isRtl }) {
           </ul>
         </div>
       )}
+
+      <div className="mt-8">
+        <h3 className={`font-bold text-sm mb-3 ${T.textMain}`}>
+          {isRtl ? 'المكاتب الميدانية' : 'Field Offices'}
+          {officesLoading && <span className={`text-[10px] ms-2 ${T.textFaint}`}>· {isRtl ? 'تحميل' : 'loading'}</span>}
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {(offices || []).map((o) => (
+            <div key={o.id} className={`p-4 rounded-2xl border ${T.inputBorder} flex items-start justify-between gap-3`}>
+              <div>
+                <p className={`font-bold text-sm ${T.textMain}`}>{isRtl ? o.nameAr : o.nameEn}</p>
+                <p className={`text-[11px] mt-1 ${T.textMuted}`}>
+                  {o.region} · {o.staff} {isRtl ? 'موظف' : 'staff'} · {o.activeTasks} {isRtl ? 'مهمة' : 'tasks'}
+                </p>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                o.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'
+              }`}>
+                {o.status === 'active' ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'صيانة' : 'Maintenance')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -902,6 +1030,8 @@ function useOnlineStatus() {
 function ProfileSection({ T, isRtl }) {
   const { profile, isAuthConfigured: configured, signOut } = useAuth();
   const navigate = useNavigate();
+  const { data: staff } = useStaff();
+  const team = (staff || []).filter((s) => s.id !== 'EMP-001');
 
   const displayName = profile?.name || APP.userName;
   const displayTitle = isRtl ? APP.userTitle : APP.userTitleEn;
@@ -941,6 +1071,41 @@ function ProfileSection({ T, isRtl }) {
           </span>
         )}
       </div>
+
+      {team.length > 0 && (
+        <div className="mt-8">
+          <h3 className={`font-bold text-sm mb-3 ${T.textMain}`}>
+            {isRtl ? 'الفريق' : 'Team'}
+          </h3>
+          <ul className="space-y-2">
+            {team.map((m) => (
+              <li
+                key={m.id}
+                className={`flex items-center justify-between gap-3 p-3 rounded-xl border ${T.inputBorder}`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-purple-500/15 flex items-center justify-center border border-purple-500/30 shrink-0">
+                    <User size={16} className="text-[#8B5CF6]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`text-sm font-bold truncate ${T.textMain}`}>
+                      {isRtl ? m.nameAr : m.nameEn}
+                    </p>
+                    <p className={`text-[11px] truncate ${T.textMuted}`}>
+                      {isRtl ? m.roleAr : m.roleEn}
+                    </p>
+                  </div>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                  m.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-slate-500/10 text-slate-400'
+                }`}>
+                  {m.status === 'active' ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'إجازة' : 'On leave')}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
