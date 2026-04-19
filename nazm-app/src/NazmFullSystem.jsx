@@ -10,6 +10,7 @@ import {
   LogIn, LogOut, Fingerprint, ChevronRight, CheckCircle2,
   User, Sun, Moon, Shield, AlertTriangle,
   MapPin, Send, FileDown, Wifi, WifiOff, Crosshair,
+  Menu, X,
 } from 'lucide-react';
 import { APP, FIELD_STATS, AI_MESSAGE, SECTIONS } from './config.js';
 import { useFieldStats } from './data/useData.js';
@@ -95,12 +96,14 @@ export default function NazmFullSystem() {
   const toggleLang = () => setIsRtl((v) => !v);
   const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div
       className={`min-h-screen overflow-x-hidden transition-colors duration-300 ${T.page} ${isRtl ? 'font-arabic' : 'font-sans'}`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <TopBar T={T} isDark={isDark} isRtl={isRtl} toggleLang={toggleLang} toggleTheme={toggleTheme} />
+      <TopBar T={T} isDark={isDark} isRtl={isRtl} toggleLang={toggleLang} toggleTheme={toggleTheme} onOpenMenu={() => setMenuOpen(true)} />
 
       <Routes>
         <Route path="/" element={<LandingPage T={T} isRtl={isRtl} />} />
@@ -109,7 +112,7 @@ export default function NazmFullSystem() {
           path="/dashboard"
           element={
             <ProtectedRoute T={T} isRtl={isRtl}>
-              <DashboardLayout T={T} isRtl={isRtl} theme={theme} setTheme={setTheme} />
+              <DashboardLayout T={T} isRtl={isRtl} theme={theme} setTheme={setTheme} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
             </ProtectedRoute>
           }
         >
@@ -133,14 +136,26 @@ export default function NazmFullSystem() {
 }
 
 // --- Top Bar (always rendered) ---
-function TopBar({ T, isDark, isRtl, toggleLang, toggleTheme }) {
+function TopBar({ T, isDark, isRtl, toggleLang, toggleTheme, onOpenMenu }) {
   const { isAuthenticated, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const hideSignIn = location.pathname.startsWith('/dashboard') || location.pathname === '/auth';
+  const onDashboard = location.pathname.startsWith('/dashboard');
 
   return (
     <nav className={`p-5 border-b flex justify-between items-center backdrop-blur-xl sticky top-0 z-50 ${T.navBg}`}>
+      <div className="flex items-center gap-3">
+        {onDashboard && (
+          <button
+            type="button"
+            onClick={onOpenMenu}
+            aria-label={isRtl ? 'فتح القائمة' : 'Open menu'}
+            className={`lg:hidden p-2 rounded-xl transition ${T.chip}`}
+          >
+            <Menu size={18} />
+          </button>
+        )}
       <Link
         to="/"
         className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] rounded-xl"
@@ -158,6 +173,7 @@ function TopBar({ T, isDark, isRtl, toggleLang, toggleTheme }) {
           </span>
         </div>
       </Link>
+      </div>
 
       <div className="flex items-center gap-2 md:gap-3">
         <button
@@ -353,13 +369,15 @@ function AuthButton({ icon, label, onClick, disabled = false, T }) {
 }
 
 // --- Dashboard Layout ---
-function DashboardLayout({ T, isRtl }) {
+function DashboardLayout({ T, isRtl, menuOpen, setMenuOpen }) {
   const location = useLocation();
   const activeKey = location.pathname.split('/')[2] || 'home';
 
+  useEffect(() => { setMenuOpen?.(false); }, [location.pathname, setMenuOpen]);
+
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 pb-28 lg:pb-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <aside className="lg:col-span-3 space-y-6">
+      <aside className="hidden lg:block lg:col-span-3 space-y-6">
         <SidebarProfile T={T} isRtl={isRtl} />
         <SidebarNav T={T} isRtl={isRtl} activeKey={activeKey} />
         {APP.userRole === 'founder' && <SidebarStats T={T} isRtl={isRtl} />}
@@ -368,6 +386,38 @@ function DashboardLayout({ T, isRtl }) {
       <main className="lg:col-span-9 space-y-6">
         <Outlet />
       </main>
+
+      {menuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+          onClick={() => setMenuOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={isRtl ? 'قائمة التنقل' : 'Navigation menu'}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} h-full w-[82%] max-w-xs overflow-y-auto p-4 space-y-4 ${T.page}`}
+          >
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-bold ${T.textFaint}`}>
+                {isRtl ? 'القائمة' : 'Menu'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                aria-label={isRtl ? 'إغلاق' : 'Close'}
+                className={`p-2 rounded-xl ${T.chip}`}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <SidebarProfile T={T} isRtl={isRtl} />
+            <SidebarNav T={T} isRtl={isRtl} activeKey={activeKey} />
+            {APP.userRole === 'founder' && <SidebarStats T={T} isRtl={isRtl} />}
+          </div>
+        </div>
+      )}
 
       <MobileBottomNav T={T} isRtl={isRtl} activeKey={activeKey} />
     </div>
