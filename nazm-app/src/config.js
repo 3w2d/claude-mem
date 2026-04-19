@@ -26,6 +26,8 @@ export const AI_MESSAGE = {
 
 export const SECTIONS = [
   { key: 'home',      path: 'home',      labelAr: 'الرئيسية',       labelEn: 'Dashboard'    },
+  { key: 'ai',        path: 'ai',        labelAr: 'المساعد الذكي',  labelEn: 'AI Assistant' },
+  { key: 'field',     path: 'field',     labelAr: 'الميدان (GPS)', labelEn: 'Field (GPS)'  },
   { key: 'mail',      path: 'mail',      labelAr: 'البريد والمهام', labelEn: 'Mail & Tasks' },
   { key: 'sheets',    path: 'sheets',    labelAr: 'جداول البيانات', labelEn: 'Spreadsheets' },
   { key: 'analytics', path: 'analytics', labelAr: 'تقارير الأداء',  labelEn: 'Analytics'    },

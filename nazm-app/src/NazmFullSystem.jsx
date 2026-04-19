@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Routes, Route, Navigate, Link, NavLink, Outlet,
   useNavigate, useLocation,
@@ -9,10 +9,14 @@ import {
   BarChart3, Smartphone, Monitor, Laptop,
   LogIn, LogOut, Fingerprint, ChevronRight, CheckCircle2,
   User, Sun, Moon, Shield, AlertTriangle,
+  MapPin, Send, FileDown, Wifi, WifiOff, Crosshair,
 } from 'lucide-react';
 import { APP, FIELD_STATS, AI_MESSAGE, SECTIONS } from './config.js';
 import { useAuth } from './auth/AuthProvider.jsx';
 import { isAuthConfigured } from './auth/msalConfig.js';
+import { useGeolocation } from './lib/useGeolocation.js';
+import { ask } from './lib/aiMock.js';
+import { generateReport } from './lib/pdfReport.js';
 
 // --- Theme tokens (dark + light) ---
 const THEMES = {
@@ -58,6 +62,8 @@ const STORAGE_KEYS = { theme: 'nazm.theme', lang: 'nazm.lang' };
 
 const SECTION_ICONS = {
   home: Layout,
+  ai: Brain,
+  field: MapPin,
   mail: Mail,
   sheets: FileSpreadsheet,
   analytics: BarChart3,
@@ -108,6 +114,8 @@ export default function NazmFullSystem() {
         >
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<HomeSection T={T} isRtl={isRtl} />} />
+          <Route path="ai" element={<AISection T={T} isRtl={isRtl} />} />
+          <Route path="field" element={<FieldSection T={T} isRtl={isRtl} />} />
           <Route path="mail" element={<MailSection T={T} isRtl={isRtl} />} />
           <Route path="sheets" element={<SheetsSection T={T} isRtl={isRtl} />} />
           <Route path="analytics" element={<AnalyticsSection T={T} isRtl={isRtl} />} />
@@ -436,7 +444,7 @@ function SidebarStats({ T, isRtl }) {
 }
 
 function MobileBottomNav({ T, isRtl }) {
-  const items = SECTIONS.filter((s) => ['home', 'mail', 'sheets', 'analytics', 'profile'].includes(s.key));
+  const items = SECTIONS.filter((s) => ['home', 'ai', 'field', 'analytics', 'profile'].includes(s.key));
   return (
     <nav
       className={`lg:hidden fixed bottom-0 inset-x-0 backdrop-blur-xl p-3 flex justify-around items-center z-50 ${T.bottomBar}`}
@@ -542,16 +550,297 @@ function SheetsSection({ T, isRtl }) {
 }
 
 function AnalyticsSection({ T, isRtl }) {
+  const reportRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleGenerate = async () => {
+    setError('');
+    setBusy(true);
+    try {
+      await generateReport(reportRef.current, {
+        fileName: `nazm-report-${new Date().toISOString().slice(0, 10)}.pdf`,
+        brand: `${APP.brandEn} · ${APP.brandAr}`,
+      });
+    } catch (e) {
+      setError(e?.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <SectionShell
-      T={T}
-      icon={<BarChart3 className="text-[#8B5CF6]" size={28} />}
-      title={isRtl ? 'تقارير الأداء' : 'Analytics'}
-      desc={isRtl
-        ? 'لوحات Power BI مدمجة تعرض اتجاهات المكاتب والمطالبات لحظة بلحظة.'
-        : 'Embedded Power BI dashboards showing office and claim trends in real time.'}
-    />
+    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
+      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <div className="flex items-center gap-3">
+          <BarChart3 className="text-[#8B5CF6]" size={28} />
+          <h2 className={`text-2xl font-black ${T.textMain}`}>
+            {isRtl ? 'تقارير الأداء' : 'Analytics'}
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={busy}
+          className={`px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-[#8B5CF6] text-white hover:brightness-110 ${busy ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          <FileDown size={14} />
+          {busy
+            ? (isRtl ? 'جاري التوليد…' : 'Generating…')
+            : (isRtl ? 'تقرير PDF احترافي' : 'Professional PDF Report')}
+        </button>
+      </div>
+
+      {error && (
+        <p className="text-xs text-red-500 mb-4">{error}</p>
+      )}
+
+      <div ref={reportRef} className={`p-6 rounded-3xl border ${T.inputBorder}`}>
+        <h3 className={`text-lg font-black mb-4 ${T.textMain}`}>
+          {isRtl ? 'ملخص الحالة الميدانية' : 'Field Status Summary'}
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {FIELD_STATS.map((s) => (
+            <div key={s.key} className={`p-4 rounded-2xl border ${T.surfaceAlt}`}>
+              <p className={`text-[10px] uppercase ${T.textFaint}`}>
+                {isRtl ? s.labelAr : s.labelEn}
+              </p>
+              <p className={`text-3xl font-black ${T.textMain}`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+        <p className={`text-sm mt-6 leading-relaxed ${T.textMuted}`}>
+          {isRtl ? AI_MESSAGE.ar : AI_MESSAGE.en}
+        </p>
+      </div>
+    </div>
   );
+}
+
+function AISection({ T, isRtl }) {
+  const [messages, setMessages] = useState(() => [
+    { role: 'assistant', text: isRtl
+      ? 'أهلاً عوض. اسألني عن المطالبات، المكاتب، الموظفين، أو تداخل المواعيد.'
+      : 'Hi Awadh. Ask me about claims, offices, staff, or scheduling conflicts.' },
+  ]);
+  const [input, setInput] = useState('');
+  const [thinking, setThinking] = useState(false);
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [messages, thinking]);
+
+  const onSend = async (e) => {
+    e?.preventDefault();
+    const text = input.trim();
+    if (!text || thinking) return;
+    setInput('');
+    setMessages((m) => [...m, { role: 'user', text }]);
+    setThinking(true);
+    const reply = await ask(text, { isRtl });
+    setMessages((m) => [...m, { role: 'assistant', text: reply }]);
+    setThinking(false);
+  };
+
+  const suggestions = isRtl
+    ? ['هل يوجد تداخل في المواعيد؟', 'ملخص المطالبات', 'حالة المكاتب']
+    : ['Any scheduling conflicts?', 'Claims summary', 'Office status'];
+
+  return (
+    <div className={`p-8 rounded-[40px] border ${T.surface} flex flex-col`} style={{ minHeight: 480 }}>
+      <div className="flex items-center gap-3 mb-4">
+        <Brain className="text-[#8B5CF6] animate-pulse" size={28} />
+        <h2 className={`text-2xl font-black ${T.textMain}`}>
+          {isRtl ? 'المساعد الذكي' : 'AI Assistant'}
+        </h2>
+      </div>
+
+      <div
+        ref={listRef}
+        className={`flex-1 overflow-y-auto space-y-3 mb-4 pr-1 ${T.textMain}`}
+        style={{ maxHeight: 360 }}
+      >
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                m.role === 'user'
+                  ? 'bg-[#8B5CF6] text-white'
+                  : `${T.chipMuted}`
+              }`}
+            >
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {thinking && (
+          <div className="flex justify-start">
+            <div className={`px-4 py-3 rounded-2xl text-sm ${T.chipMuted}`}>
+              <span className="animate-pulse">{isRtl ? 'يفكر…' : 'Thinking…'}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-3">
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setInput(s)}
+            className={`text-[11px] px-3 py-1.5 rounded-full ${T.chip}`}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      <form onSubmit={onSend} className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={isRtl ? 'اكتب سؤالك…' : 'Type your question…'}
+          className={`flex-1 px-4 py-3 rounded-2xl outline-none text-sm border ${T.inputBorder} ${T.surfaceAlt} ${T.textMain}`}
+          aria-label={isRtl ? 'سؤال للمساعد الذكي' : 'Question for the AI assistant'}
+        />
+        <button
+          type="submit"
+          disabled={thinking || !input.trim()}
+          className={`px-4 py-3 rounded-2xl bg-[#8B5CF6] text-white transition ${thinking || !input.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:brightness-110'}`}
+          aria-label={isRtl ? 'إرسال' : 'Send'}
+        >
+          <Send size={16} />
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function FieldSection({ T, isRtl }) {
+  const { position, error, loading, capture } = useGeolocation();
+  const [visits, setVisits] = useState([]);
+  const online = useOnlineStatus();
+
+  const saveVisit = () => {
+    if (!position) return;
+    setVisits((v) => [{ ...position, capturedAt: new Date().toISOString() }, ...v]);
+  };
+
+  return (
+    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <MapPin className="text-[#8B5CF6]" size={28} />
+          <h2 className={`text-2xl font-black ${T.textMain}`}>
+            {isRtl ? 'العمليات الميدانية' : 'Field Operations'}
+          </h2>
+        </div>
+        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] ${
+          online ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'
+        }`}>
+          {online ? <Wifi size={12} /> : <WifiOff size={12} />}
+          {online ? (isRtl ? 'متصل' : 'Online') : (isRtl ? 'غير متصل' : 'Offline')}
+        </div>
+      </div>
+
+      <p className={`text-sm mb-6 leading-relaxed ${T.textMuted}`}>
+        {isRtl
+          ? 'التقط موقع الزيارة لتوثيق عمليات التفقد في 137,000 كم² من المنطقة. تُحفظ البيانات محلياً وتعمل دون اتصال بالشبكة.'
+          : 'Capture visit coordinates to verify field audits across the 137,000 km² region. Data stays local and works offline.'}
+      </p>
+
+      <button
+        type="button"
+        onClick={capture}
+        disabled={loading}
+        className={`w-full px-6 py-4 rounded-2xl font-black text-base bg-[#8B5CF6] text-white hover:brightness-110 transition flex items-center justify-center gap-3 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        <Crosshair size={18} />
+        {loading
+          ? (isRtl ? 'جاري تحديد الموقع…' : 'Acquiring location…')
+          : (isRtl ? 'التقاط إحداثيات الزيارة' : 'Capture visit coordinates')}
+      </button>
+
+      {error && (
+        <p className="text-xs text-red-500 mt-3">
+          {isRtl ? 'خطأ في الموقع: ' : 'Location error: '}{error.message}
+        </p>
+      )}
+
+      {position && (
+        <div className={`mt-6 p-5 rounded-3xl border ${T.inputBorder}`}>
+          <h3 className={`font-bold text-sm mb-3 ${T.textMain}`}>
+            {isRtl ? 'آخر قراءة GPS' : 'Latest GPS fix'}
+          </h3>
+          <dl className="grid grid-cols-2 gap-3 text-xs">
+            <FieldRow T={T} label={isRtl ? 'خط العرض' : 'Latitude'}  value={position.latitude.toFixed(6)} />
+            <FieldRow T={T} label={isRtl ? 'خط الطول' : 'Longitude'} value={position.longitude.toFixed(6)} />
+            <FieldRow T={T} label={isRtl ? 'الدقة' : 'Accuracy'}     value={`±${Math.round(position.accuracy)} m`} />
+            <FieldRow T={T} label={isRtl ? 'الوقت' : 'Captured'}
+                             value={new Date(position.timestamp).toLocaleTimeString()} />
+          </dl>
+          <button
+            type="button"
+            onClick={saveVisit}
+            className={`mt-4 px-5 py-2 rounded-xl text-xs font-bold transition ${T.chip}`}
+          >
+            {isRtl ? 'حفظ زيارة' : 'Save visit'}
+          </button>
+        </div>
+      )}
+
+      {visits.length > 0 && (
+        <div className="mt-6">
+          <h3 className={`font-bold text-sm mb-3 ${T.textMain}`}>
+            {isRtl ? 'سجل الزيارات' : 'Visit log'}
+          </h3>
+          <ul className="space-y-2">
+            {visits.map((v, i) => (
+              <li
+                key={i}
+                className={`flex items-center justify-between p-3 rounded-xl border ${T.inputBorder}`}
+              >
+                <span className={`text-xs font-mono ${T.textMuted}`}>
+                  {v.latitude.toFixed(4)}, {v.longitude.toFixed(4)}
+                </span>
+                <span className={`text-[11px] ${T.textFaint}`}>
+                  {new Date(v.capturedAt).toLocaleTimeString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FieldRow({ T, label, value }) {
+  return (
+    <div>
+      <dt className={`text-[10px] uppercase mb-1 ${T.textFaint}`}>{label}</dt>
+      <dd className={`font-bold ${T.textMain}`}>{value}</dd>
+    </div>
+  );
+}
+
+function useOnlineStatus() {
+  const [online, setOnline] = useState(() =>
+    typeof navigator === 'undefined' ? true : navigator.onLine,
+  );
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
+  return online;
 }
 
 function ProfileSection({ T, isRtl }) {
