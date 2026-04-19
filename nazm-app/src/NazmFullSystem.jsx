@@ -10,10 +10,10 @@ import {
   LogIn, LogOut, Fingerprint, ChevronRight, CheckCircle2,
   User, Sun, Moon, Shield, AlertTriangle,
   MapPin, Send, FileDown, Wifi, WifiOff, Crosshair,
-  Menu, X,
+  Menu, X, Plus, Trash2, Check,
 } from 'lucide-react';
 import { APP, FIELD_STATS, AI_MESSAGE, SECTIONS } from './config.js';
-import { useFieldStats, useClaims, useOffices, useStaff } from './data/useData.js';
+import { useFieldStats, useClaims, useOffices, useStaff, useTasks } from './data/useData.js';
 import { useAuth } from './auth/AuthProvider.jsx';
 import { isAuthConfigured } from './auth/msalConfig.js';
 import { useGeolocation } from './lib/useGeolocation.js';
@@ -578,15 +578,156 @@ function HomeSection({ T, isRtl }) {
 }
 
 function MailSection({ T, isRtl }) {
+  const { tasks, loading, add, toggle, remove } = useTasks();
+  const [filter, setFilter] = useState('open');
+  const [draftAr, setDraftAr] = useState('');
+  const [draftEn, setDraftEn] = useState('');
+  const [priority, setPriority] = useState('medium');
+
+  const visible = tasks.filter((t) =>
+    filter === 'all' ? true : filter === 'done' ? t.done : !t.done,
+  );
+  const openCount = tasks.filter((t) => !t.done).length;
+
+  const submit = (e) => {
+    e.preventDefault();
+    const ar = draftAr.trim();
+    const en = draftEn.trim();
+    if (!ar && !en) return;
+    add({ titleAr: ar || en, titleEn: en || ar, priority });
+    setDraftAr(''); setDraftEn('');
+  };
+
+  const priorityClass = {
+    high:   'bg-red-500/10 text-red-500',
+    medium: 'bg-amber-500/10 text-amber-500',
+    low:    'bg-slate-500/10 text-slate-400',
+  };
+  const priorityLabel = (p) => isRtl
+    ? ({ high: 'عاجل', medium: 'متوسط', low: 'منخفض' }[p] || p)
+    : ({ high: 'High', medium: 'Medium', low: 'Low' }[p] || p);
+  const sourceIcon = { email: Mail, ai: Brain, manual: Plus };
+
   return (
-    <SectionShell
-      T={T}
-      icon={<Mail className="text-[#8B5CF6]" size={28} />}
-      title={isRtl ? 'البريد والمهام' : 'Mail & Tasks'}
-      desc={isRtl
-        ? 'يلتقط نَظْم رسائلك من Outlook ويحوّلها إلى مهام قابلة للتنفيذ مع تواريخ مقترحة.'
-        : 'NAZM captures your Outlook messages and turns them into actionable tasks with suggested dates.'}
-    />
+    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
+      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Mail className="text-[#8B5CF6]" size={28} />
+          <h2 className={`text-2xl font-black ${T.textMain}`}>
+            {isRtl ? 'البريد والمهام' : 'Mail & Tasks'}
+          </h2>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full ${T.chipMuted}`}>
+            {openCount} {isRtl ? 'مفتوحة' : 'open'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {['open', 'done', 'all'].map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                filter === f ? 'bg-[#8B5CF6] text-white' : T.chip
+              }`}
+            >
+              {f === 'open' ? (isRtl ? 'مفتوحة' : 'Open')
+                : f === 'done' ? (isRtl ? 'منجزة' : 'Done')
+                : (isRtl ? 'الكل' : 'All')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <form onSubmit={submit} className={`p-4 rounded-3xl border mb-6 ${T.inputBorder}`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input
+            type="text"
+            value={draftAr}
+            onChange={(e) => setDraftAr(e.target.value)}
+            placeholder={isRtl ? 'مهمة جديدة بالعربية' : 'New task (Arabic)'}
+            dir="rtl"
+            className={`px-3 py-2 rounded-xl text-sm border ${T.inputBorder} ${T.textMain} bg-transparent`}
+          />
+          <input
+            type="text"
+            value={draftEn}
+            onChange={(e) => setDraftEn(e.target.value)}
+            placeholder={isRtl ? 'مهمة جديدة بالإنجليزية' : 'New task (English)'}
+            dir="ltr"
+            className={`px-3 py-2 rounded-xl text-sm border ${T.inputBorder} ${T.textMain} bg-transparent`}
+          />
+        </div>
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value)}
+            className={`px-3 py-2 rounded-xl text-xs border ${T.inputBorder} ${T.textMain} bg-transparent`}
+          >
+            <option value="high">{priorityLabel('high')}</option>
+            <option value="medium">{priorityLabel('medium')}</option>
+            <option value="low">{priorityLabel('low')}</option>
+          </select>
+          <button
+            type="submit"
+            className="px-5 py-2 rounded-xl text-xs font-bold bg-[#8B5CF6] text-white hover:brightness-110 transition flex items-center gap-2"
+          >
+            <Plus size={14} /> {isRtl ? 'إضافة' : 'Add'}
+          </button>
+        </div>
+      </form>
+
+      {loading && <p className={`text-xs ${T.textMuted}`}>{isRtl ? 'جاري التحميل…' : 'Loading…'}</p>}
+
+      <ul className="space-y-2">
+        {visible.map((t) => {
+          const SrcIcon = sourceIcon[t.source] || Mail;
+          return (
+            <li
+              key={t.id}
+              className={`flex items-center gap-3 p-3 rounded-2xl border ${T.inputBorder} ${t.done ? 'opacity-60' : ''}`}
+            >
+              <button
+                type="button"
+                onClick={() => toggle(t.id)}
+                aria-label={isRtl ? 'تبديل الإنجاز' : 'Toggle done'}
+                className={`shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition ${
+                  t.done ? 'bg-[#8B5CF6] border-[#8B5CF6] text-white' : `${T.inputBorder} ${T.textFaint}`
+                }`}
+              >
+                {t.done && <Check size={14} />}
+              </button>
+              <SrcIcon size={14} className={T.textFaint} />
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-bold truncate ${t.done ? 'line-through' : ''} ${T.textMain}`}>
+                  {isRtl ? t.titleAr : t.titleEn}
+                </p>
+                {t.due && (
+                  <p className={`text-[11px] ${T.textFaint}`}>
+                    {isRtl ? 'مستحق: ' : 'Due: '}{new Date(t.due).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full ${priorityClass[t.priority] || ''}`}>
+                {priorityLabel(t.priority)}
+              </span>
+              <button
+                type="button"
+                onClick={() => remove(t.id)}
+                aria-label={isRtl ? 'حذف' : 'Delete'}
+                className={`shrink-0 p-1 rounded-lg transition hover:text-red-500 ${T.textFaint}`}
+              >
+                <Trash2 size={14} />
+              </button>
+            </li>
+          );
+        })}
+        {!loading && visible.length === 0 && (
+          <li className={`p-6 text-center text-xs ${T.textMuted}`}>
+            {isRtl ? 'لا توجد مهام في هذا التصنيف.' : 'No tasks in this view.'}
+          </li>
+        )}
+      </ul>
+    </div>
   );
 }
 

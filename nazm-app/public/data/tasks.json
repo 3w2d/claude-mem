@@ -1,0 +1,7 @@
+[
+  { "id": "TSK-001", "titleAr": "مراجعة المطالبات العاجلة (12 مطالبة)",       "titleEn": "Review urgent claims (12 items)",          "priority": "high",   "due": "2026-04-20", "done": false, "source": "email" },
+  { "id": "TSK-002", "titleAr": "إعادة جدولة مواعيد مكاتب مكة الثلاثة",       "titleEn": "Reschedule the 3 Makkah office visits",    "priority": "high",   "due": "2026-04-21", "done": false, "source": "ai" },
+  { "id": "TSK-003", "titleAr": "اعتماد سفر فريق الطائف",                     "titleEn": "Approve Taif team travel",                 "priority": "medium", "due": "2026-04-22", "done": false, "source": "email" },
+  { "id": "TSK-004", "titleAr": "تقرير الأداء الأسبوعي — جدة",                "titleEn": "Weekly performance report — Jeddah",       "priority": "medium", "due": "2026-04-23", "done": true,  "source": "manual" },
+  { "id": "TSK-005", "titleAr": "متابعة فاتورة الصيانة لمكتب المدينة",        "titleEn": "Follow up on Madinah maintenance invoice", "priority": "low",    "due": "2026-04-25", "done": false, "source": "email" }
+]
