@@ -12,6 +12,7 @@ import {
   MapPin, Send, FileDown, Wifi, WifiOff, Crosshair,
 } from 'lucide-react';
 import { APP, FIELD_STATS, AI_MESSAGE, SECTIONS } from './config.js';
+import { useFieldStats } from './data/useData.js';
 import { useAuth } from './auth/AuthProvider.jsx';
 import { isAuthConfigured } from './auth/msalConfig.js';
 import { useGeolocation } from './lib/useGeolocation.js';
@@ -423,13 +424,16 @@ function SidebarNav({ T, isRtl, activeKey }) {
 }
 
 function SidebarStats({ T, isRtl }) {
+  const { data: stats, loading } = useFieldStats();
+  const list = stats || FIELD_STATS;
   return (
     <div className={`bg-gradient-to-br p-6 rounded-[32px] border ${T.surfaceFrom}`}>
       <h3 className={`text-xs font-bold mb-4 flex items-center gap-2 ${T.textMain}`}>
         <Lock size={12} className="text-[#8B5CF6]" /> {isRtl ? 'إحصائيات الميدان' : 'Field Stats'}
+        {loading && <span className="text-[9px] text-slate-400">· {isRtl ? 'جارٍ التحميل' : 'loading'}</span>}
       </h3>
       <div className="space-y-4">
-        {FIELD_STATS.map((s) => (
+        {list.map((s) => (
           <StatItem
             key={s.key}
             label={isRtl ? s.labelAr : s.labelEn}
@@ -553,6 +557,8 @@ function AnalyticsSection({ T, isRtl }) {
   const reportRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const { data: stats } = useFieldStats();
+  const statsList = stats || FIELD_STATS;
 
   const handleGenerate = async () => {
     setError('');
@@ -600,7 +606,7 @@ function AnalyticsSection({ T, isRtl }) {
           {isRtl ? 'ملخص الحالة الميدانية' : 'Field Status Summary'}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {FIELD_STATS.map((s) => (
+          {statsList.map((s) => (
             <div key={s.key} className={`p-4 rounded-2xl border ${T.surfaceAlt}`}>
               <p className={`text-[10px] uppercase ${T.textFaint}`}>
                 {isRtl ? s.labelAr : s.labelEn}

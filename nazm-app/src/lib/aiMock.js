@@ -3,6 +3,10 @@
 // Replace this module with a real LLM call later; the interface is stable.
 
 import { FIELD_STATS, AI_MESSAGE } from '../config.js';
+import { fetchData } from '../data/api.js';
+
+let liveStats = null;
+fetchData('stats').then((d) => { liveStats = d; }).catch(() => {});
 
 const intents = [
   { key: 'conflicts', ar: /تداخل|تعارض|جدول|مواعيد/i, en: /conflict|overlap|schedul/i },
@@ -19,7 +23,8 @@ function detectIntent(text, isRtl) {
 }
 
 function stat(key) {
-  return FIELD_STATS.find((s) => s.key === key)?.value ?? 0;
+  const source = liveStats || FIELD_STATS;
+  return source.find((s) => s.key === key)?.value ?? 0;
 }
 
 export function respond(userText, { isRtl = true } = {}) {
