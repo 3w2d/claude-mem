@@ -40,6 +40,8 @@ jobs:
         working-directory: nazm-app
         env:
           BASE: /${{ github.event.repository.name }}/app/
+          VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
+          VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
         run: npm run build
 
       - name: Assemble site

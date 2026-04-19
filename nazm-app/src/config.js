@@ -5,7 +5,10 @@ export const APP = {
   brandAr: 'نَظْم',
   brandEn: 'NAZM',
   tagline: 'Intelligence Hub',
-  userName: 'User_142',
+  userName: 'عوض الصمداني',
+  userNameEn: 'Awadh Alsamdani',
+  userTitle: 'مهندس إدارة المشروع',
+  userTitleEn: 'Project Management Engineer',
   userRole: 'founder',
   office365Connected: true,
 };
@@ -22,8 +25,12 @@ export const AI_MESSAGE = {
 };
 
 export const SECTIONS = [
-  { key: 'home',      labelAr: 'الرئيسية',       labelEn: 'Dashboard'    },
-  { key: 'mail',      labelAr: 'البريد والمهام', labelEn: 'Mail & Tasks' },
-  { key: 'sheets',    labelAr: 'جداول البيانات', labelEn: 'Spreadsheets' },
-  { key: 'analytics', labelAr: 'تقارير الأداء',  labelEn: 'Analytics'    },
+  { key: 'home',      path: 'home',      labelAr: 'الرئيسية',       labelEn: 'Dashboard'    },
+  { key: 'ai',        path: 'ai',        labelAr: 'المساعد الذكي',  labelEn: 'AI Assistant' },
+  { key: 'field',     path: 'field',     labelAr: 'الميدان (GPS)', labelEn: 'Field (GPS)'  },
+  { key: 'mail',      path: 'mail',      labelAr: 'البريد والمهام', labelEn: 'Mail & Tasks' },
+  { key: 'sheets',    path: 'sheets',    labelAr: 'جداول البيانات', labelEn: 'Spreadsheets' },
+  { key: 'analytics', path: 'analytics', labelAr: 'تقارير الأداء',  labelEn: 'Analytics'    },
+  { key: 'profile',   path: 'profile',   labelAr: 'الملف الشخصي',   labelEn: 'Profile'      },
+  { key: 'settings',  path: 'settings',  labelAr: 'الإعدادات',      labelEn: 'Settings'     },
 ];
