@@ -1,0 +1,422 @@
+# 📁 NAZM Project Structure
+
+نَظْم · Intelligence Hub — Complete Cross-Platform Application
+
+-----
+
+## 🏗️ Directory Structure
+
+```
+nazm-app/
+├── src/
+│   ├── main.jsx                    # Entry point
+│   ├── index.css                   # Global styles
+│   ├── NazmFullSystem.jsx          # Main app component
+│   ├── config.js                   # Configuration constants
+│   │
+│   ├── auth/
+│   │   ├── AuthProvider.jsx        # Auth context
+│   │   └── msalConfig.js           # Azure configuration
+│   │
+│   ├── hooks/
+│   │   ├── usePersistence.js       # localStorage hooks
+│   │   ├── useGeolocation.js       # GPS location hook
+│   │   ├── useOnlineStatus.js      # Online/offline status
+│   │   └── useElectron.js          # Electron integration
+│   │
+│   ├── components/
+│   │   ├── HomeDashboard.jsx       # Enhanced home page
+│   │   ├── AIChat.jsx              # AI chat component
+│   │   ├── ResponsiveLayout.jsx    # Responsive layout system
+│   │   ├── FieldSection.jsx        # GPS/Field operations
+│   │   ├── AnalyticsSection.jsx    # Reports & analytics
+│   │   └── [sections]/             # Other sections
+│   │
+│   ├── lib/
+│   │   ├── api.js                  # Frontend API client
+│   │   ├── aiMock.js               # AI mock responses
+│   │   ├── pdfReport.js            # PDF generation
+│   │   └── utils.js                # Utility functions
+│   │
+│   └── sw.js                       # Service Worker
+│
+├── public/
+│   ├── index.html                  # HTML template
+│   ├── manifest.json               # PWA manifest
+│   ├── sw.js                       # Service Worker
+│   │
+│   └── assets/
+│       ├── icon-192x192.png        # App icon
+│       ├── icon-512x512.png        # Large icon
+│       ├── og-image.png            # Social sharing
+│       └── [screenshots]/          # App screenshots
+│
+├── electron/
+│   ├── electron-main.js            # Electron main process
+│   ├── preload.js                  # Preload script
+│   └── [utils]/                    # Electron utilities
+│
+├── capacitor.config.json           # Capacitor config (iOS/Android)
+├── electron-builder.json           # Electron builder config
+├── tailwind.config.js              # Tailwind CSS config
+├── vite.config.js                  # Vite config with PWA
+├── package.json                    # Dependencies & scripts
+├── .env.local                      # Environment variables
+├── .env.example                    # Environment template
+│
+├── BUILD_AND_DEPLOY.md             # Build & deployment guide
+├── PROJECT_STRUCTURE.md            # This file
+└── README.md                       # Project overview
+```
+
+-----
+
+## 🔄 Data Flow Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│              User Interface (React)                 │
+│  ┌──────────────┬────────────┬──────────────┐      │
+│  │ HomeSection  │ AISection  │ FieldSection │ ...  │
+│  └──────────────┴────────────┴──────────────┘      │
+└─────────────────────────────────────────────────────┘
+                        ↕
+┌─────────────────────────────────────────────────────┐
+│         State Management & Persistence              │
+│  ┌──────────────────────────────────────────┐      │
+│  │  usePersistence Hooks                    │      │
+│  │  - useTasks()    → localStorage          │      │
+│  │  - useVisits()   → localStorage          │      │
+│  │  - useChatHistory() → localStorage       │      │
+│  └──────────────────────────────────────────┘      │
+└─────────────────────────────────────────────────────┘
+                        ↕
+┌─────────────────────────────────────────────────────┐
+│              API Layer                              │
+│  ┌──────────────────────────────────────────┐      │
+│  │  api.js - Frontend API Client            │      │
+│  │  - Network requests with timeout         │      │
+│  │  - Response caching                      │      │
+│  │  - Offline fallback                      │      │
+│  └──────────────────────────────────────────┘      │
+└─────────────────────────────────────────────────────┘
+                        ↕
+┌─────────────────────────────────────────────────────┐
+│         Service Worker (Offline Support)           │
+│  ┌──────────────────────────────────────────┐      │
+│  │  sw.js                                   │      │
+│  │  - Cache static assets                   │      │
+│  │  - Background sync                       │      │
+│  │  - Push notifications                    │      │
+│  └──────────────────────────────────────────┘      │
+└─────────────────────────────────────────────────────┘
+                        ↕
+┌─────────────────────────────────────────────────────┐
+│            Backend API Server                       │
+│  https://api.nazm.app                              │
+└─────────────────────────────────────────────────────┘
+```
+
+-----
+
+## 📦 Component Hierarchy
+
+```
+NazmFullSystem
+├── TopBar
+│   ├── Logo
+│   └── ThemeToggle
+│
+├── DashboardLayout (ResponsiveLayout)
+│   ├── Sidebar
+│   │   ├── SidebarProfile
+│   │   ├── SidebarNav
+│   │   └── SidebarStats
+│   │
+│   └── MainContent
+│       ├── HomeSection (HomeDashboard)
+│       │   ├── StatCards
+│       │   ├── TaskManager
+│       │   └── AIInsights
+│       │
+│       ├── AISection (AIChat)
+│       │   ├── MessageList
+│       │   ├── Suggestions
+│       │   └── InputForm
+│       │
+│       ├── FieldSection
+│       │   ├── LocationButton
+│       │   ├── CoordinatesDisplay
+│       │   └── VisitsList
+│       │
+│       ├── MailSection
+│       ├── SheetsSection
+│       ├── AnalyticsSection
+│       ├── ProfileSection
+│       └── SettingsSection
+│
+└── MobileBottomNav (mobile only)
+```
+
+-----
+
+## 🔌 Hooks & Custom Logic
+
+### Persistence Hooks (`usePersistence.js`)
+
+```javascript
+usePersist(key, defaultValue)     // Generic persist hook
+useTasks()                        // Task management
+useVisits()                       // GPS location logging
+useChatHistory()                  // Chat message history
+useStats()                        // User statistics
+```
+
+### Electron Hooks (`useElectron.js`)
+
+```javascript
+useIsElectron()                   // Detect if in Electron
+useElectronAPI()                  // Access electron API
+useElectronStore(key, default)    // Electron data storage
+useDesktopNotification()          // Native notifications
+useAppInfo()                      // App version & platform
+useExternalLink()                 // Safe external links
+useAppLifecycle()                 // Online/offline status
+```
+
+### Custom Hooks
+
+```javascript
+useGeolocation()                  // GPS location
+useOnlineStatus()                 // Network status
+useAuth()                         // Azure authentication
+```
+
+-----
+
+## 🎨 Theme System
+
+Located in `NazmFullSystem.jsx`:
+
+```javascript
+const THEMES = {
+  dark: {
+    page: 'bg-[#070A12]',
+    surface: 'bg-[#150E2B]',
+    textMain: 'text-white',
+    textMuted: 'text-slate-400',
+    // ... more properties
+  },
+  light: {
+    // Light theme colors
+  }
+}
+```
+
+Access with: `T.page`, `T.surface`, `T.textMain`, etc.
+
+-----
+
+## 📱 Responsive Breakpoints
+
+Using Tailwind CSS:
+
+```
+sm:  ≥ 640px   (mobile)
+md:  ≥ 768px   (tablet)
+lg:  ≥ 1024px  (desktop)
+xl:  ≥ 1280px  (wide desktop)
+2xl: ≥ 1536px  (ultra-wide)
+```
+
+Use in components:
+
+```jsx
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+```
+
+-----
+
+## 🚀 Build Targets
+
+### Web
+
+- ✅ Vite + React
+- ✅ PWA enabled
+- ✅ Service Worker
+- ✅ RTL support
+- ✅ Offline support
+
+### Mobile (iOS/Android)
+
+- ✅ Capacitor
+- ✅ Native app wrapper
+- ✅ Web assets
+- ✅ Device APIs (location, camera, etc.)
+- ✅ App store distribution
+
+### Desktop (Windows/macOS/Linux)
+
+- ✅ Electron
+- ✅ Native menus
+- ✅ System tray
+- ✅ Auto-update
+- ✅ Installer
+
+-----
+
+## 🔒 Authentication Flow
+
+```
+User Login
+    ↓
+Azure Entra (Microsoft OAuth)
+    ↓
+Exchange code for token
+    ↓
+Store in localStorage
+    ↓
+Include in API requests as Bearer token
+    ↓
+Token refresh on expiry
+    ↓
+Logout clears token
+```
+
+-----
+
+## 💾 Data Persistence Strategy
+
+```
+┌─────────────────────┐
+│   User Action       │
+└────────────┬────────┘
+             ↓
+┌─────────────────────────────────────────┐
+│  Priority 1: JavaScript State (Memory)  │
+│  ↓                                      │
+│  Priority 2: LocalStorage (Browser)     │
+│  ↓                                      │
+│  Priority 3: IndexedDB (Large data)     │
+│  ↓                                      │
+│  Priority 4: Backend API (Sync)         │
+└─────────────────────────────────────────┘
+```
+
+-----
+
+## 🔄 Offline Support
+
+1. **Service Worker** caches static assets
+1. **LocalStorage** caches user data
+1. **API Client** queues failed requests
+1. **Background Sync** syncs when online
+1. **Notification** alerts when data syncs
+
+-----
+
+## 📊 Analytics & Monitoring
+
+```
+App Events
+    ↓
+Google Analytics (VITE_GA_ID)
+    ↓
+Sentry (Error tracking)
+    ↓
+Custom logging
+```
+
+-----
+
+## 🔑 Environment Variables
+
+```env
+# API
+VITE_API_URL=https://api.nazm.app
+VITE_API_TIMEOUT=10000
+
+# Authentication
+VITE_AZURE_CLIENT_ID=...
+VITE_AZURE_TENANT_ID=...
+
+# Features
+VITE_ENABLE_OFFLINE_MODE=true
+VITE_ENABLE_NOTIFICATIONS=true
+
+# Analytics
+VITE_GA_ID=...
+```
+
+-----
+
+## 📚 Key Technologies
+
+|Layer      |Technology         |Purpose               |
+|-----------|-------------------|----------------------|
+|**UI**     |React 18           |Component library     |
+|**Styling**|Tailwind CSS 3     |Utility-first CSS     |
+|**Routing**|React Router v7    |Client-side navigation|
+|**Auth**   |@azure/msal        |Microsoft OAuth       |
+|**Build**  |Vite 5             |Lightning-fast build  |
+|**PWA**    |Workbox            |Offline support       |
+|**Desktop**|Electron 31        |Native app wrapper    |
+|**Mobile** |Capacitor 6        |Native bridge         |
+|**PDF**    |jsPDF + html2canvas|Report generation     |
+|**State**  |React Hooks        |Local state           |
+|**Storage**|localStorage       |Persistent storage    |
+
+-----
+
+## 🚀 Getting Started
+
+### 1. **Clone & Install**
+
+```bash
+git clone https://github.com/3w2d/nazm-app.git
+cd nazm-app
+npm install
+```
+
+### 2. **Configure Environment**
+
+```bash
+cp .env.example .env.local
+# Edit .env.local with your settings
+```
+
+### 3. **Development**
+
+```bash
+npm run dev              # Web
+npm run dev:all         # Web + Electron
+```
+
+### 4. **Build**
+
+```bash
+npm run build           # Web production
+npm run build:all       # All platforms
+npm run dist:all        # Create installers
+```
+
+-----
+
+## 📞 File Locations Quick Reference
+
+|What         |Where                             |
+|-------------|----------------------------------|
+|Main app     |`src/NazmFullSystem.jsx`          |
+|Home page    |`src/components/HomeDashboard.jsx`|
+|AI chat      |`src/components/AIChat.jsx`       |
+|Data hooks   |`src/hooks/usePersistence.js`     |
+|API client   |`src/lib/api.js`                  |
+|Electron main|`electron/electron-main.js`       |
+|HTML template|`public/index.html`               |
+|PWA config   |`vite.config.js`                  |
+|Build guide  |`BUILD_AND_DEPLOY.md`             |
+
+-----
+
+**Last Updated:** 2024
+**Version:** 1.0.0
