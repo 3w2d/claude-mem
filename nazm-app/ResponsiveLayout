@@ -1,0 +1,207 @@
+import React, { useEffect, useState } from ‘react’;
+import { Menu, X, ChevronLeft } from ‘lucide-react’;
+
+/**
+
+- Responsive Layout for Web, Tablet, and Mobile
+- Automatically adapts sidebar behavior based on screen size
+  */
+  export function ResponsiveLayout({ children, sidebar, T, isRtl }) {
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [screenSize, setScreenSize] = useState(‘lg’);
+
+useEffect(() => {
+const handleResize = () => {
+const width = window.innerWidth;
+
+```
+  if (width < 640) {
+    setScreenSize('sm');
+    setIsMobile(true);
+    setSidebarOpen(false);
+  } else if (width < 1024) {
+    setScreenSize('md');
+    setIsMobile(false);
+    setSidebarOpen(false);
+  } else {
+    setScreenSize('lg');
+    setIsMobile(false);
+    setSidebarOpen(true);
+  }
+};
+
+handleResize();
+window.addEventListener('resize', handleResize);
+return () => window.removeEventListener('resize', handleResize);
+```
+
+}, []);
+
+// Mobile overlay handler
+const closeMobileSidebar = () => {
+if (isMobile) {
+setSidebarOpen(false);
+}
+};
+
+return (
+<div className="flex h-screen overflow-hidden">
+{/* Desktop Sidebar - Always visible on lg+ */}
+<aside
+className={`hidden lg:flex flex-col w-80 border-r transition-transform ${T.surface}`}
+>
+<div className="overflow-y-auto flex-1 p-4">
+{sidebar}
+</div>
+</aside>
+
+```
+  {/* Mobile Sidebar Overlay */}
+  {isMobile && sidebarOpen && (
+    <div
+      className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+      onClick={closeMobileSidebar}
+    />
+  )}
+
+  {/* Mobile Sidebar - Slide from side */}
+  <aside
+    className={`fixed lg:static inset-y-0 ${isRtl ? 'right-0' : 'left-0'} w-72 z-50 transition-transform lg:transform-none ${
+      sidebarOpen ? 'translate-x-0' : (isRtl ? 'translate-x-full' : '-translate-x-full')
+    } ${T.surface}`}
+  >
+    <div className="p-4 flex items-center justify-between lg:hidden border-b">
+      <span className={`font-bold ${T.textMain}`}>Menu</span>
+      <button
+        onClick={() => setSidebarOpen(false)}
+        className={`p-2 rounded-lg hover:bg-black/10 transition`}
+      >
+        <X size={20} />
+      </button>
+    </div>
+    <div className="overflow-y-auto p-4">
+      {sidebar}
+    </div>
+  </aside>
+
+  {/* Main Content */}
+  <main className="flex-1 flex flex-col overflow-hidden">
+    {/* Mobile Header */}
+    <header
+      className={`lg:hidden flex items-center justify-between p-4 border-b ${T.surface}`}
+    >
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className={`p-2 rounded-lg hover:bg-black/10 transition`}
+      >
+        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+      <h1 className={`font-bold text-lg ${T.textMain}`}>NAZM</h1>
+      <div className="w-10" /> {/* Spacer for centering */}
+    </header>
+
+    {/* Scrollable Content Area */}
+    <div
+      className={`flex-1 overflow-y-auto ${T.page}`}
+      onClick={closeMobileSidebar}
+    >
+      {children}
+    </div>
+  </main>
+
+  {/* Screen Size Debug (development only) */}
+  {process.env.NODE_ENV === 'development' && (
+    <div className={`fixed bottom-4 right-4 px-3 py-1 rounded text-xs ${T.chip}`}>
+      {screenSize}
+    </div>
+  )}
+</div>
+```
+
+);
+}
+
+/**
+
+- Mobile-optimized Container
+  */
+  export function MobileContainer({ children, className = ‘’ }) {
+  return (
+  
+   <div className={`p-4 md:p-6 lg:p-8 space-y-4 ${className}`}>
+     {children}
+   </div>
+
+);
+}
+
+/**
+
+- Adaptive Grid Component
+- Automatically adjusts columns based on screen size
+  */
+  export function AdaptiveGrid({ children, gap = 4 }) {
+  return (
+  
+   <div
+     className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-${gap}`}
+   >
+     {children}
+   </div>
+
+);
+}
+
+/**
+
+- Safe Area Container for notched devices
+  */
+  export function SafeAreaContainer({ children, className = ‘’ }) {
+  return (
+  
+   <div
+     className={`${className}`}
+     style={{
+       paddingLeft: 'max(0px, env(safe-area-inset-left))',
+       paddingRight: 'max(0px, env(safe-area-inset-right))',
+       paddingTop: 'max(0px, env(safe-area-inset-top))',
+       paddingBottom: 'max(0px, env(safe-area-inset-bottom))',
+     }}
+   >
+     {children}
+   </div>
+
+);
+}
+
+/**
+
+- Breakpoint Hook
+  */
+  export function useBreakpoint() {
+  const [breakpoint, setBreakpoint] = useState(‘lg’);
+
+useEffect(() => {
+const handleResize = () => {
+const width = window.innerWidth;
+if (width < 640) setBreakpoint(‘sm’);
+else if (width < 1024) setBreakpoint(‘md’);
+else setBreakpoint(‘lg’);
+};
+
+```
+handleResize();
+window.addEventListener('resize', handleResize);
+return () => window.removeEventListener('resize', handleResize);
+```
+
+}, []);
+
+return {
+isMobile: breakpoint === ‘sm’,
+isTablet: breakpoint === ‘md’,
+isDesktop: breakpoint === ‘lg’,
+breakpoint,
+};
+}
