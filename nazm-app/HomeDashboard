@@ -1,0 +1,280 @@
+import React, { useState } from ‘react’;
+import {
+Brain, BarChart3, FileSpreadsheet, CheckCircle2, Plus,
+Trash2, Clock, TrendingUp, Target
+} from ‘lucide-react’;
+import { useTasks, useStats } from ‘../hooks/usePersistence’;
+
+/**
+
+- Enhanced Home Dashboard with Quick Stats, Tasks, and Insights
+  */
+  export function HomeDashboard({ T, isRtl }) {
+  const { tasks, addTask, toggleTask, deleteTask } = useTasks();
+  const { stats, increment } = useStats();
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTaskText, setNewTaskText] = useState(’’);
+
+const completedTasks = tasks.filter(t => t.completed).length;
+const completionRate = tasks.length ? Math.round((completedTasks / tasks.length) * 100) : 0;
+
+const handleAddTask = (e) => {
+e.preventDefault();
+if (!newTaskText.trim()) return;
+addTask({ title: newTaskText });
+setNewTaskText(’’);
+setShowAddTask(false);
+increment(‘tasksCompleted’);
+};
+
+return (
+<div className="space-y-6">
+{/* Top Alert Section */}
+<div className={`p-8 rounded-[40px] relative overflow-hidden border ${T.surface}`}>
+<div className="absolute top-0 left-0 w-2 h-full bg-[#8B5CF6]" />
+<div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+<div className="flex items-center gap-3">
+<Brain className="text-[#8B5CF6] animate-pulse" size={28} />
+<h2 className={`text-2xl font-black ${T.textMain}`}>
+{isRtl ? ‘نَظْم ينتظر توجيهاتك’ : ‘Nazm is Ready’}
+</h2>
+</div>
+<div className="flex items-center gap-2 bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-[10px]">
+<CheckCircle2 size={12} /> {isRtl ? ‘نشط’ : ‘Active’}
+</div>
+</div>
+<p className={`text-base md:text-lg leading-relaxed ${T.textMuted}`}>
+{isRtl
+? ‘أنت تقدمت بشكل جيد. استمر في تسجيل زياراتك وأكمل مهامك لتحسين الإنتاجية.’
+: ‘You're doing great. Keep logging visits and completing tasks to boost productivity.’}
+</p>
+</div>
+
+```
+  {/* Quick Stats Grid */}
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <StatCard
+      T={T}
+      icon={Target}
+      label={isRtl ? 'مهام اليوم' : 'Today\'s Tasks'}
+      value={tasks.length}
+      trend={tasks.length > 0 ? '+2' : '—'}
+      trendUp
+    />
+    <StatCard
+      T={T}
+      icon={CheckCircle2}
+      label={isRtl ? 'مكتملة' : 'Completed'}
+      value={completedTasks}
+      trend={`${completionRate}%`}
+      trendUp={completedTasks > 0}
+    />
+    <StatCard
+      T={T}
+      icon={Clock}
+      label={isRtl ? 'متوسط الوقت' : 'Avg Time'}
+      value="4.2h"
+      trend={isRtl ? 'أفضل من أمس' : 'Better than yesterday'}
+      trendUp
+    />
+    <StatCard
+      T={T}
+      icon={TrendingUp}
+      label={isRtl ? 'سلسلة متواصلة' : 'Streak'}
+      value="12"
+      trend={isRtl ? 'أيام' : 'days'}
+      trendUp
+    />
+  </div>
+
+  {/* Main Content Grid */}
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {/* Tasks Section (2 cols on lg) */}
+    <div className="lg:col-span-2 space-y-4">
+      <div className={`p-6 rounded-[32px] border ${T.surface}`}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-xl font-black flex items-center gap-2 ${T.textMain}`}>
+            <Target size={20} className="text-[#8B5CF6]" />
+            {isRtl ? 'مهامك اليومية' : 'Your Tasks'}
+          </h3>
+          <button
+            type="button"
+            onClick={() => setShowAddTask(!showAddTask)}
+            className="text-[#8B5CF6] hover:bg-[#8B5CF6]/10 p-2 rounded-lg transition"
+          >
+            <Plus size={18} />
+          </button>
+        </div>
+
+        {showAddTask && (
+          <form onSubmit={handleAddTask} className="mb-4 p-3 rounded-xl bg-black/20 flex gap-2">
+            <input
+              type="text"
+              value={newTaskText}
+              onChange={(e) => setNewTaskText(e.target.value)}
+              placeholder={isRtl ? 'أضف مهمة جديدة…' : 'Add new task…'}
+              className={`flex-1 px-3 py-2 rounded-lg outline-none text-sm border ${T.inputBorder} ${T.surfaceAlt} ${T.textMain}`}
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-lg bg-[#8B5CF6] text-white text-xs font-bold hover:brightness-110 transition"
+            >
+              {isRtl ? 'إضافة' : 'Add'}
+            </button>
+          </form>
+        )}
+
+        {tasks.length === 0 ? (
+          <p className={`text-sm text-center py-8 ${T.textFaint}`}>
+            {isRtl ? 'لا توجد مهام. ابدأ بإضافة واحدة!' : 'No tasks yet. Start by adding one!'}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {tasks.map((task) => (
+              <li
+                key={task.id}
+                className={`flex items-center gap-3 p-3 rounded-xl border transition ${
+                  task.completed
+                    ? `${T.surfaceAlt} opacity-60`
+                    : `border-purple-500/30 hover:bg-purple-500/5`
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => toggleTask(task.id)}
+                  className="w-4 h-4 rounded cursor-pointer accent-[#8B5CF6]"
+                />
+                <span className={`flex-1 text-sm ${task.completed ? 'line-through' : ''} ${T.textMain}`}>
+                  {task.title}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => deleteTask(task.id)}
+                  className="text-red-500/60 hover:text-red-500 transition text-sm"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+
+    {/* Insights Section (1 col on lg) */}
+    <div className={`p-6 rounded-[32px] border ${T.surfaceFrom}`}>
+      <h3 className={`text-lg font-black mb-4 flex items-center gap-2 ${T.textMain}`}>
+        <Brain size={18} className="text-[#8B5CF6]" /> {isRtl ? 'رؤى ذكية' : 'AI Insights'}
+      </h3>
+      <div className="space-y-4 text-sm">
+        <InsightItem
+          T={T}
+          title={isRtl ? 'أفضل وقت للإنتاجية' : 'Peak productivity'}
+          value={isRtl ? '8-11 صباحاً' : '8-11 AM'}
+          icon="📈"
+        />
+        <InsightItem
+          T={T}
+          title={isRtl ? 'معدل الإنجاز' : 'Completion rate'}
+          value={`${completionRate}%`}
+          icon="✅"
+        />
+        <InsightItem
+          T={T}
+          title={isRtl ? 'المهام المتأخرة' : 'Overdue tasks'}
+          value={tasks.filter(t => !t.completed).length}
+          icon="⏰"
+        />
+        <InsightItem
+          T={T}
+          title={isRtl ? 'الجلسات هذا الأسبوع' : 'Sessions this week'}
+          value={stats.sessionCount}
+          icon="🔄"
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* Performance Cards */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <PerformanceCard
+      T={T}
+      icon={BarChart3}
+      title={isRtl ? 'تقرير الأسبوع' : 'Weekly Report'}
+      description={isRtl ? 'عرض الأداء والإحصائيات' : 'View performance metrics'}
+      color="purple"
+    />
+    <PerformanceCard
+      T={T}
+      icon={FileSpreadsheet}
+      title={isRtl ? 'السجل المالي' : 'Financial Log'}
+      description={isRtl ? 'مزامنة مع Excel' : 'Live Excel sync'}
+      color="cyan"
+    />
+  </div>
+</div>
+```
+
+);
+}
+
+/**
+
+- Individual Stat Card Component
+  */
+  function StatCard({ T, icon: Icon, label, value, trend, trendUp }) {
+  return (
+  
+   <div className={`p-4 rounded-2xl border ${T.surface}`}>
+     <div className="flex items-center justify-between mb-2">
+       <Icon size={18} className="text-[#8B5CF6]" />
+       <span className={`text-[10px] ${trendUp ? 'text-green-500' : 'text-amber-500'}`}>
+         {trend}
+       </span>
+     </div>
+     <p className={`text-[11px] uppercase ${T.textFaint}`}>{label}</p>
+     <p className={`text-2xl font-black ${T.textMain}`}>{value}</p>
+   </div>
+
+);
+}
+
+/**
+
+- Insight Item Component
+  */
+  function InsightItem({ T, title, value, icon }) {
+  return (
+  
+   <div className={`p-3 rounded-xl border ${T.inputBorder}`}>
+     <div className="flex items-start gap-2">
+       <span className="text-lg">{icon}</span>
+       <div className="flex-1">
+         <p className={`text-[10px] uppercase ${T.textFaint}`}>{title}</p>
+         <p className={`font-bold ${T.textMain}`}>{value}</p>
+       </div>
+     </div>
+   </div>
+
+);
+}
+
+/**
+
+- Performance Card Component
+  */
+  function PerformanceCard({ T, icon: Icon, title, description, color }) {
+  const bgGradient = color === ‘purple’
+  ? ‘from-purple-500/20 to-purple-500/5’
+  : ‘from-cyan-500/20 to-cyan-500/5’;
+
+return (
+<div className={`p-6 rounded-[32px] border bg-gradient-to-br ${bgGradient} ${T.inputBorder} cursor-pointer hover:scale-105 transition`}>
+<Icon size={28} className={color === ‘purple’ ? ‘text-purple-500’ : ‘text-cyan-500’} className=“mb-3” />
+<h4 className={`font-bold text-lg mb-1 ${T.textMain}`}>{title}</h4>
+<p className={`text-sm ${T.textMuted}`}>{description}</p>
+</div>
+);
+}
