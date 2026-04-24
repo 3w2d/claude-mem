@@ -1,0 +1,357 @@
+/**
+
+- API Client for NAZM Backend Communication
+- Handles authentication, caching, and offline support
+  */
+
+const API_BASE_URL = process.env.VITE_API_URL || ‘https://api.nazm.app’;
+const CACHE_NAME = ‘nazm-api-cache’;
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
+/**
+
+- API Client Class
+  */
+  class NazmAPI {
+  constructor(baseURL = API_BASE_URL) {
+  this.baseURL = baseURL;
+  this.token = null;
+  this.requestCache = new Map();
+  }
+
+/**
+
+- Set authentication token
+  */
+  setToken(token) {
+  this.token = token;
+  if (typeof window !== ‘undefined’) {
+  localStorage.setItem(‘auth-token’, token);
+  }
+  }
+
+/**
+
+- Get authentication token
+  */
+  getToken() {
+  if (this.token) return this.token;
+  if (typeof window !== ‘undefined’) {
+  this.token = localStorage.getItem(‘auth-token’);
+  }
+  return this.token;
+  }
+
+/**
+
+- Make HTTP request with caching and offline support
+  */
+  async request(endpoint, options = {}) {
+  const { method = ‘GET’, body, cache = true, timeout = 10000 } = options;
+  const url = `${this.baseURL}${endpoint}`;
+  const cacheKey = `${method}:${url}`;
+
+```
+// Check cache first
+if (cache && method === 'GET' && this.requestCache.has(cacheKey)) {
+  const { data, timestamp } = this.requestCache.get(cacheKey);
+  if (Date.now() - timestamp < CACHE_TTL) {
+    return data;
+  }
+}
+
+const headers = {
+  'Content-Type': 'application/json',
+  ...options.headers,
+};
+
+if (this.getToken()) {
+  headers.Authorization = `Bearer ${this.getToken()}`;
+}
+
+try {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+    signal: controller.signal,
+  });
+
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      this.clearToken();
+      throw new Error('Unauthorized - please login again');
+    }
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  // Cache successful GET requests
+  if (cache && method === 'GET') {
+    this.requestCache.set(cacheKey, { data, timestamp: Date.now() });
+  }
+
+  return data;
+} catch (error) {
+  // Try to get from cache on error
+  if (cache && method === 'GET' && this.requestCache.has(cacheKey)) {
+    console.warn('Using cached data due to error:', error.message);
+    return this.requestCache.get(cacheKey).data;
+  }
+
+  // Check browser cache
+  if (typeof window !== 'undefined' && method === 'GET') {
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      const cachedResponse = await cache.match(url);
+      if (cachedResponse) {
+        console.warn('Using browser cache due to error');
+        return await cachedResponse.json();
+      }
+    } catch (cacheError) {
+      console.error('Cache retrieval failed:', cacheError);
+    }
+  }
+
+  throw error;
+}
+```
+
+}
+
+/**
+
+- Clear authentication
+  */
+  clearToken() {
+  this.token = null;
+  if (typeof window !== ‘undefined’) {
+  localStorage.removeItem(‘auth-token’);
+  }
+  }
+
+/**
+
+- Clear all caches
+  */
+  clearCache() {
+  this.requestCache.clear();
+  if (typeof window !== ‘undefined’ && ‘caches’ in window) {
+  caches.delete(CACHE_NAME);
+  }
+  }
+
+// ============= Auth Endpoints =============
+
+async login(email, password) {
+return this.request(’/auth/login’, {
+method: ‘POST’,
+body: { email, password },
+cache: false,
+});
+}
+
+async logout() {
+this.clearToken();
+return this.request(’/auth/logout’, { method: ‘POST’, cache: false });
+}
+
+async refreshToken() {
+return this.request(’/auth/refresh’, { method: ‘POST’, cache: false });
+}
+
+async verifyToken() {
+return this.request(’/auth/verify’, { method: ‘GET’ });
+}
+
+// ============= Tasks Endpoints =============
+
+async getTasks(filters = {}) {
+const params = new URLSearchParams(filters).toString();
+return this.request(`/tasks${params ? `?${params}` : ''}`);
+}
+
+async getTask(id) {
+return this.request(`/tasks/${id}`);
+}
+
+async createTask(task) {
+return this.request(’/tasks’, {
+method: ‘POST’,
+body: task,
+cache: false,
+});
+}
+
+async updateTask(id, updates) {
+return this.request(`/tasks/${id}`, {
+method: ‘PUT’,
+body: updates,
+cache: false,
+});
+}
+
+async deleteTask(id) {
+return this.request(`/tasks/${id}`, {
+method: ‘DELETE’,
+cache: false,
+});
+}
+
+// ============= Visits/GPS Endpoints =============
+
+async getVisits(filters = {}) {
+const params = new URLSearchParams(filters).toString();
+return this.request(`/visits${params ? `?${params}` : ''}`);
+}
+
+async logVisit(position) {
+return this.request(’/visits’, {
+method: ‘POST’,
+body: {
+latitude: position.latitude,
+longitude: position.longitude,
+accuracy: position.accuracy,
+timestamp: position.timestamp,
+},
+cache: false,
+});
+}
+
+async deleteVisit(id) {
+return this.request(`/visits/${id}`, {
+method: ‘DELETE’,
+cache: false,
+});
+}
+
+// ============= Chat/Messages Endpoints =============
+
+async getMessages(limit = 50) {
+return this.request(`/chat/messages?limit=${limit}`);
+}
+
+async sendMessage(text) {
+return this.request(’/chat/ask’, {
+method: ‘POST’,
+body: { text },
+cache: false,
+});
+}
+
+async clearChatHistory() {
+return this.request(’/chat/clear’, {
+method: ‘POST’,
+cache: false,
+});
+}
+
+// ============= Analytics Endpoints =============
+
+async getAnalytics(dateRange = {}) {
+const params = new URLSearchParams(dateRange).toString();
+return this.request(`/analytics${params ? `?${params}` : ''}`);
+}
+
+async generateReport(options = {}) {
+return this.request(’/analytics/report’, {
+method: ‘POST’,
+body: options,
+cache: false,
+timeout: 30000,
+});
+}
+
+// ============= User Profile Endpoints =============
+
+async getProfile() {
+return this.request(’/user/profile’);
+}
+
+async updateProfile(updates) {
+return this.request(’/user/profile’, {
+method: ‘PUT’,
+body: updates,
+cache: false,
+});
+}
+
+async getSettings() {
+return this.request(’/user/settings’);
+}
+
+async updateSettings(settings) {
+return this.request(’/user/settings’, {
+method: ‘PUT’,
+body: settings,
+cache: false,
+});
+}
+
+// ============= Sync Endpoints =============
+
+async syncData() {
+return this.request(’/sync’, { method: ‘POST’, cache: false });
+}
+
+async getLastSyncTime() {
+return this.request(’/sync/last’);
+}
+}
+
+// Create singleton instance
+export const api = new NazmAPI();
+
+/**
+
+- Hook for API calls with error handling
+  */
+  export function useAPI() {
+  return {
+  api,
+  // Tasks
+  getTasks: (filters) => api.getTasks(filters),
+  createTask: (task) => api.createTask(task),
+  updateTask: (id, updates) => api.updateTask(id, updates),
+  deleteTask: (id) => api.deleteTask(id),
+  
+  // Visits
+  getVisits: (filters) => api.getVisits(filters),
+  logVisit: (position) => api.logVisit(position),
+  
+  // Chat
+  sendMessage: (text) => api.sendMessage(text),
+  getMessages: (limit) => api.getMessages(limit),
+  
+  // Analytics
+  getAnalytics: (range) => api.getAnalytics(range),
+  generateReport: (options) => api.generateReport(options),
+  
+  // User
+  getProfile: () => api.getProfile(),
+  updateProfile: (updates) => api.updateProfile(updates),
+  };
+  }
+
+/**
+
+- Async wrapper for API calls with error handling
+  */
+  export async function withAPIError(apiFn) {
+  try {
+  return await apiFn();
+  } catch (error) {
+  console.error(‘API Error:’, error);
+  throw {
+  message: error.message || ‘An error occurred’,
+  status: error.status || ‘UNKNOWN’,
+  isNetworkError: error instanceof TypeError,
+  };
+  }
+  }
