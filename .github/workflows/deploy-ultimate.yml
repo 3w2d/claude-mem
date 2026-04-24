@@ -1,0 +1,63 @@
+name: Deploy NAZM to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 📦 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+      
+      - name: 🧹 Clear npm cache
+        run: npm cache clean --force
+      
+      - name: 📝 Check package.json
+        run: cat package.json | head -20
+      
+      - name: 📥 Install dependencies
+        run: npm install --no-save
+        timeout-minutes: 15
+      
+      - name: 🏗️ Build
+        run: npm run build
+        timeout-minutes: 10
+      
+      - name: ✅ Check dist folder
+        run: |
+          echo "Contents of dist folder:"
+          ls -la dist/ || echo "dist folder not found"
+      
+      - name: 📤 Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+      
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
