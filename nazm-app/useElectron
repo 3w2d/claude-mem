@@ -1,0 +1,174 @@
+import { useEffect, useState } from ‘react’;
+
+/**
+
+- Hook to detect if running in Electron
+  */
+  export function useIsElectron() {
+  const [isElectron, setIsElectron] = useState(false);
+
+useEffect(() => {
+setIsElectron(!!window.electronAPI);
+}, []);
+
+return isElectron;
+}
+
+/**
+
+- Hook for safe Electron API access
+  */
+  export function useElectronAPI() {
+  const [api, setApi] = useState(null);
+
+useEffect(() => {
+if (window.electronAPI) {
+setApi(window.electronAPI);
+}
+}, []);
+
+return api;
+}
+
+/**
+
+- Hook for persistent storage using Electron store
+  */
+  export function useElectronStore(key, defaultValue) {
+  const [value, setValue] = useState(defaultValue);
+  const [loaded, setLoaded] = useState(false);
+
+useEffect(() => {
+if (!window.electronAPI) return;
+
+```
+// Load from store
+window.electronAPI.store.get(key).then((storedValue) => {
+  if (storedValue !== undefined) {
+    setValue(storedValue);
+  }
+  setLoaded(true);
+});
+```
+
+}, [key]);
+
+const updateValue = (newValue) => {
+const valueToStore = typeof newValue === ‘function’ ? newValue(value) : newValue;
+setValue(valueToStore);
+
+```
+if (window.electronAPI) {
+  window.electronAPI.store.set(key, valueToStore);
+}
+```
+
+};
+
+return [value, updateValue, loaded];
+}
+
+/**
+
+- Hook for desktop notifications
+  */
+  export function useDesktopNotification() {
+  const showNotification = async (title, options = {}) => {
+  // Web Notification API
+  if (‘Notification’ in window && Notification.permission === ‘granted’) {
+  new Notification(title, options);
+  }
+  
+  // Electron Notification API
+  if (window.electronAPI) {
+  await window.electronAPI.showNotification(title, options);
+  }
+  };
+
+return { showNotification };
+}
+
+/**
+
+- Hook for app info
+  */
+  export function useAppInfo() {
+  const [appInfo, setAppInfo] = useState({
+  version: ‘1.0.0’,
+  platform: ‘web’,
+  isElectron: false,
+  });
+
+useEffect(() => {
+const loadAppInfo = async () => {
+if (!window.electronAPI) {
+setAppInfo({
+version: ‘1.0.0’,
+platform: navigator.platform,
+isElectron: false,
+});
+return;
+}
+
+```
+  try {
+    const version = await window.electronAPI.getAppVersion();
+    setAppInfo({
+      version,
+      platform: window.electronAPI.platform,
+      isElectron: true,
+    });
+  } catch (error) {
+    console.error('Failed to load app info:', error);
+  }
+};
+
+loadAppInfo();
+```
+
+}, []);
+
+return appInfo;
+}
+
+/**
+
+- Hook for handling external links safely
+  */
+  export function useExternalLink() {
+  const openLink = (url) => {
+  if (window.electronAPI) {
+  window.electronAPI.openExternal(url);
+  } else {
+  window.open(url, ‘_blank’);
+  }
+  };
+
+return { openLink };
+}
+
+/**
+
+- Hook for app lifecycle
+  */
+  export function useAppLifecycle() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+useEffect(() => {
+const handleOnline = () => setIsOnline(true);
+const handleOffline = () => setIsOnline(false);
+
+```
+window.addEventListener('online', handleOnline);
+window.addEventListener('offline', handleOffline);
+
+return () => {
+  window.removeEventListener('online', handleOnline);
+  window.removeEventListener('offline', handleOffline);
+};
+```
+
+}, []);
+
+return { isOnline };
+}
