@@ -1,0 +1,219 @@
+import React, { useState, useEffect, useRef } from ‘react’;
+import { Brain, Send, Trash2, Clock, MessageCircle } from ‘lucide-react’;
+import { useChatHistory, useStats } from ‘../hooks/usePersistence’;
+import { ask } from ‘../lib/aiMock’;
+
+/**
+
+- Enhanced AI Chat Component with History Persistence
+  */
+  export function AIChat({ T, isRtl }) {
+  const { messages, addMessage, clearHistory } = useChatHistory();
+  const { increment } = useStats();
+  const [input, setInput] = useState(’’);
+  const [thinking, setThinking] = useState(false);
+  const listRef = useRef(null);
+
+// Auto-scroll to latest message
+useEffect(() => {
+if (listRef.current) {
+listRef.current.scrollTop = listRef.current.scrollHeight;
+}
+}, [messages, thinking]);
+
+const suggestions = isRtl
+? [‘هل يوجد تداخل في المواعيد؟’, ‘ملخص المطالبات’, ‘حالة المكاتب’, ‘نصائح الإنتاجية’]
+: [‘Any scheduling conflicts?’, ‘Claims summary’, ‘Office status’, ‘Productivity tips’];
+
+const handleSend = async (e) => {
+e?.preventDefault();
+const text = input.trim();
+if (!text || thinking) return;
+
+```
+// Add user message
+setInput('');
+addMessage('user', text);
+increment('messagesExchanged');
+
+// Get AI response
+setThinking(true);
+try {
+  const reply = await ask(text, { isRtl });
+  addMessage('assistant', reply);
+  increment('messagesExchanged');
+} catch (error) {
+  addMessage('assistant', isRtl
+    ? 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.'
+    : 'Sorry, an error occurred. Please try again.');
+} finally {
+  setThinking(false);
+}
+```
+
+};
+
+const handleSuggestion = (suggestion) => {
+setInput(suggestion);
+};
+
+return (
+<div className={`p-8 rounded-[40px] border ${T.surface} flex flex-col`} style={{ minHeight: 600 }}>
+{/* Header */}
+<div className=“flex items-center justify-between mb-6 pb-4 border-b” style={{ borderColor: ‘rgba(139, 92, 246, 0.1)’ }}>
+<div className="flex items-center gap-3">
+<Brain className="text-[#8B5CF6] animate-pulse" size={28} />
+<div>
+<h2 className={`text-2xl font-black ${T.textMain}`}>
+{isRtl ? ‘المساعد الذكي’ : ‘AI Assistant’}
+</h2>
+<p className={`text-[11px] ${T.textFaint}`}>
+{isRtl ? ‘نَظْم ذكي متعدد الوظائف’ : ‘Multi-functional smart assistant’}
+</p>
+</div>
+</div>
+{messages.length > 0 && (
+<button
+type=“button”
+onClick={() => {
+if (confirm(isRtl ? ‘هل تريد مسح السجل؟’ : ‘Clear chat history?’)) {
+clearHistory();
+}
+}}
+className=“text-red-500/60 hover:text-red-500 p-2 rounded-lg transition”
+title={isRtl ? ‘مسح السجل’ : ‘Clear history’}
+>
+<Trash2 size={18} />
+</button>
+)}
+</div>
+
+```
+  {/* Messages Container */}
+  <div
+    ref={listRef}
+    className={`flex-1 overflow-y-auto space-y-4 mb-4 pr-2`}
+    style={{ maxHeight: 400 }}
+  >
+    {messages.length === 0 ? (
+      <div className="h-full flex items-center justify-center text-center">
+        <div>
+          <MessageCircle size={48} className="mx-auto mb-4 opacity-20" />
+          <p className={`text-sm ${T.textFaint}`}>
+            {isRtl ? 'ابدأ محادثة مع نَظْم…' : 'Start a conversation with Nazm…'}
+          </p>
+        </div>
+      </div>
+    ) : (
+      messages.map((msg) => (
+        <ChatMessage
+          key={msg.id}
+          message={msg}
+          T={T}
+          isRtl={isRtl}
+          isUser={msg.role === 'user'}
+        />
+      ))
+    )}
+
+    {thinking && (
+      <div className="flex justify-start">
+        <div className={`px-4 py-3 rounded-2xl text-sm ${T.chipMuted}`}>
+          <ThinkingDots isRtl={isRtl} />
+        </div>
+      </div>
+    )}
+  </div>
+
+  {/* Suggestions */}
+  <div className="flex flex-wrap gap-2 mb-4">
+    {suggestions.map((suggestion) => (
+      <button
+        key={suggestion}
+        type="button"
+        onClick={() => handleSuggestion(suggestion)}
+        className={`text-[11px] px-3 py-1.5 rounded-full transition hover:scale-105 ${T.chip}`}
+      >
+        {suggestion}
+      </button>
+    ))}
+  </div>
+
+  {/* Input Form */}
+  <form onSubmit={handleSend} className="flex gap-2">
+    <input
+      type="text"
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
+      placeholder={isRtl ? 'اكتب سؤالك…' : 'Type your question…'}
+      disabled={thinking}
+      className={`flex-1 px-4 py-3 rounded-2xl outline-none text-sm border transition ${T.inputBorder} ${T.surfaceAlt} ${T.textMain} ${thinking ? 'opacity-50 cursor-not-allowed' : ''}`}
+    />
+    <button
+      type="submit"
+      disabled={thinking || !input.trim()}
+      className={`px-4 py-3 rounded-2xl bg-[#8B5CF6] text-white transition ${thinking || !input.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:brightness-110'}`}
+      title={isRtl ? 'إرسال' : 'Send'}
+    >
+      <Send size={16} />
+    </button>
+  </form>
+
+  {/* Message Count Footer */}
+  {messages.length > 0 && (
+    <div className={`mt-3 text-[11px] flex items-center gap-2 ${T.textFaint}`}>
+      <Clock size={12} />
+      {isRtl ? `${messages.length} رسالة` : `${messages.length} messages`}
+    </div>
+  )}
+</div>
+```
+
+);
+}
+
+/**
+
+- Individual Chat Message Component
+  */
+  function ChatMessage({ message, T, isRtl, isUser }) {
+  const isAssistant = !isUser;
+  return (
+  
+   <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+     <div
+       className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+         isUser
+           ? 'bg-[#8B5CF6] text-white'
+           : `${T.chipMuted}`
+       }`}
+     >
+       {message.text}
+       <div className={`text-[10px] mt-1 ${isUser ? 'opacity-70' : T.textFaint}`}>
+         {new Date(message.timestamp).toLocaleTimeString(isRtl ? 'ar-SA' : 'en-US', {
+           hour: '2-digit',
+           minute: '2-digit',
+         })}
+       </div>
+     </div>
+   </div>
+
+);
+}
+
+/**
+
+- Thinking Animation Component
+  */
+  function ThinkingDots({ isRtl }) {
+  return (
+  
+   <div className="flex items-center gap-1">
+     <span className="animate-bounce" style={{ animationDelay: '0ms' }}>•</span>
+     <span className="animate-bounce" style={{ animationDelay: '150ms' }}>•</span>
+     <span className="animate-bounce" style={{ animationDelay: '300ms' }}>•</span>
+     <span className="ms-2 text-sm">{isRtl ? 'يفكر…' : 'Thinking…'}</span>
+   </div>
+
+);
+}
