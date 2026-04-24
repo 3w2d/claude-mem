@@ -1,0 +1,413 @@
+# 🚀 NAZM - Build & Deployment Guide
+
+نَظْم · NAZM — Intelligence Hub
+
+Complete guide for building and deploying to Web, Mobile, and Desktop.
+
+-----
+
+## 📋 Prerequisites
+
+```bash
+# Node.js 18+ and npm/yarn
+node --version  # v18.0.0+
+npm --version   # 8.0.0+
+
+# Install dependencies
+npm install
+```
+
+-----
+
+## 🌐 Web App (Web Browser)
+
+### Development
+
+```bash
+npm run dev
+# Opens http://localhost:5173
+```
+
+### Build for Production
+
+```bash
+npm run build
+# Output: dist/
+
+# Preview production build
+npm run preview
+```
+
+### Deployment to Vercel
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy
+vercel
+# Select "dist" as build output directory
+```
+
+### Deployment to Netlify
+
+```bash
+# Create vercel.json or netlify.toml
+# Copy dist/ to deployment
+
+# Using Netlify CLI
+npm install -g netlify-cli
+netlify deploy --prod --dir=dist
+```
+
+### Deployment to GitHub Pages
+
+```bash
+# Update vite.config.js
+# base: '/nazm-app/'
+
+npm run build
+
+# Push dist/ to gh-pages branch
+git subtree push --prefix dist origin gh-pages
+```
+
+-----
+
+## 📱 Mobile App (iOS & Android)
+
+### Using React Native Web + Capacitor
+
+#### 1. **Install Capacitor**
+
+```bash
+npm install @capacitor/core @capacitor/cli
+npm install @capacitor/ios @capacitor/android
+npx cap init nazm com.nazm.app
+```
+
+#### 2. **Build Web Assets**
+
+```bash
+npm run build
+npx cap sync
+```
+
+#### 3. **iOS Build**
+
+```bash
+# Requirements: macOS, Xcode 14+
+npx cap open ios
+# In Xcode: Product > Build > Archive > Distribute
+```
+
+#### 4. **Android Build**
+
+```bash
+# Requirements: Android Studio, Java 11+
+npx cap open android
+# In Android Studio: Build > Generate Signed APK
+```
+
+#### 5. **Push to App Stores**
+
+**iOS App Store:**
+
+```bash
+# Requirements: Apple Developer Account ($99/year)
+# Follow Xcode's "Distribute Content" wizard
+```
+
+**Google Play Store:**
+
+```bash
+# Requirements: Google Play Developer Account ($25 one-time)
+# Upload APK in Google Play Console
+```
+
+### Progressive Web App (PWA)
+
+The app works as PWA on mobile browsers:
+
+1. Open https://nazm.app in mobile browser
+1. Tap “Share” → “Add to Home Screen”
+1. Opens fullscreen like native app
+1. Works offline with cached data
+
+-----
+
+## 🪟 Windows / macOS / Linux Desktop
+
+### Development
+
+```bash
+# Terminal 1: Start dev server
+npm run dev
+
+# Terminal 2: Start Electron (waits for server)
+npm run dev:all
+```
+
+### Build Standalone Executable
+
+```bash
+# Build everything
+npm run build:all
+
+# Create installers for all platforms
+npm run dist:all
+
+# Platform-specific builds
+npm run dist:win    # Windows NSIS installer + portable
+npm run dist:mac    # macOS DMG
+npm run dist:linux  # Linux AppImage + DEB
+```
+
+### Output Files
+
+After `npm run dist:all`:
+
+```
+dist/
+├── NAZM-1.0.0.exe          # Windows installer
+├── NAZM-1.0.0-portable.exe # Windows portable
+├── NAZM-1.0.0.dmg          # macOS installer
+├── NAZM-1.0.0.AppImage     # Linux AppImage
+└── nazm-1.0.0-1_amd64.deb  # Linux DEB package
+```
+
+### Code Signing (Production)
+
+**Windows:**
+
+```bash
+# Set environment variables before build
+export WIN_CSC_LINK="/path/to/certificate.pfx"
+export WIN_CSC_KEY_PASSWORD="password"
+
+npm run dist:win
+```
+
+**macOS:**
+
+```bash
+# Requires Apple Developer certificate
+export APPLE_ID="your-email@example.com"
+export APPLE_PASSWORD="your-app-password"
+export ASC_PROVIDER="your-team-id"
+
+npm run dist:mac
+```
+
+-----
+
+## 🔧 Environment Configuration
+
+Create `.env.local`:
+
+```env
+# API Configuration
+VITE_API_URL=https://api.nazm.app
+VITE_API_TIMEOUT=10000
+
+# Azure Entra (Microsoft)
+VITE_AZURE_CLIENT_ID=your-client-id
+VITE_AZURE_TENANT_ID=your-tenant-id
+VITE_AZURE_REDIRECT_URI=http://localhost:5173
+
+# Analytics
+VITE_GA_ID=your-ga-id
+
+# Feature Flags
+VITE_ENABLE_OFFLINE_MODE=true
+VITE_ENABLE_NOTIFICATIONS=true
+```
+
+-----
+
+## 📊 Performance Optimization
+
+### Bundle Analysis
+
+```bash
+# Install
+npm install -D rollup-plugin-visualizer
+
+# Build with analysis
+npm run build
+
+# Open dist/stats.html
+```
+
+### Code Splitting
+
+Already configured in `vite.config.js`:
+
+```javascript
+rollupOptions: {
+  output: {
+    manualChunks: {
+      'react-vendor': ['react', 'react-dom'],
+      'azure-vendor': ['@azure/msal-browser'],
+    },
+  },
+}
+```
+
+### Minification
+
+```bash
+# Already minified in production build
+npm run build  # Uses terser
+```
+
+-----
+
+## 🧪 Testing & Quality
+
+```bash
+# Unit tests
+npm run test
+
+# Linting
+npm run lint
+
+# Type checking (if using TypeScript)
+npm run type-check
+```
+
+-----
+
+## 🔒 Security Checklist
+
+- [ ] Enable HTTPS on all production URLs
+- [ ] Set secure CSP headers
+- [ ] Rotate API keys regularly
+- [ ] Enable 2FA on deployment accounts
+- [ ] Use environment variables for secrets
+- [ ] Regular dependency updates: `npm audit`
+- [ ] Sign Windows/macOS installers
+- [ ] Implement CORS properly
+- [ ] Enable update checking in Electron
+
+-----
+
+## 🌍 CI/CD Pipeline (GitHub Actions)
+
+Create `.github/workflows/deploy.yml`:
+
+```yaml
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - run: npm install
+      - run: npm run build
+      - run: npm run dist
+      
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+```
+
+-----
+
+## 📈 Monitoring & Analytics
+
+### Sentry (Error Tracking)
+
+```bash
+npm install @sentry/react
+
+# Initialize in main.jsx
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "your-sentry-dsn",
+  environment: process.env.NODE_ENV,
+});
+```
+
+### Google Analytics
+
+```bash
+npm install react-ga4
+
+# Initialize in main.jsx
+import ReactGA from "react-ga4";
+
+ReactGA.initialize(process.env.VITE_GA_ID);
+```
+
+-----
+
+## 🆘 Troubleshooting
+
+### Service Worker Issues
+
+```bash
+# Clear all caches
+application.clear()
+
+# Re-register
+navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister()))
+```
+
+### Electron Build Fails
+
+```bash
+# Clean build
+rm -rf dist node_modules
+npm install
+npm run build:all
+```
+
+### API Timeout
+
+Increase timeout in `.env.local`:
+
+```env
+VITE_API_TIMEOUT=30000  # 30 seconds
+```
+
+-----
+
+## 📚 Resources
+
+- [Vite Docs](https://vitejs.dev)
+- [React Router](https://reactrouter.com)
+- [Tailwind CSS](https://tailwindcss.com)
+- [Electron Docs](https://www.electronjs.org/docs)
+- [Capacitor Docs](https://capacitorjs.com)
+- [PWA Checklist](https://web.dev/pwa-checklist/)
+
+-----
+
+## 📞 Support
+
+For issues:
+
+1. Check GitHub Issues
+1. See troubleshooting section
+1. Contact: team@nazm.app
+
+-----
+
+**Last Updated:** 2024
+**Version:** 1.0.0
