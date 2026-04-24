@@ -1,29 +1,50 @@
-name: Deploy Install Scripts
+name: Deploy NAZM to GitHub Pages
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'openclaw/install.sh'
-      - 'install/**'
-  workflow_dispatch:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Copy install scripts to deploy directory
-        run: |
-          mkdir -p install/public
-          cp openclaw/install.sh install/public/openclaw.sh
-
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 📦 Setup Node.js 18
+        uses: actions/setup-node@v4
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: ./install
+          node-version: '18'
+      
+      - name: 🔍 Install dependencies
+        run: npm install --legacy-peer-deps
+      
+      - name: 🏗️ Build project
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.nazm.app
+      
+      - name: 📤 Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: 'dist'
+      
+      - name: 🚀 Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        id: deployment
+        uses: actions/deploy-pages@v2
