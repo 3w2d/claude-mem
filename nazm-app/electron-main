@@ -1,0 +1,179 @@
+import { app, BrowserWindow, Menu, ipcMain, Notification } from ‘electron’;
+import isDev from ‘electron-is-dev’;
+import path from ‘path’;
+import { fileURLToPath } from ‘url’;
+import Store from ‘electron-store’;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const store = new Store();
+let mainWindow;
+
+// Create window
+function createWindow() {
+const isDarkMode = store.get(‘theme’, ‘dark’) === ‘dark’;
+
+mainWindow = new BrowserWindow({
+width: 1400,
+height: 900,
+minWidth: 800,
+minHeight: 600,
+icon: path.join(__dirname, ‘assets/icon.png’),
+webPreferences: {
+preload: path.join(__dirname, ‘preload.js’),
+nodeIntegration: false,
+contextIsolation: true,
+enableRemoteModule: false,
+},
+});
+
+const startUrl = isDev
+? ‘http://localhost:5173’
+: `file://${path.join(__dirname, '../dist/index.html')}`;
+
+mainWindow.loadURL(startUrl);
+
+if (isDev) {
+mainWindow.webContents.openDevTools();
+}
+
+mainWindow.on(‘closed’, () => {
+mainWindow = null;
+});
+
+// Handle window state
+mainWindow.on(‘resize’, () => {
+const bounds = mainWindow.getBounds();
+store.set(‘windowBounds’, bounds);
+});
+
+mainWindow.on(‘move’, () => {
+const bounds = mainWindow.getBounds();
+store.set(‘windowBounds’, bounds);
+});
+
+// Restore window position
+const windowBounds = store.get(‘windowBounds’);
+if (windowBounds) {
+mainWindow.setBounds(windowBounds);
+}
+
+return mainWindow;
+}
+
+// App event listeners
+app.on(‘ready’, createWindow);
+
+app.on(‘window-all-closed’, () => {
+if (process.platform !== ‘darwin’) {
+app.quit();
+}
+});
+
+app.on(‘activate’, () => {
+if (mainWindow === null) {
+createWindow();
+}
+});
+
+// IPC Handlers for desktop features
+ipcMain.handle(‘get-app-version’, () => app.getVersion());
+
+ipcMain.handle(‘get-user-data-path’, () => app.getPath(‘userData’));
+
+ipcMain.handle(‘store-get’, (event, key) => store.get(key));
+
+ipcMain.handle(‘store-set’, (event, key, value) => {
+store.set(key, value);
+return true;
+});
+
+ipcMain.handle(‘show-notification’, (event, { title, body, icon }) => {
+new Notification({
+title,
+body,
+icon: icon || path.join(__dirname, ‘assets/icon.png’),
+}).show();
+});
+
+ipcMain.handle(‘open-external’, (event, url) => {
+require(‘electron’).shell.openExternal(url);
+});
+
+// Menu
+const createMenu = () => {
+const template = [
+{
+label: ‘File’,
+submenu: [
+{
+label: ‘Exit’,
+accelerator: ‘CmdOrCtrl+Q’,
+click: () => app.quit(),
+},
+],
+},
+{
+label: ‘Edit’,
+submenu: [
+{ role: ‘undo’ },
+{ role: ‘redo’ },
+{ type: ‘separator’ },
+{ role: ‘cut’ },
+{ role: ‘copy’ },
+{ role: ‘paste’ },
+],
+},
+{
+label: ‘View’,
+submenu: [
+{ role: ‘reload’ },
+{ role: ‘forceReload’ },
+{ role: ‘toggleDevTools’ },
+{ type: ‘separator’ },
+{ role: ‘resetZoom’ },
+{ role: ‘zoomIn’ },
+{ role: ‘zoomOut’ },
+{ type: ‘separator’ },
+{ role: ‘togglefullscreen’ },
+],
+},
+{
+label: ‘Help’,
+submenu: [
+{
+label: ‘About NAZM’,
+click: () => {
+const { dialog } = require(‘electron’);
+dialog.showMessageBox(mainWindow, {
+type: ‘info’,
+title: ‘About NAZM’,
+message: ‘NAZM - Intelligence Hub’,
+detail: `Version: ${app.getVersion()}\n\nIntelligent productivity app for field operations, mail sync, and analytics.\n\n© 2024 NAZM Team`,
+buttons: [‘OK’],
+});
+},
+},
+],
+},
+];
+
+const menu = Menu.buildFromTemplate(template);
+Menu.setApplicationMenu(menu);
+};
+
+app.whenReady().then(createMenu);
+
+// Auto updater (optional)
+if (!isDev) {
+const { autoUpdater } = require(‘electron-updater’);
+autoUpdater.checkForUpdatesAndNotify();
+}
+
+// Handle any uncaught exceptions
+process.on(‘uncaughtException’, (error) => {
+console.error(‘Uncaught Exception:’, error);
+});
+
+console.log(‘✅ Electron app initialized’);
