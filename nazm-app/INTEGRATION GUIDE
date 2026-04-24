@@ -1,0 +1,356 @@
+# 🔗 NAZM Integration Guide
+
+كيفية دمج جميع الملفات والمكونات الجديدة مع المشروع الأساسي
+
+-----
+
+## 📋 ملخص الملفات المستحدثة
+
+|الملف                 |الموقع           |الغرض                           |
+|----------------------|-----------------|--------------------------------|
+|`usePersistence.js`   |`src/hooks/`     |حفظ البيانات في localStorage    |
+|`HomeDashboard.jsx`   |`src/components/`|الصفحة الرئيسية المحسّنة         |
+|`AIChat.jsx`          |`src/components/`|مساعد الذكاء الاصطناعي          |
+|`ResponsiveLayout.jsx`|`src/components/`|تخطيط responsive للويب والموبايل|
+|`useElectron.js`      |`src/hooks/`     |التكامل مع Electron             |
+|`api.js`              |`src/lib/`       |عميل API الأمامي                |
+|`vite.config.js`      |`root/`          |إعدادات Vite مع PWA             |
+|`sw.js`               |`src/`           |Service Worker للدعم الـ offline|
+|`electron-main.js`    |`root/`          |عملية Electron الرئيسية         |
+|`preload.js`          |`root/`          |سكريبت preload آمن              |
+|`index.html`          |`public/`        |قالب HTML مع PWA                |
+|`package.json`        |`root/`          |Dependencies و scripts محدثة    |
+
+-----
+
+## 🚀 خطوات التكامل
+
+### الخطوة 1: نسخ الملفات
+
+```bash
+# 1. انسخ ملفات Hooks
+cp usePersistence.js src/hooks/
+cp useElectron.js src/hooks/
+
+# 2. انسخ مكونات React
+cp HomeDashboard.jsx src/components/
+cp AIChat.jsx src/components/
+cp ResponsiveLayout.jsx src/components/
+
+# 3. انسخ مكتبات
+cp api.js src/lib/
+
+# 4. انسخ config files
+cp vite.config.js ./
+cp package.json ./
+cp index.html public/
+
+# 5. انسخ Electron files
+cp electron-main.js ./
+cp preload.js ./
+
+# 6. انسخ Service Worker
+cp sw.js src/
+```
+
+-----
+
+### الخطوة 2: تحديث package.json
+
+تأكد من أن `package.json` يحتوي على:
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
+    "dev:all": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && npm run dev:electron\"",
+    "build": "vite build",
+    "build:all": "npm run build && npm run build:electron",
+    "dist:all": "electron-builder -mwl"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.14.1",
+    "lucide-react": "^1.8.0",
+    "@azure/msal-browser": "^5.7.0",
+    "@azure/msal-react": "^5.3.0",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-precaching": "^7.1.0",
+    "workbox-routing": "^7.1.0",
+    "workbox-strategies": "^7.1.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-store": "^10.0.0",
+    "concurrently": "^8.2.2"
+  }
+}
+```
+
+-----
+
+### الخطوة 3: تحديث NazmFullSystem.jsx
+
+استبدل الـ sections بـ المكونات الجديدة:
+
+#### Import الملفات الجديدة:
+
+```javascript
+import { HomeDashboard } from './components/HomeDashboard';
+import { AIChat } from './components/AIChat';
+import { ResponsiveLayout, MobileContainer } from './components/ResponsiveLayout';
+import { usePersist, useTasks, useChatHistory } from './hooks/usePersistence';
+import { useElectronAPI } from './hooks/useElectron';
+```
+
+#### استبدل HomeSection:
+
+```javascript
+function HomeSection({ T, isRtl }) {
+  return <HomeDashboard T={T} isRtl={isRtl} />;
+}
+```
+
+#### استبدل AISection:
+
+```javascript
+function AISection({ T, isRtl }) {
+  return <AIChat T={T} isRtl={isRtl} />;
+}
+```
+
+#### استبدل DashboardLayout:
+
+```javascript
+function DashboardLayout({ T, isRtl, children }) {
+  return (
+    <ResponsiveLayout
+      T={T}
+      isRtl={isRtl}
+      sidebar={<Sidebar T={T} isRtl={isRtl} />}
+    >
+      {children}
+    </ResponsiveLayout>
+  );
+}
+```
+
+-----
+
+### الخطوة 4: إضافة Electron Main Process
+
+تأكد من أن `electron-main.js` في الـ root directory:
+
+```bash
+# تحقق من وجود الملف
+ls -la electron-main.js
+```
+
+تحديث `package.json`:
+
+```json
+{
+  "main": "dist/electron-main.js",
+  "build": {
+    "files": ["dist/**/*", "node_modules/**/*"]
+  }
+}
+```
+
+-----
+
+### الخطوة 5: تهيئة Capacitor (للموبايل)
+
+```bash
+# تثبيت Capacitor
+npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
+
+# إنشاء native projects
+npx cap init nazm com.nazm.app
+
+# مزامنة الأصول
+npx cap sync
+```
+
+-----
+
+### الخطوة 6: إعدادات البيئة
+
+أنشئ `.env.local`:
+
+```env
+# API Configuration
+VITE_API_URL=https://api.nazm.app
+VITE_API_TIMEOUT=10000
+
+# Azure Entra (Microsoft)
+VITE_AZURE_CLIENT_ID=your-client-id
+VITE_AZURE_TENANT_ID=your-tenant-id
+VITE_AZURE_REDIRECT_URI=http://localhost:5173
+
+# Features
+VITE_ENABLE_OFFLINE_MODE=true
+VITE_ENABLE_NOTIFICATIONS=true
+
+# Analytics
+VITE_GA_ID=your-ga-id
+```
+
+-----
+
+### الخطوة 7: تثبيت Dependencies
+
+```bash
+# حذف node_modules القديم
+rm -rf node_modules package-lock.json
+
+# إعادة التثبيت
+npm install
+```
+
+-----
+
+### الخطوة 8: اختبار التطبيق
+
+#### Web:
+
+```bash
+npm run dev
+# افتح http://localhost:5173
+```
+
+#### Web + Electron:
+
+```bash
+npm run dev:all
+# سيفتح تطبيق Electron بعد 5 ثوانٍ
+```
+
+#### Build للإنتاج:
+
+```bash
+npm run build      # Web فقط
+npm run build:all  # Web + Electron
+npm run dist:all   # Create installers
+```
+
+-----
+
+## 🔄 تدفق العمل المقترح
+
+### Day 1: إعداد أساسي
+
+- [ ] نسخ الملفات
+- [ ] تحديث package.json
+- [ ] `npm install`
+- [ ] اختبار `npm run dev`
+
+### Day 2: تكامل الويب
+
+- [ ] تحديث NazmFullSystem.jsx
+- [ ] اختبار المكونات الجديدة
+- [ ] تجربة Data persistence
+- [ ] اختبار PWA offline
+
+### Day 3: Desktop
+
+- [ ] اختبار `npm run dev:all`
+- [ ] بناء Electron executables
+- [ ] اختبار على Windows/macOS
+
+### Day 4: Mobile
+
+- [ ] إعداد Capacitor
+- [ ] بناء iOS و Android
+- [ ] اختبار على الجوال
+
+### Day 5: Deployment
+
+- [ ] Deploy الويب (Vercel/Netlify)
+- [ ] نشر على App Stores
+- [ ] إطلاق Desktop versions
+
+-----
+
+## 🐛 استكشاف الأخطاء
+
+### خطأ: “Cannot find module”
+
+```bash
+# إعادة تثبيت
+npm install
+
+# مسح الـ cache
+npm cache clean --force
+```
+
+### خطأ: “Service Worker not registering”
+
+```javascript
+// تأكد من وجود manifest.json
+// وأن sw.js في public/
+navigator.serviceWorker.register('/sw.js')
+```
+
+### خطأ: Electron لا يبدأ
+
+```bash
+# تحقق من البناء
+npm run build:all
+
+# جرب بشكل مباشر
+electron .
+```
+
+### خطأ: API request timeout
+
+زيادة الـ timeout في `.env.local`:
+
+```env
+VITE_API_TIMEOUT=30000  # 30 seconds
+```
+
+-----
+
+## ✅ قائمة التحقق النهائية
+
+- [ ] Web app يعمل على localhost:5173
+- [ ] Service Worker مسجل
+- [ ] PWA يعمل offline
+- [ ] Electron app يفتح
+- [ ] Tasks persisted في localStorage
+- [ ] AI Chat يحفظ السجل
+- [ ] Navigation يعمل RTL
+- [ ] Theme toggle يعمل
+- [ ] Responsive design على موبايل
+- [ ] API client يتعامل مع الأخطاء
+
+-----
+
+## 🎯 الخطوات التالية
+
+1. **Backend API**: بناء `/api/tasks`, `/api/visits`, etc.
+1. **Database**: إضافة MongoDB/PostgreSQL
+1. **Authentication**: تحسين Azure Entra integration
+1. **Analytics**: إضافة Google Analytics و Sentry
+1. **Mobile Apps**: إطلاق iOS و Android
+1. **Desktop**: إطلاق Windows و macOS versions
+
+-----
+
+## 📞 الدعم والمساعدة
+
+|المشكلة         |الحل                                         |
+|----------------|---------------------------------------------|
+|Vite لا يعمل    |`npm install @vitejs/plugin-react`           |
+|Electron لا يفتح|`npm run dev` أولاً، ثم `npm run dev:electron`|
+|PWA لا يعمل     |افسح الـ cache و ServiceWorker من DevTools   |
+|API timeout     |زيادة `VITE_API_TIMEOUT` في `.env.local`     |
+
+-----
+
+**التاريخ:** 2024
+**الإصدار:** 1.0.0
