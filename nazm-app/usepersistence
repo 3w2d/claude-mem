@@ -1,0 +1,140 @@
+import { useState, useCallback, useEffect } from 'react';
+
+/**
+ * Hook لحفظ واسترجاع البيانات من localStorage
+ * @param {string} key - المفتاح الفريد للتخزين
+ * @param {*} initialValue - القيمة الافتراضية
+ * @returns {[*, Function]} [value, setValue]
+ */
+export function usePersist(key, initialValue) {
+  const [state, setState] = useState(() => {
+    if (typeof window === 'undefined') return initialValue;
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : initialValue;
+    } catch (e) {
+      console.warn(`Failed to parse localStorage key "${key}":`, e);
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch (e) {
+      console.error(`Failed to store "${key}":`, e);
+    }
+  }, [key, state]);
+
+  return [state, setState];
+}
+
+/**
+ * Hook لإدارة tasks مع persistence
+ */
+export function useTasks(prefix = 'nazm.tasks') {
+  const [tasks, setTasks] = usePersist(prefix, []);
+
+  const addTask = useCallback((task) => {
+    setTasks(t => [{
+      id: Date.now(),
+      completed: false,
+      createdAt: new Date().toISOString(),
+      ...task
+    }, ...t]);
+  }, [setTasks]);
+
+  const updateTask = useCallback((id, updates) => {
+    setTasks(t => t.map(task => task.id === id ? { ...task, ...updates } : task));
+  }, [setTasks]);
+
+  const deleteTask = useCallback((id) => {
+    setTasks(t => t.filter(task => task.id !== id));
+  }, [setTasks]);
+
+  const toggleTask = useCallback((id) => {
+    setTasks(t => t.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  }, [setTasks]);
+
+  return { tasks, addTask, updateTask, deleteTask, toggleTask };
+}
+
+/**
+ * Hook لإدارة visits (GPS locations)
+ */
+export function useVisits(prefix = 'nazm.visits') {
+  const [visits, setVisits] = usePersist(prefix, []);
+
+  const addVisit = useCallback((position) => {
+    setVisits(v => [{
+      id: Date.now(),
+      latitude: position.latitude,
+      longitude: position.longitude,
+      accuracy: position.accuracy,
+      timestamp: position.timestamp,
+      capturedAt: new Date().toISOString()
+    }, ...v]);
+  }, [setVisits]);
+
+  const deleteVisit = useCallback((id) => {
+    setVisits(v => v.filter(visit => visit.id !== id));
+  }, [setVisits]);
+
+  const clearVisits = useCallback(() => {
+    setVisits([]);
+  }, [setVisits]);
+
+  return { visits, addVisit, deleteVisit, clearVisits };
+}
+
+/**
+ * Hook لإدارة AI Chat history
+ */
+export function useChatHistory(prefix = 'nazm.chat.history') {
+  const [messages, setMessages] = usePersist(prefix, []);
+
+  const addMessage = useCallback((role, text) => {
+    setMessages(m => [...m, {
+      id: Date.now(),
+      role,
+      text,
+      timestamp: new Date().toISOString()
+    }]);
+  }, [setMessages]);
+
+  const clearHistory = useCallback(() => {
+    setMessages([]);
+  }, [setMessages]);
+
+  return { messages, addMessage, clearHistory };
+}
+
+/**
+ * Hook للعدادات الإحصائية
+ */
+export function useStats(prefix = 'nazm.stats') {
+  const [stats, setStats] = usePersist(prefix, {
+    tasksCompleted: 0,
+    visitsLogged: 0,
+    messagesExchanged: 0,
+    sessionCount: 0,
+  });
+
+  const increment = useCallback((key) => {
+    setStats(s => ({ ...s, [key]: (s[key] || 0) + 1 }));
+  }, [setStats]);
+
+  const reset = useCallback(() => {
+    setStats({
+      tasksCompleted: 0,
+      visitsLogged: 0,
+      messagesExchanged: 0,
+      sessionCount: 0,
+    });
+  }, [setStats]);
+
+  return { stats, increment, reset };
+}
