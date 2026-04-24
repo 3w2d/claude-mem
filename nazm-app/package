@@ -1,0 +1,99 @@
+{
+  "name": "nazm-app",
+  "version": "1.0.0",
+  "description": "NAZM — نَظْم · Intelligence Hub · bilingual productivity app for Web, Mobile & Desktop",
+  "type": "module",
+  "main": "dist/electron-main.js",
+  "homepage": "./",
+  "author": "NAZM Team",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
+    "dev:all": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && npm run dev:electron\"",
+    "build": "vite build",
+    "build:electron": "npm run build && esbuild electron-main.js --bundle --platform=node --outfile=dist/electron-main.js --external:electron",
+    "build:all": "npm run build && npm run build:electron",
+    "preview": "vite preview --port 4173",
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
+    "dist:all": "electron-builder -mwl",
+    "test": "vitest",
+    "lint": "eslint src --ext .js,.jsx"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "^5.7.0",
+    "@azure/msal-react": "^5.3.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^1.8.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.14.1",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-precaching": "^7.1.0",
+    "workbox-routing": "^7.1.0",
+    "workbox-strategies": "^7.1.0",
+    "workbox-expiration": "^7.1.0",
+    "workbox-cacheable-response": "^7.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.19",
+    "vite": "^5.4.0",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-is-dev": "^3.0.1",
+    "electron-store": "^10.0.0",
+    "electron-updater": "^6.1.8",
+    "esbuild": "^0.21.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.nazm.app",
+    "productName": "NAZM",
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "certificateFile": null,
+      "certificatePassword": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NAZM"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    }
+  }
+}
