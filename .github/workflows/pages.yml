@@ -8,6 +8,7 @@ on:
     paths:
       - 'landing/**'
       - 'nazm-app/**'
+      - 'rakiza/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -50,6 +51,8 @@ jobs:
           cp -r landing/. _site/
           mkdir -p _site/app
           cp -r nazm-app/dist/. _site/app/
+          mkdir -p _site/rakiza
+          cp -r rakiza/. _site/rakiza/
 
       - uses: actions/upload-pages-artifact@v3
         with:
