@@ -112,6 +112,49 @@
             z-index: -1; pointer-events: none;
         }
 
+        /* Engineering drawings section */
+        .drawings-wrap {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+            max-width: 1100px; margin: 0 auto;
+        }
+        .draw-card {
+            background: var(--glass-white);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-light);
+            border-radius: 20px; padding: 30px;
+            box-shadow: 0 15px 40px -12px rgba(0, 0, 0, 0.04);
+        }
+        .draw-title {
+            display: flex; justify-content: space-between; align-items: baseline;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed var(--border-light); padding-bottom: 12px;
+        }
+        .draw-title h4 { font-size: 1.1rem; color: var(--text-dark); font-weight: 600; }
+        .draw-title .draw-tag {
+            font-family: 'IBM Plex Mono'; font-size: 12px;
+            color: var(--accent-blue); letter-spacing: 1px;
+        }
+        .draw-svg { width: 100%; height: auto; display: block; }
+        .draw-svg .grid { stroke: var(--border-light); stroke-width: 0.5; fill: none; }
+        .draw-svg .wall { stroke: var(--text-dark); stroke-width: 2; fill: none; }
+        .draw-svg .col { fill: var(--accent-blue); }
+        .draw-svg .col-outline { stroke: var(--accent-blue); stroke-width: 1.5; fill: rgba(0, 86, 247, 0.08); }
+        .draw-svg .dim-line { stroke: var(--text-muted); stroke-width: 0.6; }
+        .draw-svg .dim-tick { stroke: var(--text-muted); stroke-width: 0.6; }
+        .draw-svg .dim-text {
+            font-family: 'IBM Plex Mono'; font-size: 9px; fill: var(--text-muted);
+            text-anchor: middle; direction: ltr;
+        }
+        .draw-svg .label {
+            font-family: 'IBM Plex Sans Arabic'; font-size: 10px; fill: var(--text-muted);
+            text-anchor: middle;
+        }
+        .draw-svg .center-mark { stroke: var(--accent-blue); stroke-width: 0.5; stroke-dasharray: 2 2; }
+        .draw-svg .slab { fill: rgba(0, 86, 247, 0.05); stroke: var(--accent-blue); stroke-width: 1; }
+        .draw-svg .rebar { stroke: var(--accent-blue); stroke-width: 0.7; }
+        .draw-svg .ground-hatch { stroke: var(--text-muted); stroke-width: 0.5; }
+        .draw-svg .footing { fill: rgba(100, 116, 139, 0.15); stroke: var(--text-dark); stroke-width: 1.2; }
+
         @media (max-width: 900px) {
             section { padding: 100px 5% 40px; }
             .hero-wrap h1 { font-size: 2.8rem; }
@@ -129,6 +172,10 @@
             .res-value { font-size: 26px; }
             .field input, .btn-calc { padding: 14px; }
         }
+        @media (max-width: 900px) {
+            .drawings-wrap { grid-template-columns: 1fr; gap: 20px; }
+            .draw-card { padding: 22px; }
+        }
     </style>
 </head>
 <body>
@@ -145,6 +192,132 @@
         <div class="hero-wrap gsap-reveal">
             <h1>هندسة الكميات<br>بأسلوب <span>ذكي ونقي.</span></h1>
             <p>حوّل بيانات مشروعك الإنشائي إلى تقارير دقيقة وفورية. "ركيزة" تمنحك الأرقام التي تحتاجها لبدء البناء بكل ثقة.</p>
+        </div>
+    </section>
+
+    <section id="drawings">
+        <div class="drawings-wrap gsap-reveal">
+
+            <div class="draw-card">
+                <div class="draw-title">
+                    <h4>المخطط الأفقي · شبكة الأعمدة</h4>
+                    <span class="draw-tag">DWG-01 · PLAN</span>
+                </div>
+                <svg class="draw-svg" viewBox="0 0 360 280" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="grid-pat" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <path d="M 20 0 L 0 0 0 20" class="grid"/>
+                        </pattern>
+                    </defs>
+                    <rect x="40" y="30" width="280" height="200" fill="url(#grid-pat)"/>
+
+                    <rect x="40" y="30" width="280" height="200" class="wall"/>
+                    <line x1="180" y1="30" x2="180" y2="230" class="wall"/>
+                    <line x1="40" y1="130" x2="320" y2="130" class="wall"/>
+
+                    <g class="col">
+                        <rect x="36" y="26" width="8" height="8"/>
+                        <rect x="106" y="26" width="8" height="8"/>
+                        <rect x="176" y="26" width="8" height="8"/>
+                        <rect x="246" y="26" width="8" height="8"/>
+                        <rect x="316" y="26" width="8" height="8"/>
+                        <rect x="36" y="126" width="8" height="8"/>
+                        <rect x="106" y="126" width="8" height="8"/>
+                        <rect x="176" y="126" width="8" height="8"/>
+                        <rect x="246" y="126" width="8" height="8"/>
+                        <rect x="316" y="126" width="8" height="8"/>
+                        <rect x="36" y="226" width="8" height="8"/>
+                        <rect x="106" y="226" width="8" height="8"/>
+                        <rect x="176" y="226" width="8" height="8"/>
+                        <rect x="246" y="226" width="8" height="8"/>
+                        <rect x="316" y="226" width="8" height="8"/>
+                    </g>
+
+                    <line x1="40" y1="20" x2="320" y2="20" class="dim-line"/>
+                    <line x1="40" y1="16" x2="40" y2="24" class="dim-tick"/>
+                    <line x1="110" y1="16" x2="110" y2="24" class="dim-tick"/>
+                    <line x1="180" y1="16" x2="180" y2="24" class="dim-tick"/>
+                    <line x1="250" y1="16" x2="250" y2="24" class="dim-tick"/>
+                    <line x1="320" y1="16" x2="320" y2="24" class="dim-tick"/>
+                    <text x="75" y="14" class="dim-text">5.00</text>
+                    <text x="145" y="14" class="dim-text">5.00</text>
+                    <text x="215" y="14" class="dim-text">5.00</text>
+                    <text x="285" y="14" class="dim-text">5.00</text>
+
+                    <line x1="330" y1="30" x2="330" y2="230" class="dim-line"/>
+                    <line x1="326" y1="30" x2="334" y2="30" class="dim-tick"/>
+                    <line x1="326" y1="130" x2="334" y2="130" class="dim-tick"/>
+                    <line x1="326" y1="230" x2="334" y2="230" class="dim-tick"/>
+                    <text x="345" y="83" class="dim-text" transform="rotate(90 345 83)">5.00</text>
+                    <text x="345" y="183" class="dim-text" transform="rotate(90 345 183)">5.00</text>
+
+                    <text x="180" y="265" class="label">المسطح: 20.00 × 10.00 م — مساحة 200 م²</text>
+                </svg>
+            </div>
+
+            <div class="draw-card">
+                <div class="draw-title">
+                    <h4>المقطع الإنشائي · الأساس والأدوار</h4>
+                    <span class="draw-tag">DWG-02 · SECTION</span>
+                </div>
+                <svg class="draw-svg" viewBox="0 0 360 280" xmlns="http://www.w3.org/2000/svg">
+                    <g class="ground-hatch">
+                        <line x1="20" y1="220" x2="40" y2="200"/>
+                        <line x1="40" y1="220" x2="60" y2="200"/>
+                        <line x1="60" y1="220" x2="80" y2="200"/>
+                        <line x1="80" y1="220" x2="100" y2="200"/>
+                        <line x1="260" y1="220" x2="280" y2="200"/>
+                        <line x1="280" y1="220" x2="300" y2="200"/>
+                        <line x1="300" y1="220" x2="320" y2="200"/>
+                        <line x1="320" y1="220" x2="340" y2="200"/>
+                    </g>
+                    <line x1="20" y1="200" x2="100" y2="200" class="wall"/>
+                    <line x1="260" y1="200" x2="340" y2="200" class="wall"/>
+
+                    <rect x="80" y="200" width="200" height="20" class="footing"/>
+                    <rect x="120" y="180" width="120" height="20" class="footing"/>
+
+                    <g class="col-outline">
+                        <rect x="125" y="60" width="14" height="120"/>
+                        <rect x="221" y="60" width="14" height="120"/>
+                    </g>
+
+                    <rect x="100" y="150" width="160" height="10" class="slab"/>
+                    <rect x="100" y="110" width="160" height="10" class="slab"/>
+                    <rect x="100" y="70"  width="160" height="10" class="slab"/>
+                    <rect x="100" y="50"  width="160" height="10" class="slab"/>
+
+                    <g class="rebar">
+                        <line x1="105" y1="155" x2="255" y2="155"/>
+                        <line x1="105" y1="115" x2="255" y2="115"/>
+                        <line x1="105" y1="75"  x2="255" y2="75"/>
+                        <line x1="128" y1="60"  x2="128" y2="180"/>
+                        <line x1="136" y1="60"  x2="136" y2="180"/>
+                        <line x1="224" y1="60"  x2="224" y2="180"/>
+                        <line x1="232" y1="60"  x2="232" y2="180"/>
+                    </g>
+
+                    <line x1="60" y1="50" x2="60" y2="200" class="dim-line"/>
+                    <line x1="56" y1="50"  x2="64" y2="50"  class="dim-tick"/>
+                    <line x1="56" y1="90"  x2="64" y2="90"  class="dim-tick"/>
+                    <line x1="56" y1="130" x2="64" y2="130" class="dim-tick"/>
+                    <line x1="56" y1="170" x2="64" y2="170" class="dim-tick"/>
+                    <line x1="56" y1="200" x2="64" y2="200" class="dim-tick"/>
+                    <text x="48" y="73"  class="dim-text" transform="rotate(-90 48 73)">3.50</text>
+                    <text x="48" y="113" class="dim-text" transform="rotate(-90 48 113)">3.50</text>
+                    <text x="48" y="153" class="dim-text" transform="rotate(-90 48 153)">3.50</text>
+                    <text x="48" y="188" class="dim-text" transform="rotate(-90 48 188)">2.00</text>
+
+                    <text x="290" y="65"  class="dim-text" style="text-anchor:start">+ 14.00</text>
+                    <text x="290" y="105" class="dim-text" style="text-anchor:start">+ 10.50</text>
+                    <text x="290" y="145" class="dim-text" style="text-anchor:start">+ 7.00</text>
+                    <text x="290" y="185" class="dim-text" style="text-anchor:start">+ 3.50</text>
+                    <text x="290" y="215" class="dim-text" style="text-anchor:start">± 0.00</text>
+
+                    <text x="180" y="265" class="label">ارتفاع الدور 3.50 م — أساس مسلّح بعمق 2.00 م</text>
+                </svg>
+            </div>
+
         </div>
     </section>
 
@@ -221,27 +394,77 @@
             building.position.y = isMobile() ? -10 : 0;
         }
 
-        function drawBuilding(side, floors) {
-            const old = building.children[0];
-            if (old) {
-                old.geometry.dispose();
-                old.material.dispose();
+        const disposables = [];
+        function disposeBuilding() {
+            while (disposables.length) {
+                const d = disposables.pop();
+                if (d.geometry) d.geometry.dispose();
+                if (d.material) d.material.dispose();
             }
             while (building.children.length > 0) building.remove(building.children[0]);
+        }
 
-            const h = 3.5;
-            const geo = new THREE.BoxGeometry(side, h, side);
-            const mat = new THREE.MeshPhysicalMaterial({
-                color: 0x0056f7, transparent: true, opacity: 0.05, roughness: 0, metalness: 0.1, wireframe: true
-            });
+        function drawBuilding(side, floors) {
+            disposeBuilding();
+
+            const floorH = 3.5;
+            const colSize = side * 0.06;
+            const beamH = 0.5;
+            const slabH = 0.25;
+
+            const colMat = new THREE.MeshPhysicalMaterial({ color: 0x0056f7, roughness: 0.4, metalness: 0.1 });
+            const beamMat = new THREE.MeshPhysicalMaterial({ color: 0x0056f7, transparent: true, opacity: 0.85, roughness: 0.4 });
+            const slabMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, roughness: 0.7 });
+            const wireMat = new THREE.LineBasicMaterial({ color: 0x0056f7, transparent: true, opacity: 0.3 });
+            const footMat = new THREE.MeshPhysicalMaterial({ color: 0x64748b, roughness: 0.9 });
+            disposables.push({ material: colMat }, { material: beamMat }, { material: slabMat }, { material: wireMat }, { material: footMat });
+
+            const colGeo = new THREE.BoxGeometry(colSize, floorH, colSize);
+            const beamXGeo = new THREE.BoxGeometry(side, beamH, colSize);
+            const beamZGeo = new THREE.BoxGeometry(colSize, beamH, side);
+            const slabGeo = new THREE.BoxGeometry(side, slabH, side);
+            const slabEdgeGeo = new THREE.EdgesGeometry(slabGeo);
+            const footGeo = new THREE.BoxGeometry(side * 1.15, 1, side * 1.15);
+            disposables.push({ geometry: colGeo }, { geometry: beamXGeo }, { geometry: beamZGeo }, { geometry: slabGeo }, { geometry: slabEdgeGeo }, { geometry: footGeo });
+
+            const half = side / 2;
+            const colPositions = [
+                [-half, -half], [ half, -half],
+                [-half,  half], [ half,  half],
+                [0, -half], [0, half], [-half, 0], [half, 0],
+            ];
+
+            const foot = new THREE.Mesh(footGeo, footMat);
+            foot.position.y = -0.5;
+            building.add(foot);
+
             for (let i = 0; i < floors; i++) {
-                const mesh = new THREE.Mesh(geo, mat);
-                mesh.position.y = (i * h) + h / 2;
-                building.add(mesh);
+                const baseY = i * floorH;
+
+                colPositions.forEach(([x, z]) => {
+                    const c = new THREE.Mesh(colGeo, colMat);
+                    c.position.set(x, baseY + floorH / 2, z);
+                    building.add(c);
+                });
+
+                const beamY = baseY + floorH - beamH / 2;
+                const b1 = new THREE.Mesh(beamXGeo, beamMat); b1.position.set(0, beamY, -half); building.add(b1);
+                const b2 = new THREE.Mesh(beamXGeo, beamMat); b2.position.set(0, beamY,  half); building.add(b2);
+                const b3 = new THREE.Mesh(beamZGeo, beamMat); b3.position.set(-half, beamY, 0); building.add(b3);
+                const b4 = new THREE.Mesh(beamZGeo, beamMat); b4.position.set( half, beamY, 0); building.add(b4);
+
+                const slab = new THREE.Mesh(slabGeo, slabMat);
+                slab.position.y = baseY + floorH;
+                building.add(slab);
+
+                const slabEdges = new THREE.LineSegments(slabEdgeGeo, wireMat);
+                slabEdges.position.y = baseY + floorH;
+                building.add(slabEdges);
             }
+
             positionBuilding();
         }
-        drawBuilding(25, 4);
+        drawBuilding(20, 4);
 
         let rafId;
         function animate() {
