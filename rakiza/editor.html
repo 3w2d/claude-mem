@@ -300,19 +300,77 @@
         }
         .ai-drop strong { display: block; color: var(--accent-blue); margin-bottom: 4px; font-size: 13px; }
 
+        /* Templates gallery */
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px; margin-top: 8px;
+        }
+        .tpl-card {
+            background: #fff; border: 1px solid var(--border-light); border-radius: 10px;
+            overflow: hidden; cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .tpl-card:hover { border-color: var(--accent-blue); box-shadow: 0 8px 25px -8px rgba(0, 86, 247, 0.2); transform: translateY(-2px); }
+        .tpl-thumb {
+            background: var(--accent-blue-soft);
+            aspect-ratio: 1.4;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .tpl-thumb svg { width: 90%; height: 90%; }
+        .tpl-info { padding: 12px; }
+        .tpl-info h5 { font-size: 14px; margin-bottom: 4px; }
+        .tpl-info .meta {
+            font-size: 11px; color: var(--text-muted);
+            display: flex; gap: 10px; flex-wrap: wrap;
+            font-family: 'IBM Plex Mono';
+        }
+        .tpl-info .meta span::before { content: '· '; }
+        .tpl-info .meta span:first-child::before { content: ''; }
+
+        /* Wizard */
+        .wiz-step {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px 14px; margin-bottom: 14px;
+        }
+        .wiz-field { display: flex; flex-direction: column; gap: 6px; }
+        .wiz-field label { font-size: 12px; color: var(--text-muted); }
+        .wiz-field input, .wiz-field select {
+            padding: 9px 12px; border: 1px solid var(--border-light); border-radius: 6px;
+            font-size: 14px; font-family: 'IBM Plex Mono'; color: var(--accent-blue);
+            background: #fff; text-align: left; direction: ltr;
+            -webkit-appearance: none; appearance: none;
+        }
+        .wiz-field input:focus, .wiz-field select:focus { border-color: var(--accent-blue); outline: none; }
+        .wiz-field.span2 { grid-column: span 2; }
+        .wiz-summary {
+            background: var(--accent-blue-soft); border-radius: 8px;
+            padding: 12px 14px; margin-bottom: 14px;
+            font-size: 12px; color: var(--accent-blue); line-height: 1.7;
+        }
+        .wiz-summary b { font-family: 'IBM Plex Mono'; }
+        .wiz-btn {
+            width: 100%; padding: 14px; background: var(--accent-blue); color: #fff;
+            border: none; border-radius: 8px; font-weight: 600; font-size: 14px;
+            transition: 0.15s; margin-top: 4px;
+        }
+        .wiz-btn:hover { background: var(--accent-blue-hover); }
+
         /* Modal */
         .modal-bg {
             position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
             backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
             display: none; align-items: center; justify-content: center;
             z-index: 100;
+            padding: 20px; overflow-y: auto;
         }
         .modal-bg.show { display: flex; }
         .modal {
             background: #fff; border-radius: 14px; padding: 28px;
-            max-width: 460px; width: 90%;
+            max-width: 460px; width: 100%;
             box-shadow: 0 25px 60px -20px rgba(0,0,0,0.3);
+            margin: auto;
         }
+        .modal.lg { max-width: 880px; }
         .modal h3 { font-size: 1.2rem; margin-bottom: 12px; }
         .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.6; }
         .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
@@ -362,6 +420,10 @@
         <button class="btn" id="btnNew" title="مشروع جديد">
             <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <span>جديد</span>
+        </button>
+        <button class="btn btn-primary" id="btnTemplates" title="نماذج جاهزة">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            <span>نماذج جاهزة</span>
         </button>
         <button class="btn" id="btnImport" title="استيراد JSON">
             <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -436,10 +498,44 @@
         <div class="side-body" id="paneBoq"></div>
         <div class="side-body" id="paneProps" style="display:none;"></div>
         <div class="side-body" id="paneAI" style="display:none;">
-            <div class="props-label">رفع مخطط ورقي</div>
+            <div class="props-label">المساعد الذكي · أنشئ تصميماً من احتياجاتك</div>
+            <div class="wiz-step">
+                <div class="wiz-field">
+                    <label>عرض الأرض (م)</label>
+                    <input type="number" id="wizW" value="12" min="4" max="30" step="0.5">
+                </div>
+                <div class="wiz-field">
+                    <label>طول الأرض (م)</label>
+                    <input type="number" id="wizH" value="10" min="4" max="30" step="0.5">
+                </div>
+                <div class="wiz-field">
+                    <label>عدد غرف النوم</label>
+                    <input type="number" id="wizBeds" value="3" min="1" max="6">
+                </div>
+                <div class="wiz-field">
+                    <label>عدد الحمامات</label>
+                    <input type="number" id="wizBaths" value="2" min="1" max="4">
+                </div>
+                <div class="wiz-field">
+                    <label>عدد الأدوار</label>
+                    <input type="number" id="wizFloors" value="1" min="1" max="4">
+                </div>
+                <div class="wiz-field">
+                    <label>الطابع</label>
+                    <select id="wizStyle">
+                        <option value="modern">عصري</option>
+                        <option value="traditional">تقليدي</option>
+                        <option value="compact">اقتصادي</option>
+                    </select>
+                </div>
+            </div>
+            <div class="wiz-summary" id="wizSummary"></div>
+            <button class="wiz-btn" id="wizGenerate">إنشاء التصميم تلقائياً</button>
+
+            <div class="props-label" style="margin-top:22px;">رفع مخطط ورقي</div>
             <label class="ai-drop" id="aiDrop">
                 <strong>ارفع صورة المخطط</strong>
-                حوّل رسماً ورقياً إلى مشروع رقمي تلقائياً
+                حوّل رسماً ورقياً إلى مشروع رقمي
                 <input type="file" accept="image/*" hidden id="aiFile">
             </label>
             <div class="props-label" style="margin-top:18px;">أسعار السوق (SAR)</div>
@@ -1540,6 +1636,281 @@ function sampleProject() {
 }
 
 // =====================================================================
+// PARAMETRIC PLAN GENERATOR
+// =====================================================================
+function generatePlan(opts) {
+    const { width: W, height: H, bedrooms, bathrooms, floors: nFloors, style } = opts;
+    const allFloors = [];
+
+    const corners = [{x:0,y:0},{x:W,y:0},{x:W,y:H},{x:0,y:H}];
+    const wMid = W / 2, hMid = H / 2;
+
+    for (let fi = 0; fi < nFloors; fi++) {
+        const f = makeFloor(fi === 0 ? 'الدور الأرضي' : `الدور ${fi + 1}`);
+        const isGround = fi === 0;
+
+        // Outer walls
+        const wallId = (a, b) => ({ id: uid(), x1: a.x, y1: a.y, x2: b.x, y2: b.y });
+        f.walls.push(wallId(corners[0], corners[1]));
+        f.walls.push(wallId(corners[1], corners[2]));
+        f.walls.push(wallId(corners[2], corners[3]));
+        f.walls.push(wallId(corners[3], corners[0]));
+
+        // Ground floor: living + kitchen on the south strip, bedrooms north (single-floor case)
+        // Multi-floor: ground = social spaces, upper = bedrooms
+        const livingFrac = nFloors === 1 ? 0.45 : (isGround ? 1.0 : 0);
+        const bedFrac = nFloors === 1 ? 0.55 : (isGround ? 0 : 1.0);
+
+        if (isGround) {
+            // South strip: living + kitchen
+            const livingH = nFloors === 1 ? H * livingFrac : H * 0.55;
+            // Kitchen wall
+            f.walls.push(wallId({x: W * 0.6, y: 0}, {x: W * 0.6, y: livingH}));
+            // Living/kitchen separator (only if single-floor)
+            if (nFloors === 1) {
+                f.walls.push(wallId({x: 0, y: livingH}, {x: W, y: livingH}));
+            } else {
+                // Stairs/corridor area
+                f.walls.push(wallId({x: 0, y: H * 0.55}, {x: W * 0.4, y: H * 0.55}));
+                f.walls.push(wallId({x: W * 0.4, y: H * 0.55}, {x: W * 0.4, y: H}));
+            }
+
+            // Guest bathroom on ground floor
+            const bathW = Math.min(2.0, W * 0.18);
+            const bathH = Math.min(1.8, livingH * 0.5);
+            f.walls.push(wallId({x: 0, y: bathH}, {x: bathW, y: bathH}));
+            f.walls.push(wallId({x: bathW, y: 0}, {x: bathW, y: bathH}));
+
+            // Door (entrance) on south wall, slightly off-center
+            f.doors.push({ id: uid(), wallId: f.walls[0].id, t: 0.4, width: DOOR_W });
+            // Kitchen door
+            f.doors.push({ id: uid(), wallId: f.walls[4].id, t: 0.5, width: DOOR_W });
+
+            // Windows on east/west and north
+            f.windows.push({ id: uid(), wallId: f.walls[1].id, t: 0.25, width: WIN_W });
+            f.windows.push({ id: uid(), wallId: f.walls[1].id, t: 0.75, width: WIN_W });
+            f.windows.push({ id: uid(), wallId: f.walls[3].id, t: 0.4, width: WIN_W });
+            f.windows.push({ id: uid(), wallId: f.walls[3].id, t: 0.75, width: WIN_W });
+        }
+
+        if (nFloors === 1 || !isGround) {
+            // Bedrooms strip
+            const startY = nFloors === 1 ? H * livingFrac : 0;
+            const endY = H;
+            const stripH = endY - startY;
+
+            // Master bedroom takes 40% width
+            const masterW = W * 0.5;
+            // Other bedrooms split the remainder
+            const otherCount = bedrooms - 1;
+            const otherW = otherCount > 0 ? (W - masterW) / otherCount : 0;
+
+            // Vertical separators
+            f.walls.push(wallId({x: masterW, y: startY}, {x: masterW, y: endY}));
+            for (let i = 1; i < otherCount; i++) {
+                const x = masterW + i * otherW;
+                f.walls.push(wallId({x, y: startY}, {x, y: endY}));
+            }
+            // Horizontal corridor (if multi-floor) - already part of separator above
+
+            // Master bathroom (en-suite) — corner of master bedroom
+            const enSuiteW = Math.min(2.5, masterW * 0.4);
+            const enSuiteH = Math.min(2.0, stripH * 0.35);
+            f.walls.push(wallId({x: 0, y: endY - enSuiteH}, {x: enSuiteW, y: endY - enSuiteH}));
+            f.walls.push(wallId({x: enSuiteW, y: endY - enSuiteH}, {x: enSuiteW, y: endY}));
+
+            // Common bathroom (if 2+ bathrooms requested)
+            if (bathrooms >= 2 && otherCount > 0) {
+                const cbX = masterW + 0.1;
+                const cbW2 = Math.min(2.0, otherW * 0.6);
+                const cbH = Math.min(1.8, stripH * 0.3);
+                f.walls.push(wallId({x: cbX, y: endY - cbH}, {x: cbX + cbW2, y: endY - cbH}));
+                f.walls.push(wallId({x: cbX + cbW2, y: endY - cbH}, {x: cbX + cbW2, y: endY}));
+            }
+
+            // Door from corridor to each bedroom (place on bottom wall of bedroom strip if single-floor)
+            if (nFloors === 1) {
+                // Master door
+                const w0 = f.walls.find(w => w.x1 === 0 && w.x2 === W && w.y1 === startY);
+                if (w0) {
+                    f.doors.push({ id: uid(), wallId: w0.id, t: masterW / W * 0.5, width: DOOR_W });
+                    for (let i = 0; i < otherCount; i++) {
+                        const x = masterW + (i + 0.5) * otherW;
+                        f.doors.push({ id: uid(), wallId: w0.id, t: x / W, width: DOOR_W });
+                    }
+                }
+            }
+
+            // Bedroom windows on north + east/west outer walls
+            f.windows.push({ id: uid(), wallId: f.walls[2].id, t: 0.2, width: WIN_W });
+            f.windows.push({ id: uid(), wallId: f.walls[2].id, t: 0.5, width: WIN_W });
+            f.windows.push({ id: uid(), wallId: f.walls[2].id, t: 0.8, width: WIN_W });
+            if (nFloors > 1) {
+                f.windows.push({ id: uid(), wallId: f.walls[1].id, t: 0.4, width: WIN_W });
+                f.windows.push({ id: uid(), wallId: f.walls[3].id, t: 0.4, width: WIN_W });
+            }
+        }
+
+        // Columns: corners + perimeter (every ~5m) + key intersections
+        const colSpacing = 5;
+        const colSize = style === 'compact' ? 0.25 : 0.30;
+        const cols = [];
+        const addCol = (x, y) => {
+            if (!cols.some(c => Math.abs(c.x - x) < 0.1 && Math.abs(c.y - y) < 0.1)) {
+                cols.push({ id: uid(), x, y, size: colSize });
+            }
+        };
+        // Corners
+        corners.forEach(c => addCol(c.x, c.y));
+        // Perimeter
+        for (let x = colSpacing; x < W; x += colSpacing) {
+            addCol(x, 0); addCol(x, H);
+        }
+        for (let y = colSpacing; y < H; y += colSpacing) {
+            addCol(0, y); addCol(W, y);
+        }
+        // Center column for large spans
+        if (W > 8 && H > 8) addCol(wMid, hMid);
+        f.columns = cols;
+
+        allFloors.push(f);
+    }
+
+    const projectName = style === 'traditional'
+        ? `بيت تقليدي · ${W}×${H}م · ${bedrooms} غرف`
+        : style === 'compact'
+        ? `تصميم اقتصادي · ${W}×${H}م · ${bedrooms} غرف`
+        : `فيلا عصرية · ${W}×${H}م · ${bedrooms} غرف`;
+    return { name: projectName, floors: allFloors };
+}
+
+// =====================================================================
+// TEMPLATES GALLERY
+// =====================================================================
+const TEMPLATES = [
+    {
+        name: 'فيلا صغيرة', area: '8×10 م', meta: 'دور واحد · غرفتان · حمام',
+        thumb: 'small-villa',
+        build: () => generatePlan({ width: 10, height: 8, bedrooms: 2, bathrooms: 1, floors: 1, style: 'compact' })
+    },
+    {
+        name: 'فيلا متوسطة', area: '10×12 م', meta: 'دور واحد · 3 غرف · حمامان',
+        thumb: 'mid-villa',
+        build: () => generatePlan({ width: 12, height: 10, bedrooms: 3, bathrooms: 2, floors: 1, style: 'modern' })
+    },
+    {
+        name: 'فيلا دورين', area: '12×14 م', meta: 'دوران · 4 غرف · 3 حمامات',
+        thumb: 'two-story',
+        build: () => generatePlan({ width: 14, height: 12, bedrooms: 4, bathrooms: 3, floors: 2, style: 'modern' })
+    },
+    {
+        name: 'فيلا كبيرة', area: '15×15 م', meta: 'دوران · 5 غرف · 4 حمامات',
+        thumb: 'large-villa',
+        build: () => generatePlan({ width: 15, height: 15, bedrooms: 5, bathrooms: 4, floors: 2, style: 'modern' })
+    },
+    {
+        name: 'دوبلكس', area: '10×10 م', meta: '3 أدوار · 4 غرف · 3 حمامات',
+        thumb: 'duplex',
+        build: () => generatePlan({ width: 10, height: 10, bedrooms: 4, bathrooms: 3, floors: 3, style: 'modern' })
+    },
+    {
+        name: 'استراحة', area: '12×8 م', meta: 'دور واحد · غرفتان · مجلس + حمام',
+        thumb: 'rest-house',
+        build: () => generatePlan({ width: 12, height: 8, bedrooms: 2, bathrooms: 1, floors: 1, style: 'traditional' })
+    },
+    {
+        name: 'شقة عائلية', area: '11×9 م', meta: 'دور واحد · 3 غرف · حمامان',
+        thumb: 'apartment',
+        build: () => generatePlan({ width: 11, height: 9, bedrooms: 3, bathrooms: 2, floors: 1, style: 'compact' })
+    },
+    {
+        name: 'مبنى عمارة', area: '14×12 م', meta: '4 أدوار · 3 غرف لكل دور',
+        thumb: 'building',
+        build: () => generatePlan({ width: 14, height: 12, bedrooms: 3, bathrooms: 2, floors: 4, style: 'modern' })
+    },
+];
+
+function thumbSvg(p) {
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    const f = p.floors[0];
+    f.walls.forEach(w => {
+        minX = Math.min(minX, w.x1, w.x2); maxX = Math.max(maxX, w.x1, w.x2);
+        minY = Math.min(minY, w.y1, w.y2); maxY = Math.max(maxY, w.y1, w.y2);
+    });
+    const W = maxX - minX, H = maxY - minY;
+    const pad = 1;
+    let s = `<svg viewBox="${minX - pad} ${minY - pad} ${W + pad * 2} ${H + pad * 2}" preserveAspectRatio="xMidYMid meet">`;
+    s += `<g transform="translate(0 ${maxY + minY}) scale(1 -1)">`;
+    f.walls.forEach(w => {
+        s += `<line x1="${w.x1}" y1="${w.y1}" x2="${w.x2}" y2="${w.y2}" stroke="#1a1e23" stroke-width="0.18" stroke-linecap="butt"/>`;
+    });
+    f.columns.forEach(c => {
+        s += `<rect x="${c.x - 0.18}" y="${c.y - 0.18}" width="0.36" height="0.36" fill="#0056f7"/>`;
+    });
+    s += `</g></svg>`;
+    return s;
+}
+
+function openTemplatesGallery() {
+    const cards = TEMPLATES.map((t, i) => {
+        const p = t.build();
+        return `<div class="tpl-card" data-i="${i}">
+            <div class="tpl-thumb">${thumbSvg(p)}</div>
+            <div class="tpl-info">
+                <h5>${t.name}</h5>
+                <div class="meta"><span>${t.area}</span><span>${t.meta}</span></div>
+            </div>
+        </div>`;
+    }).join('');
+    showModal('اختر نموذجاً جاهزاً',
+        `<div class="gallery-grid">${cards}</div>`,
+        null, true);
+    document.querySelectorAll('.tpl-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const i = parseInt(card.dataset.i);
+            project = TEMPLATES[i].build();
+            active.floorIdx = 0; active.selectedId = null;
+            document.getElementById('projName').value = project.name;
+            persist(); recalcAll(); renderFloorTabs(); render();
+            modalBg.classList.remove('show');
+        });
+    });
+}
+document.getElementById('btnTemplates').addEventListener('click', openTemplatesGallery);
+
+// =====================================================================
+// AI WIZARD
+// =====================================================================
+function readWizard() {
+    return {
+        width: parseFloat(document.getElementById('wizW').value) || 12,
+        height: parseFloat(document.getElementById('wizH').value) || 10,
+        bedrooms: parseInt(document.getElementById('wizBeds').value) || 3,
+        bathrooms: parseInt(document.getElementById('wizBaths').value) || 2,
+        floors: parseInt(document.getElementById('wizFloors').value) || 1,
+        style: document.getElementById('wizStyle').value,
+    };
+}
+function updateWizSummary() {
+    const o = readWizard();
+    const totalArea = (o.width * o.height * o.floors).toFixed(1);
+    const styles = { modern: 'عصري', traditional: 'تقليدي', compact: 'اقتصادي' };
+    document.getElementById('wizSummary').innerHTML =
+        `أرض <b>${o.width}×${o.height}</b> م · <b>${o.floors}</b> ${o.floors > 1 ? 'أدوار' : 'دور'} · ` +
+        `<b>${o.bedrooms}</b> غرف نوم + <b>${o.bathrooms}</b> حمامات<br>` +
+        `إجمالي المساحة المبنية: <b>${totalArea}</b> م² · الطابع: ${styles[o.style]}`;
+}
+['wizW','wizH','wizBeds','wizBaths','wizFloors','wizStyle'].forEach(id =>
+    document.getElementById(id).addEventListener('input', updateWizSummary));
+document.getElementById('wizGenerate').addEventListener('click', () => {
+    const opts = readWizard();
+    project = generatePlan(opts);
+    active.floorIdx = 0; active.selectedId = null;
+    document.getElementById('projName').value = project.name;
+    persist(); recalcAll(); renderFloorTabs(); render();
+});
+
+// =====================================================================
 // MODAL
 // =====================================================================
 const modalBg = document.getElementById('modalBg');
@@ -1548,10 +1919,20 @@ const modalBody = document.getElementById('modalBody');
 const modalOk = document.getElementById('modalOk');
 const modalCancel = document.getElementById('modalCancel');
 let modalCb = null;
-function showModal(title, body, cb) {
+function showModal(title, body, cb, large) {
     modalTitle.textContent = title;
     modalBody.innerHTML = body;
     modalCb = cb;
+    document.querySelector('.modal').classList.toggle('lg', !!large);
+    document.querySelector('.modal-actions').style.display = cb ? '' : 'none';
+    if (!cb) {
+        const closeBtn = document.getElementById('modalCancel');
+        closeBtn.style.display = '';
+        closeBtn.textContent = 'إغلاق';
+    } else {
+        document.getElementById('modalCancel').textContent = 'إلغاء';
+        document.getElementById('modalCancel').style.display = '';
+    }
     modalBg.classList.add('show');
 }
 modalOk.addEventListener('click', () => { modalBg.classList.remove('show'); if (modalCb) modalCb(); });
@@ -1579,17 +1960,13 @@ function boot() {
     size3D();
     renderProps();
 
-    // First-run sample
+    // First-run: show templates gallery
     const empty = project.floors.length === 1 && !project.floors[0].walls.length && !project.floors[0].columns.length;
     if (empty) {
-        showModal('ابدأ بنموذج جاهز؟',
-            'يمكن أن نبدأ المشروع بفيلا 12×10م كمثال، أو ابدأ من الصفر.<br>أدوات الرسم: اضغط <strong>W</strong> لجدار، <strong>C</strong> لعمود.',
-            () => {
-                project = sampleProject();
-                document.getElementById('projName').value = project.name;
-                persist(); recalcAll(); renderFloorTabs(); render();
-            });
+        setTimeout(openTemplatesGallery, 200);
     }
+
+    updateWizSummary();
 }
 
 let resizeTimer;
