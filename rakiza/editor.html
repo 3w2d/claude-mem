@@ -375,6 +375,57 @@
         .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.6; }
         .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
+        /* Chat */
+        .chat {
+            display: flex; flex-direction: column;
+            height: 420px; max-height: 60vh;
+            border: 1px solid var(--border-light); border-radius: 10px;
+            overflow: hidden; background: var(--bg-main);
+        }
+        .chat-msgs {
+            flex: 1; overflow-y: auto;
+            padding: 12px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .msg { max-width: 85%; padding: 9px 12px; border-radius: 12px; font-size: 13px; line-height: 1.55; }
+        .msg.user { background: var(--accent-blue); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg.bot { background: #fff; border: 1px solid var(--border-light); color: var(--text-dark); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .msg.tool { background: var(--accent-blue-soft); color: var(--accent-blue); font-family: 'IBM Plex Mono'; font-size: 11px; align-self: stretch; max-width: 100%; }
+        .msg.err { background: #fee2e2; color: var(--danger); align-self: stretch; max-width: 100%; }
+        .msg .who { font-size: 10px; opacity: 0.7; margin-bottom: 2px; }
+        .chat-input-wrap {
+            display: flex; gap: 6px;
+            padding: 8px; border-top: 1px solid var(--border-light); background: var(--bg-panel);
+        }
+        .chat-input {
+            flex: 1; padding: 9px 12px; border: 1px solid var(--border-light); border-radius: 6px;
+            font-size: 13px; resize: none; min-height: 38px; max-height: 120px;
+        }
+        .chat-input:focus { outline: none; border-color: var(--accent-blue); }
+        .chat-send {
+            background: var(--accent-blue); color: #fff;
+            border: none; border-radius: 6px; padding: 0 14px; font-weight: 600;
+        }
+        .chat-send:disabled { opacity: 0.5; }
+        .chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-top: 1px solid var(--border-light); }
+        .chat-chip {
+            font-size: 11px; padding: 4px 10px; border-radius: 12px;
+            background: var(--accent-blue-soft); color: var(--accent-blue);
+            border: 1px solid var(--border-blue); cursor: pointer;
+        }
+        .chat-chip:hover { background: var(--accent-blue); color: #fff; }
+        .api-key-box {
+            display: flex; gap: 6px; padding: 8px; border-bottom: 1px solid var(--border-light);
+            background: var(--bg-panel);
+        }
+        .api-key-box input {
+            flex: 1; padding: 6px 10px; border: 1px solid var(--border-light); border-radius: 5px;
+            font-size: 11px; font-family: 'IBM Plex Mono'; direction: ltr;
+        }
+        .api-key-box input:focus { outline: none; border-color: var(--accent-blue); }
+        .api-key-box select {
+            padding: 6px; border: 1px solid var(--border-light); border-radius: 5px; font-size: 11px;
+        }
+
         /* Mobile */
         @media (max-width: 900px) {
             .app {
@@ -498,7 +549,29 @@
         <div class="side-body" id="paneBoq"></div>
         <div class="side-body" id="paneProps" style="display:none;"></div>
         <div class="side-body" id="paneAI" style="display:none;">
-            <div class="props-label">المساعد الذكي · أنشئ تصميماً من احتياجاتك</div>
+            <div class="props-label">محادثة مع المهندس الذكي</div>
+            <div class="chat">
+                <div class="api-key-box">
+                    <input type="password" id="apiKey" placeholder="مفتاح Anthropic API (اختياري)" autocomplete="off">
+                    <select id="aiModel" title="النموذج">
+                        <option value="claude-haiku-4-5">Haiku · سريع</option>
+                        <option value="claude-sonnet-4-6">Sonnet · أذكى</option>
+                    </select>
+                </div>
+                <div class="chat-msgs" id="chatMsgs"></div>
+                <div class="chat-suggestions" id="chatSuggestions">
+                    <span class="chat-chip">أضف غرفة 4×3 شمال شرق</span>
+                    <span class="chat-chip">احذف العمود الأوسط</span>
+                    <span class="chat-chip">كبّر المجلس</span>
+                    <span class="chat-chip">أضف دور علوي</span>
+                </div>
+                <div class="chat-input-wrap">
+                    <textarea class="chat-input" id="chatInput" placeholder="اكتب طلبك (مثل: أضف عموداً في 5,5)" rows="1"></textarea>
+                    <button class="chat-send" id="chatSend">إرسال</button>
+                </div>
+            </div>
+
+            <div class="props-label" style="margin-top:18px;">المساعد البسيط · إنشاء سريع من احتياجاتك</div>
             <div class="wiz-step">
                 <div class="wiz-field">
                     <label>عرض الأرض (م)</label>
@@ -2293,6 +2366,361 @@ const statusZoomEl = document.getElementById('statusZoom');
 const saveStatusEl = document.getElementById('saveStatus');
 
 // =====================================================================
+// AI CHAT — design assistant
+// =====================================================================
+const chatMsgsEl = document.getElementById('chatMsgs');
+const chatInputEl = document.getElementById('chatInput');
+const chatSendEl = document.getElementById('chatSend');
+const apiKeyEl = document.getElementById('apiKey');
+const aiModelEl = document.getElementById('aiModel');
+
+apiKeyEl.value = localStorage.getItem(STORAGE_KEY + ':apiKey') || '';
+aiModelEl.value = localStorage.getItem(STORAGE_KEY + ':model') || 'claude-haiku-4-5';
+apiKeyEl.addEventListener('change', () => localStorage.setItem(STORAGE_KEY + ':apiKey', apiKeyEl.value));
+aiModelEl.addEventListener('change', () => localStorage.setItem(STORAGE_KEY + ':model', aiModelEl.value));
+
+let chatHistory = []; // [{role, content}]
+
+function addMsg(cls, text, who) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    if (who) d.innerHTML = `<div class="who">${who}</div>` + escapeHtml(text);
+    else d.textContent = text;
+    chatMsgsEl.appendChild(d);
+    chatMsgsEl.scrollTop = chatMsgsEl.scrollHeight;
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+// ---- Design tool implementations ----
+const designTools = {
+    describe_project() {
+        return {
+            project_name: project.name,
+            floor_count: project.floors.length,
+            active_floor: active.floorIdx,
+            floors: project.floors.map((f, i) => ({
+                index: i, name: f.name, height: f.height,
+                walls: f.walls.length, columns: f.columns.length,
+                doors: f.doors.length, windows: f.windows.length,
+                bbox: bbox(f)
+            }))
+        };
+    },
+    describe_floor({ floor }) {
+        const f = project.floors[floor ?? active.floorIdx];
+        if (!f) return { error: 'floor not found' };
+        return {
+            walls: f.walls.map(w => ({ x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2 })),
+            columns: f.columns.map(c => ({ x: c.x, y: c.y, size: c.size })),
+            doors: f.doors.map(d => ({ wall_index: f.walls.findIndex(w => w.id === d.wallId), t: d.t, width: d.width })),
+            windows: f.windows.map(d => ({ wall_index: f.walls.findIndex(w => w.id === d.wallId), t: d.t, width: d.width })),
+        };
+    },
+    add_wall({ x1, y1, x2, y2, floor }) {
+        const f = project.floors[floor ?? active.floorIdx];
+        if (!f) return { error: 'floor not found' };
+        if (Math.hypot(x2 - x1, y2 - y1) < 0.1) return { error: 'wall too short' };
+        f.walls.push({ id: uid(), x1, y1, x2, y2 });
+        return { ok: true, count: f.walls.length };
+    },
+    add_column({ x, y, size, floor }) {
+        const f = project.floors[floor ?? active.floorIdx];
+        if (!f) return { error: 'floor not found' };
+        f.columns.push({ id: uid(), x, y, size: size ?? COL_DEFAULT });
+        return { ok: true, count: f.columns.length };
+    },
+    add_door({ x, y, width, floor }) {
+        const f = project.floors[floor ?? active.floorIdx];
+        if (!f) return { error: 'floor not found' };
+        const hit = pickWallOnFloor(f, x, y, 0.5);
+        if (!hit) return { error: 'no wall near point' };
+        f.doors.push({ id: uid(), wallId: hit.id, t: hit.t, width: width ?? DOOR_W });
+        return { ok: true };
+    },
+    add_window({ x, y, width, floor }) {
+        const f = project.floors[floor ?? active.floorIdx];
+        if (!f) return { error: 'floor not found' };
+        const hit = pickWallOnFloor(f, x, y, 0.5);
+        if (!hit) return { error: 'no wall near point' };
+        f.windows.push({ id: uid(), wallId: hit.id, t: hit.t, width: width ?? WIN_W });
+        return { ok: true };
+    },
+    delete_at({ x, y, floor }) {
+        const f = project.floors[floor ?? active.floorIdx];
+        if (!f) return { error: 'floor not found' };
+        const before = f.walls.length + f.columns.length + f.doors.length + f.windows.length;
+        for (const c of f.columns) {
+            if (Math.abs(c.x - x) < c.size && Math.abs(c.y - y) < c.size) {
+                f.columns = f.columns.filter(o => o.id !== c.id);
+                return { ok: true, removed: 'column' };
+            }
+        }
+        const wh = pickWallOnFloor(f, x, y, 0.4);
+        if (wh) {
+            f.walls = f.walls.filter(w => w.id !== wh.id);
+            f.doors = f.doors.filter(d => f.walls.some(w => w.id === d.wallId));
+            f.windows = f.windows.filter(d => f.walls.some(w => w.id === d.wallId));
+            return { ok: true, removed: 'wall' };
+        }
+        return { error: 'nothing at that point' };
+    },
+    add_floor({ copy_from }) {
+        const src = project.floors[copy_from ?? active.floorIdx];
+        const nf = makeFloor('الدور ' + (project.floors.length + 1));
+        if (src) {
+            nf.height = src.height;
+            nf.walls = src.walls.map(w => ({ ...w, id: uid() }));
+            const idMap = {};
+            src.walls.forEach((w, i) => { idMap[w.id] = nf.walls[i].id; });
+            nf.columns = src.columns.map(c => ({ ...c, id: uid() }));
+            nf.doors = src.doors.map(d => ({ ...d, id: uid(), wallId: idMap[d.wallId] })).filter(d => d.wallId);
+            nf.windows = src.windows.map(d => ({ ...d, id: uid(), wallId: idMap[d.wallId] })).filter(d => d.wallId);
+        }
+        project.floors.push(nf);
+        active.floorIdx = project.floors.length - 1;
+        return { ok: true, floor: project.floors.length - 1 };
+    },
+    delete_floor({ index }) {
+        if (project.floors.length <= 1) return { error: 'cannot delete last floor' };
+        const i = index ?? active.floorIdx;
+        if (i < 0 || i >= project.floors.length) return { error: 'invalid index' };
+        project.floors.splice(i, 1);
+        if (active.floorIdx >= project.floors.length) active.floorIdx = project.floors.length - 1;
+        return { ok: true };
+    },
+    set_floor_height({ index, height }) {
+        const f = project.floors[index ?? active.floorIdx];
+        if (!f) return { error: 'floor not found' };
+        f.height = Math.max(2.5, Math.min(5, height));
+        return { ok: true, height: f.height };
+    },
+    clear_floor({ index }) {
+        const f = project.floors[index ?? active.floorIdx];
+        if (!f) return { error: 'floor not found' };
+        f.walls = []; f.columns = []; f.doors = []; f.windows = [];
+        return { ok: true };
+    },
+    apply_template({ name }) {
+        const t = TEMPLATES.find(tpl => tpl.name === name || tpl.name.includes(name));
+        if (!t) return { error: 'template not found', available: TEMPLATES.map(x => x.name) };
+        project = t.build();
+        active.floorIdx = 0; active.selectedId = null;
+        document.getElementById('projName').value = project.name;
+        return { ok: true, applied: t.name };
+    },
+};
+
+function pickWallOnFloor(f, x, y, tol) {
+    for (const w of f.walls) {
+        const t = projectOnSegment(x, y, w.x1, w.y1, w.x2, w.y2);
+        if (t < 0 || t > 1) continue;
+        const px = w.x1 + (w.x2 - w.x1) * t;
+        const py = w.y1 + (w.y2 - w.y1) * t;
+        if (Math.hypot(px - x, py - y) < tol) return { id: w.id, t };
+    }
+    return null;
+}
+function bbox(f) {
+    if (!f.walls.length) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    f.walls.forEach(w => {
+        minX = Math.min(minX, w.x1, w.x2); maxX = Math.max(maxX, w.x1, w.x2);
+        minY = Math.min(minY, w.y1, w.y2); maxY = Math.max(maxY, w.y1, w.y2);
+    });
+    return { minX, maxX, minY, maxY };
+}
+
+// ---- Anthropic tool schemas ----
+const ANTHROPIC_TOOLS = [
+    { name: 'describe_project', description: 'يصف حالة المشروع: عدد الأدوار، أبعاد كل دور، عدد الجدران/الأعمدة', input_schema: { type: 'object', properties: {} } },
+    { name: 'describe_floor', description: 'يرجع جدران وأعمدة وأبواب وشبابيك دور معين', input_schema: { type: 'object', properties: { floor: { type: 'integer', description: 'فهرس الدور (0 = الأرضي)' } } } },
+    { name: 'add_wall', description: 'يضيف جداراً من نقطة (x1,y1) إلى (x2,y2) بالأمتار. مبدأ الإحداثيات: x شرقاً، y شمالاً، 0,0 الزاوية الجنوبية الغربية', input_schema: { type: 'object', properties: { x1:{type:'number'}, y1:{type:'number'}, x2:{type:'number'}, y2:{type:'number'}, floor:{type:'integer'} }, required:['x1','y1','x2','y2'] } },
+    { name: 'add_column', description: 'يضيف عمود في النقطة (x,y) بحجم size (افتراضي 0.30م)', input_schema: { type: 'object', properties: { x:{type:'number'}, y:{type:'number'}, size:{type:'number'}, floor:{type:'integer'} }, required:['x','y'] } },
+    { name: 'add_door', description: 'يضيف باباً على أقرب جدار للنقطة (x,y)', input_schema: { type: 'object', properties: { x:{type:'number'}, y:{type:'number'}, width:{type:'number'}, floor:{type:'integer'} }, required:['x','y'] } },
+    { name: 'add_window', description: 'يضيف شباكاً على أقرب جدار للنقطة', input_schema: { type: 'object', properties: { x:{type:'number'}, y:{type:'number'}, width:{type:'number'}, floor:{type:'integer'} }, required:['x','y'] } },
+    { name: 'delete_at', description: 'يحذف الجدار أو العمود الأقرب لنقطة (x,y)', input_schema: { type: 'object', properties: { x:{type:'number'}, y:{type:'number'}, floor:{type:'integer'} }, required:['x','y'] } },
+    { name: 'add_floor', description: 'يضيف دوراً جديداً، اختيارياً نسخة من copy_from', input_schema: { type: 'object', properties: { copy_from: { type:'integer' } } } },
+    { name: 'delete_floor', description: 'يحذف دوراً', input_schema: { type: 'object', properties: { index:{type:'integer'} }, required:['index'] } },
+    { name: 'set_floor_height', description: 'يضبط ارتفاع الدور (2.5-5م)', input_schema: { type: 'object', properties: { index:{type:'integer'}, height:{type:'number'} }, required:['height'] } },
+    { name: 'clear_floor', description: 'يمسح كل عناصر الدور', input_schema: { type: 'object', properties: { index:{type:'integer'} } } },
+    { name: 'apply_template', description: 'يطبّق قالباً جاهزاً بالاسم (مثل: فيلا اقتصادية، فيلا فاخرة، استراحة)', input_schema: { type: 'object', properties: { name:{type:'string'} }, required:['name'] } },
+];
+
+const SYSTEM_PROMPT = `أنت مهندس معماري سعودي يساعد المستخدم في تعديل مخطط فيلا/مبنى داخل تطبيق ويب.
+
+تستطيع تعديل المخطط مباشرة باستخدام الأدوات. الأبعاد بالأمتار. نظام الإحداثيات:
+- x: من الغرب (0) إلى الشرق (موجب)
+- y: من الجنوب (0) إلى الشمال (موجب)
+
+قواعد التصميم السعودي القياسية:
+- مجلس رجال: 4.5×6 م (مدخل منفصل عن العائلة إن أمكن)
+- غرفة نوم رئيسية: 4×4 م مع حمام داخلي
+- غرفة نوم عادية: 3×3.5 م
+- مطبخ: 4×3.75 م
+- حمام: 1.5×2 م
+- ممر: عرض ≥ 1.2 م
+- ارتفاع الدور: 3.3-3.8 م
+
+عند طلب تعديل:
+1. ابدأ بـ describe_project إن لم تعرف الحالة
+2. نفّذ التعديلات بالأدوات
+3. أكمل بجملة قصيرة بالعربية عما فعلته
+
+كن مختصراً وعملياً. لا تشرح بإسهاب.`;
+
+async function sendChat(text) {
+    if (!text.trim()) return;
+    chatHistory.push({ role: 'user', content: text });
+    addMsg('user', text);
+    chatInputEl.value = '';
+    chatSendEl.disabled = true;
+
+    try {
+        const apiKey = apiKeyEl.value.trim();
+        if (!apiKey) {
+            // No API key — fallback to local rule-based interpreter
+            const result = await runLocalCommand(text);
+            addMsg('bot', result.message, 'مساعد محلي');
+            chatHistory.push({ role: 'assistant', content: result.message });
+            recalcAll(); render(); renderFloorTabs(); persist();
+        } else {
+            await runAgentLoop(apiKey);
+        }
+    } catch (e) {
+        addMsg('err', 'خطأ: ' + (e.message || e));
+    } finally {
+        chatSendEl.disabled = false;
+    }
+}
+
+async function runAgentLoop(apiKey) {
+    const model = aiModelEl.value || 'claude-haiku-4-5';
+    let safety = 0;
+    const messages = chatHistory.map(m => ({ role: m.role, content: m.content }));
+
+    while (safety++ < 10) {
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true',
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                model, max_tokens: 1024,
+                system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+                tools: ANTHROPIC_TOOLS,
+                messages,
+            })
+        });
+        if (!resp.ok) {
+            const err = await resp.text();
+            throw new Error('Anthropic API: ' + resp.status + ' — ' + err.slice(0, 200));
+        }
+        const data = await resp.json();
+        messages.push({ role: 'assistant', content: data.content });
+
+        // Render text blocks + collect tool_use
+        const toolUses = [];
+        for (const block of data.content) {
+            if (block.type === 'text' && block.text) {
+                addMsg('bot', block.text, 'مهندس AI');
+            } else if (block.type === 'tool_use') {
+                addMsg('tool', `${block.name}(${JSON.stringify(block.input)})`);
+                toolUses.push(block);
+            }
+        }
+
+        if (data.stop_reason !== 'tool_use' || !toolUses.length) {
+            // Final assistant message — store last text in history for context
+            const finalText = data.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
+            chatHistory.push({ role: 'assistant', content: finalText });
+            recalcAll(); render(); renderFloorTabs(); persist();
+            return;
+        }
+
+        const toolResults = [];
+        for (const tu of toolUses) {
+            const fn = designTools[tu.name];
+            let result;
+            try {
+                result = fn ? fn(tu.input || {}) : { error: 'unknown tool' };
+            } catch (e) { result = { error: String(e) }; }
+            toolResults.push({
+                type: 'tool_result',
+                tool_use_id: tu.id,
+                content: JSON.stringify(result),
+                is_error: !!(result && result.error),
+            });
+        }
+        messages.push({ role: 'user', content: toolResults });
+        recalcAll(); render(); renderFloorTabs();
+    }
+    addMsg('err', 'تم إيقاف الحلقة بعد 10 دورات');
+}
+
+// ---- Local rule-based fallback ----
+function runLocalCommand(text) {
+    const t = text.toLowerCase().replace(/[،,]/g, ' ');
+    const numMatch = (s) => {
+        const m = s.match(/(-?\d+(?:\.\d+)?)\s*[,× xو]\s*(-?\d+(?:\.\d+)?)/);
+        return m ? [parseFloat(m[1]), parseFloat(m[2])] : null;
+    };
+
+    if (/(احذف|امسح|إزالة)/.test(t)) {
+        const c = numMatch(t);
+        if (c) {
+            const r = designTools.delete_at({ x: c[0], y: c[1] });
+            return { message: r.ok ? `تم حذف ${r.removed === 'wall' ? 'الجدار' : 'العمود'} عند ${c[0]},${c[1]}` : 'لا يوجد عنصر هناك' };
+        }
+        if (active.selectedId) {
+            const f = project.floors[active.floorIdx];
+            f.walls = f.walls.filter(x => x.id !== active.selectedId);
+            f.columns = f.columns.filter(x => x.id !== active.selectedId);
+            active.selectedId = null;
+            return { message: 'تم حذف العنصر المحدّد' };
+        }
+        return { message: 'حدّد عنصراً أو أعطِ إحداثيات' };
+    }
+    if (/عمود/.test(t)) {
+        const c = numMatch(t);
+        if (c) { designTools.add_column({ x: c[0], y: c[1] }); return { message: `أضفت عموداً في ${c[0]},${c[1]}` }; }
+        return { message: 'أعطني إحداثيات (مثلاً: عمود في 5,5)' };
+    }
+    if (/جدار/.test(t)) {
+        const m = t.match(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/);
+        if (m) { designTools.add_wall({ x1:+m[1], y1:+m[2], x2:+m[3], y2:+m[4] }); return { message: 'تمت إضافة الجدار' }; }
+        return { message: 'أعطني 4 إحداثيات: x1 y1 x2 y2' };
+    }
+    if (/(أضف|اضف)\s*دور/.test(t)) {
+        designTools.add_floor({ copy_from: active.floorIdx });
+        return { message: `تمت إضافة دور جديد (نسخة من ${project.floors[active.floorIdx]?.name || 'الحالي'})` };
+    }
+    if (/(امسح|نظف)\s*الدور/.test(t)) {
+        designTools.clear_floor({});
+        return { message: 'تم تفريغ الدور الحالي' };
+    }
+    for (const tpl of TEMPLATES) {
+        if (t.includes(tpl.name)) {
+            project = tpl.build();
+            active.floorIdx = 0; active.selectedId = null;
+            document.getElementById('projName').value = project.name;
+            return { message: `طُبِّق قالب: ${tpl.name}` };
+        }
+    }
+    return { message: 'بدون مفتاح API: أفهم أوامر بسيطة فقط مثل "عمود في 5,5" أو "احذف 3,4" أو "أضف دور" أو اسم قالب. أدخل مفتاح Anthropic أعلى الشات للحصول على ذكاء كامل.' };
+}
+
+chatSendEl.addEventListener('click', () => sendChat(chatInputEl.value));
+chatInputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(chatInputEl.value); }
+});
+document.querySelectorAll('.chat-chip').forEach(chip => {
+    chip.addEventListener('click', () => { chatInputEl.value = chip.textContent; chatInputEl.focus(); });
+});
+
+// =====================================================================
 // BOOT
 // =====================================================================
 function boot() {
@@ -2312,6 +2740,13 @@ function boot() {
     }
 
     updateWizSummary();
+
+    // Welcome message in chat
+    if (!chatHistory.length) {
+        addMsg('bot',
+            'مرحباً! أنا مهندس AI. اطلب أي تعديل (مثلاً: «أضف عموداً في 5,5» أو «اجعل المجلس أكبر» أو «طبّق قالب فيلا فاخرة»). إذا أدخلت مفتاح Anthropic API أستطيع فهم طلبات معقدة وتنفيذها.',
+            'مهندس AI');
+    }
 }
 
 let resizeTimer;
