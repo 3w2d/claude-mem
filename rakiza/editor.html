@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#fcfcfd">
+    <title>رَكيزة · المحرّر</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root {
+            --bg-main: #fcfcfd;
+            --bg-panel: #ffffff;
+            --accent-blue: #0056f7;
+            --accent-blue-hover: #0046cc;
+            --accent-blue-soft: rgba(0, 86, 247, 0.08);
+            --text-dark: #1a1e23;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --border-blue: rgba(0, 86, 247, 0.15);
+            --danger: #dc2626;
+            --success: #16a34a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            color: var(--text-dark);
+            background: var(--bg-main);
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        button { font-family: inherit; cursor: pointer; }
+        input { font-family: inherit; }
+
+        /* Layout */
+        .app {
+            display: grid;
+            grid-template-rows: 56px 1fr 28px;
+            grid-template-columns: 64px 1fr 320px;
+            grid-template-areas:
+                "topbar topbar topbar"
+                "tools  canvas  side"
+                "status status  status";
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        /* Top bar */
+        .topbar {
+            grid-area: topbar;
+            display: flex; align-items: center; gap: 16px;
+            padding: 0 18px;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-panel);
+            z-index: 5;
+        }
+        .topbar .logo {
+            font-size: 22px; font-weight: 700; color: var(--accent-blue);
+            letter-spacing: -0.5px;
+        }
+        .topbar .logo a { color: inherit; text-decoration: none; }
+        .topbar .project-name {
+            background: transparent; border: 1px solid transparent;
+            padding: 6px 10px; border-radius: 6px;
+            font-size: 14px; font-weight: 500; color: var(--text-dark);
+            min-width: 200px;
+        }
+        .topbar .project-name:hover, .topbar .project-name:focus {
+            border-color: var(--border-light); outline: none;
+        }
+        .topbar .save-status {
+            font-size: 12px; color: var(--text-muted);
+            font-family: 'IBM Plex Mono';
+        }
+        .topbar .spacer { flex: 1; }
+        .topbar .btn {
+            padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border-light);
+            background: #fff; color: var(--text-dark);
+            font-size: 13px; font-weight: 500;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: 0.15s;
+        }
+        .topbar .btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .topbar .btn-primary {
+            background: var(--accent-blue); color: #fff; border-color: var(--accent-blue);
+        }
+        .topbar .btn-primary:hover { background: var(--accent-blue-hover); color: #fff; }
+        .topbar .btn-icon { padding: 8px; }
+        .topbar .icon { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* Tool palette */
+        .tools {
+            grid-area: tools;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-light);
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; padding: 10px 0;
+            z-index: 4;
+        }
+        .tool {
+            width: 44px; height: 44px;
+            border-radius: 8px; border: 1px solid transparent;
+            background: transparent; color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.15s; position: relative;
+        }
+        .tool:hover { background: var(--accent-blue-soft); color: var(--accent-blue); }
+        .tool.active { background: var(--accent-blue); color: #fff; }
+        .tool.active:hover { background: var(--accent-blue-hover); color: #fff; }
+        .tool .icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .tool::after {
+            content: attr(data-tip);
+            position: absolute; right: 100%; margin-right: 8px; top: 50%;
+            transform: translateY(-50%);
+            background: var(--text-dark); color: #fff;
+            padding: 4px 8px; border-radius: 4px; font-size: 11px;
+            white-space: nowrap; opacity: 0; pointer-events: none;
+            transition: opacity 0.15s;
+        }
+        .tool:hover::after { opacity: 1; }
+        .tools .divider {
+            width: 28px; height: 1px; background: var(--border-light); margin: 6px 0;
+        }
+
+        /* Canvas */
+        .canvas-wrap {
+            grid-area: canvas;
+            position: relative;
+            background: var(--bg-main);
+            overflow: hidden;
+        }
+        canvas#plan {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            cursor: crosshair;
+        }
+        canvas#plan.tool-select { cursor: default; }
+        canvas#plan.tool-pan { cursor: grab; }
+        canvas#plan.tool-pan:active { cursor: grabbing; }
+        canvas#plan.tool-eraser { cursor: not-allowed; }
+
+        .canvas-overlay-tl {
+            position: absolute; top: 12px; left: 12px;
+            display: flex; gap: 8px; align-items: center;
+            z-index: 2;
+        }
+        .floor-tabs {
+            display: flex; gap: 4px;
+            background: var(--bg-panel); border: 1px solid var(--border-light);
+            padding: 4px; border-radius: 8px;
+        }
+        .floor-tab {
+            padding: 6px 12px; border-radius: 5px; border: none; background: transparent;
+            font-size: 12px; font-weight: 500; color: var(--text-muted);
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .floor-tab.active { background: var(--accent-blue); color: #fff; }
+        .floor-tab:hover:not(.active) { background: var(--accent-blue-soft); color: var(--accent-blue); }
+        .floor-tab .x {
+            opacity: 0.6; font-size: 14px;
+            border: none; background: transparent; color: inherit; padding: 0; line-height: 1;
+        }
+        .floor-tab .x:hover { opacity: 1; }
+        .floor-add {
+            width: 28px; height: 28px; border-radius: 5px; border: 1px dashed var(--border-light);
+            background: transparent; color: var(--text-muted); font-size: 16px;
+        }
+        .floor-add:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        .canvas-overlay-tr {
+            position: absolute; top: 12px; right: 12px;
+            background: var(--bg-panel); border: 1px solid var(--border-light);
+            padding: 6px 10px; border-radius: 8px;
+            font-size: 11px; color: var(--text-muted); font-family: 'IBM Plex Mono';
+            z-index: 2; pointer-events: none;
+        }
+
+        .canvas-overlay-br {
+            position: absolute; bottom: 12px; right: 12px;
+            display: flex; flex-direction: column; align-items: stretch;
+            gap: 6px; z-index: 3;
+        }
+        .preview-3d {
+            width: 280px; height: 200px;
+            background: var(--bg-panel); border: 1px solid var(--border-light);
+            border-radius: 10px; overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+        }
+        .preview-3d canvas { width: 100% !important; height: 100% !important; display: block; }
+        .preview-3d-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 10px; border-bottom: 1px solid var(--border-light);
+            font-size: 11px; color: var(--text-muted); background: var(--bg-panel);
+        }
+
+        /* Side panel: BOQ + properties */
+        .side {
+            grid-area: side;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-light);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .side-tabs {
+            display: flex; border-bottom: 1px solid var(--border-light);
+        }
+        .side-tab {
+            flex: 1; padding: 12px;
+            background: transparent; border: none;
+            font-size: 13px; font-weight: 500; color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+        }
+        .side-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+        .side-body {
+            flex: 1; overflow-y: auto;
+            padding: 16px;
+        }
+
+        .boq-totals {
+            background: var(--accent-blue); color: #fff;
+            padding: 16px; border-radius: 10px;
+            margin-bottom: 16px;
+        }
+        .boq-totals .label { font-size: 12px; opacity: 0.85; margin-bottom: 4px; }
+        .boq-totals .value { font-size: 28px; font-weight: 700; font-family: 'IBM Plex Mono'; line-height: 1.1; }
+        .boq-totals .value .unit { font-size: 14px; opacity: 0.8; margin-right: 4px; }
+
+        .boq-section {
+            border: 1px solid var(--border-light);
+            border-radius: 8px; margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .boq-section-head {
+            background: var(--accent-blue-soft); color: var(--accent-blue);
+            padding: 10px 14px; font-size: 12px; font-weight: 600;
+            display: flex; justify-content: space-between;
+        }
+        .boq-row {
+            display: grid; grid-template-columns: 1fr auto auto;
+            gap: 8px; padding: 10px 14px;
+            border-top: 1px solid var(--border-light);
+            font-size: 12px;
+        }
+        .boq-row:first-of-type { border-top: none; }
+        .boq-row .desc { color: var(--text-dark); font-weight: 500; }
+        .boq-row .qty { color: var(--text-muted); font-family: 'IBM Plex Mono'; text-align: left; direction: ltr; }
+        .boq-row .price { color: var(--accent-blue); font-family: 'IBM Plex Mono'; font-weight: 600; text-align: left; direction: ltr; }
+
+        .props-block { margin-bottom: 16px; }
+        .props-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .props-row {
+            display: grid; grid-template-columns: 1fr 100px;
+            gap: 8px; align-items: center; margin-bottom: 8px;
+        }
+        .props-row label { font-size: 13px; color: var(--text-dark); }
+        .props-row input {
+            padding: 6px 10px; border: 1px solid var(--border-light); border-radius: 5px;
+            font-size: 13px; font-family: 'IBM Plex Mono'; text-align: left; direction: ltr;
+            color: var(--accent-blue);
+        }
+        .props-row input:focus { border-color: var(--accent-blue); outline: none; }
+        .props-empty {
+            text-align: center; color: var(--text-muted); font-size: 13px;
+            padding: 40px 20px; line-height: 1.6;
+        }
+
+        /* Status bar */
+        .status {
+            grid-area: status;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border-light);
+            display: flex; align-items: center;
+            padding: 0 16px; gap: 16px;
+            font-size: 11px; color: var(--text-muted);
+            font-family: 'IBM Plex Mono';
+        }
+        .status .pill {
+            background: var(--accent-blue-soft); color: var(--accent-blue);
+            padding: 2px 8px; border-radius: 10px; font-weight: 600;
+        }
+        .status .spacer { flex: 1; }
+
+        /* AI dropzone */
+        .ai-drop {
+            border: 2px dashed var(--border-light);
+            border-radius: 10px; padding: 24px;
+            text-align: center; color: var(--text-muted);
+            font-size: 12px; cursor: pointer;
+            transition: 0.15s;
+        }
+        .ai-drop:hover, .ai-drop.dragging {
+            border-color: var(--accent-blue); color: var(--accent-blue);
+            background: var(--accent-blue-soft);
+        }
+        .ai-drop strong { display: block; color: var(--accent-blue); margin-bottom: 4px; font-size: 13px; }
+
+        /* Modal */
+        .modal-bg {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+        .modal-bg.show { display: flex; }
+        .modal {
+            background: #fff; border-radius: 14px; padding: 28px;
+            max-width: 460px; width: 90%;
+            box-shadow: 0 25px 60px -20px rgba(0,0,0,0.3);
+        }
+        .modal h3 { font-size: 1.2rem; margin-bottom: 12px; }
+        .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+        /* Mobile */
+        @media (max-width: 900px) {
+            .app {
+                grid-template-rows: 56px 1fr auto 28px;
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "topbar"
+                    "canvas"
+                    "side"
+                    "status";
+            }
+            .tools {
+                grid-area: canvas;
+                position: absolute;
+                left: 8px; top: 60px; bottom: 8px;
+                border-radius: 12px; border: 1px solid var(--border-light);
+                width: 52px; padding: 8px 0; gap: 2px;
+                box-shadow: 0 10px 25px -10px rgba(0,0,0,0.1);
+                z-index: 10;
+            }
+            .tool { width: 36px; height: 36px; }
+            .tool .icon { width: 18px; height: 18px; }
+            .side {
+                max-height: 40vh; border-right: none;
+                border-top: 1px solid var(--border-light);
+            }
+            .preview-3d { width: 160px; height: 120px; }
+            .topbar .project-name { min-width: 0; flex: 1; }
+            .topbar .btn span { display: none; }
+            .canvas-overlay-tl { top: 8px; right: 70px; left: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+
+    <div class="topbar">
+        <div class="logo"><a href="./">رَكيزة</a></div>
+        <input class="project-name" id="projName" value="مشروع جديد" maxlength="40">
+        <span class="save-status" id="saveStatus">محفوظ</span>
+        <div class="spacer"></div>
+        <button class="btn" id="btnNew" title="مشروع جديد">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>جديد</span>
+        </button>
+        <button class="btn" id="btnImport" title="استيراد JSON">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>استيراد</span>
+        </button>
+        <button class="btn" id="btnExportSVG">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>SVG</span>
+        </button>
+        <button class="btn" id="btnExportJSON">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>JSON</span>
+        </button>
+        <button class="btn btn-primary" id="btnExportCSV">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+            <span>BOQ · CSV</span>
+        </button>
+    </div>
+
+    <div class="tools" id="tools">
+        <button class="tool active" data-tool="select" data-tip="تحديد · S">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="3 3 21 12 13 13 12 21 3 3"/></svg>
+        </button>
+        <button class="tool" data-tool="pan" data-tip="تحريك · H">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-1.4-5.5-2.6L2 14"/></svg>
+        </button>
+        <div class="divider"></div>
+        <button class="tool" data-tool="wall" data-tip="جدار · W">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4"/></svg>
+        </button>
+        <button class="tool" data-tool="column" data-tip="عمود · C">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="8" y="8" width="8" height="8"/></svg>
+        </button>
+        <button class="tool" data-tool="door" data-tip="باب · D">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 20V8a6 6 0 0 1 12 0v12"/><line x1="14" y1="14" x2="14" y2="14.5"/></svg>
+        </button>
+        <button class="tool" data-tool="window" data-tip="شباك · N">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+        </button>
+        <div class="divider"></div>
+        <button class="tool" data-tool="eraser" data-tip="مسح · E">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M18 13l-7-7-9 9 7 7h9z"/><line x1="22" y1="22" x2="13" y2="22"/></svg>
+        </button>
+    </div>
+
+    <div class="canvas-wrap">
+        <canvas id="plan"></canvas>
+
+        <div class="canvas-overlay-tl">
+            <div class="floor-tabs" id="floorTabs"></div>
+        </div>
+
+        <div class="canvas-overlay-tr" id="cursorInfo">0.00, 0.00 m</div>
+
+        <div class="canvas-overlay-br">
+            <div class="preview-3d">
+                <div class="preview-3d-bar">
+                    <span>عرض ثلاثي الأبعاد</span>
+                    <span id="previewFloors">0 أدوار</span>
+                </div>
+                <div id="preview3D" style="height: 170px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="side">
+        <div class="side-tabs">
+            <button class="side-tab active" data-pane="boq">جدول الكميات</button>
+            <button class="side-tab" data-pane="props">الخصائص</button>
+            <button class="side-tab" data-pane="ai">AI</button>
+        </div>
+        <div class="side-body" id="paneBoq"></div>
+        <div class="side-body" id="paneProps" style="display:none;"></div>
+        <div class="side-body" id="paneAI" style="display:none;">
+            <div class="props-label">رفع مخطط ورقي</div>
+            <label class="ai-drop" id="aiDrop">
+                <strong>ارفع صورة المخطط</strong>
+                حوّل رسماً ورقياً إلى مشروع رقمي تلقائياً
+                <input type="file" accept="image/*" hidden id="aiFile">
+            </label>
+            <div class="props-label" style="margin-top:18px;">أسعار السوق (SAR)</div>
+            <div class="props-row">
+                <label>الخرسانة (م³)</label>
+                <input type="number" id="priceConcrete" value="280">
+            </div>
+            <div class="props-row">
+                <label>الحديد (طن)</label>
+                <input type="number" id="priceSteel" value="3200">
+            </div>
+            <div class="props-row">
+                <label>الجدار (م²)</label>
+                <input type="number" id="priceWall" value="85">
+            </div>
+            <div class="props-row">
+                <label>الباب (وحدة)</label>
+                <input type="number" id="priceDoor" value="800">
+            </div>
+            <div class="props-row">
+                <label>الشباك (وحدة)</label>
+                <input type="number" id="priceWindow" value="600">
+            </div>
+            <div class="props-row">
+                <label>التشطيب (م²)</label>
+                <input type="number" id="priceFinish" value="350">
+            </div>
+        </div>
+    </div>
+
+    <div class="status">
+        <span class="pill" id="statusTool">تحديد</span>
+        <span id="statusHint">اضغط أيقونة الأداة على اليمين أو اختصار الكيبورد · عجلة الفأرة للتكبير · مسطرة (space) + سحب للتحريك</span>
+        <div class="spacer"></div>
+        <span id="statusZoom">100%</span>
+    </div>
+
+</div>
+
+<div class="modal-bg" id="modalBg">
+    <div class="modal">
+        <h3 id="modalTitle">تأكيد</h3>
+        <p id="modalBody"></p>
+        <div class="modal-actions">
+            <button class="btn" id="modalCancel">إلغاء</button>
+            <button class="btn btn-primary" id="modalOk">تأكيد</button>
+        </div>
+    </div>
+</div>
+
+<script>
+'use strict';
+
+// =====================================================================
+// CONSTANTS
+// =====================================================================
+const STORAGE_KEY = 'rakiza:project:v1';
+const GRID_M = 0.5;        // grid step in meters
+const SNAP_M = 0.25;        // snap precision
+const DEFAULT_FLOOR_H = 3.5;
+const SLAB_THICK = 0.20;
+const BEAM_W = 0.30, BEAM_H = 0.50;
+const COL_DEFAULT = 0.30;
+const STEEL_KG_PER_M3 = 115;
+const FOOTING_DEPTH = 1.0;
+const WALL_THICK = 0.20;
+const DOOR_W = 0.9, DOOR_H = 2.1;
+const WIN_W = 1.2, WIN_H = 1.2;
+
+// =====================================================================
+// STATE
+// =====================================================================
+let project = loadProject() || newProject();
+let active = { tool: 'select', floorIdx: 0, draft: null, selectedId: null };
+let view = { scale: 30, offsetX: 0, offsetY: 0 }; // 30 px = 1 m by default
+let cursor = { x: 0, y: 0, snapped: { x: 0, y: 0 } };
+let prices = loadPrices();
+let saveTimer = null;
+
+function newProject() {
+    return {
+        name: 'مشروع جديد',
+        floors: [makeFloor('الدور الأرضي')]
+    };
+}
+function makeFloor(name) {
+    return {
+        name: name || 'دور',
+        height: DEFAULT_FLOOR_H,
+        walls: [],
+        columns: [],
+        doors: [],
+        windows: []
+    };
+}
+function uid() { return Math.random().toString(36).slice(2, 9); }
+
+function loadProject() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const p = JSON.parse(raw);
+        if (!p.floors || !p.floors.length) return null;
+        return p;
+    } catch { return null; }
+}
+function loadPrices() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY + ':prices');
+        if (!raw) return defaultPrices();
+        return Object.assign(defaultPrices(), JSON.parse(raw));
+    } catch { return defaultPrices(); }
+}
+function defaultPrices() {
+    return { concrete: 280, steel: 3200, wall: 85, door: 800, window: 600, finish: 350 };
+}
+function persist() {
+    clearTimeout(saveTimer);
+    saveStatusEl.textContent = 'جارٍ الحفظ...';
+    saveTimer = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+        localStorage.setItem(STORAGE_KEY + ':prices', JSON.stringify(prices));
+        saveStatusEl.textContent = 'محفوظ ✓';
+    }, 200);
+}
+
+// =====================================================================
+// CANVAS + RENDERING
+// =====================================================================
+const canvas = document.getElementById('plan');
+const ctx = canvas.getContext('2d');
+let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+function resizeCanvas() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    if (!view.initialized) {
+        view.offsetX = w * dpr / 2;
+        view.offsetY = h * dpr / 2;
+        view.initialized = true;
+    }
+    render();
+}
+
+function worldToScreen(x, y) {
+    return {
+        x: x * view.scale * dpr + view.offsetX,
+        y: -y * view.scale * dpr + view.offsetY
+    };
+}
+function screenToWorld(sx, sy) {
+    return {
+        x: (sx - view.offsetX) / (view.scale * dpr),
+        y: -(sy - view.offsetY) / (view.scale * dpr)
+    };
+}
+function snap(v) { return Math.round(v / SNAP_M) * SNAP_M; }
+
+function render() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    drawGrid(W, H);
+    drawAxes();
+
+    const floor = project.floors[active.floorIdx];
+    if (!floor) return;
+
+    // Walls
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = '#1a1e23';
+    floor.walls.forEach(w => drawWall(w, w.id === active.selectedId));
+
+    // Doors / windows along walls
+    floor.doors.forEach(d => drawOpening(d, floor, 'door'));
+    floor.windows.forEach(d => drawOpening(d, floor, 'window'));
+
+    // Columns
+    floor.columns.forEach(c => drawColumn(c, c.id === active.selectedId));
+
+    // Draft (in-progress drawing)
+    if (active.draft) drawDraft(active.draft);
+
+    // Snap indicator
+    if (active.tool === 'wall' || active.tool === 'column') {
+        const p = worldToScreen(cursor.snapped.x, cursor.snapped.y);
+        ctx.fillStyle = '#0056f7';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawGrid(W, H) {
+    const minorPx = GRID_M * view.scale * dpr;
+    const majorPx = minorPx * 5;
+
+    // Minor
+    ctx.strokeStyle = 'rgba(0, 86, 247, 0.06)';
+    ctx.lineWidth = 1;
+    const startX = view.offsetX % minorPx;
+    const startY = view.offsetY % minorPx;
+    ctx.beginPath();
+    for (let x = startX; x < W; x += minorPx) {
+        ctx.moveTo(x, 0); ctx.lineTo(x, H);
+    }
+    for (let x = startX; x > 0; x -= minorPx) {
+        ctx.moveTo(x, 0); ctx.lineTo(x, H);
+    }
+    for (let y = startY; y < H; y += minorPx) {
+        ctx.moveTo(0, y); ctx.lineTo(W, y);
+    }
+    for (let y = startY; y > 0; y -= minorPx) {
+        ctx.moveTo(0, y); ctx.lineTo(W, y);
+    }
+    ctx.stroke();
+
+    // Major
+    ctx.strokeStyle = 'rgba(0, 86, 247, 0.18)';
+    ctx.lineWidth = 1;
+    const startMX = view.offsetX % majorPx;
+    const startMY = view.offsetY % majorPx;
+    ctx.beginPath();
+    for (let x = startMX; x < W; x += majorPx) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let x = startMX; x > 0; x -= majorPx) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let y = startMY; y < H; y += majorPx) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    for (let y = startMY; y > 0; y -= majorPx) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    ctx.stroke();
+}
+
+function drawAxes() {
+    ctx.strokeStyle = 'rgba(0, 86, 247, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, view.offsetY);
+    ctx.lineTo(canvas.width, view.offsetY);
+    ctx.moveTo(view.offsetX, 0);
+    ctx.lineTo(view.offsetX, canvas.height);
+    ctx.stroke();
+}
+
+function drawWall(w, selected) {
+    const a = worldToScreen(w.x1, w.y1);
+    const b = worldToScreen(w.x2, w.y2);
+    ctx.strokeStyle = selected ? '#0056f7' : '#1a1e23';
+    ctx.lineWidth = WALL_THICK * view.scale * dpr;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+
+    // Length label
+    const len = Math.hypot(w.x2 - w.x1, w.y2 - w.y1);
+    if (len > 0.5) {
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        const angle = Math.atan2(b.y - a.y, b.x - a.x);
+        ctx.save();
+        ctx.translate(mx, my);
+        ctx.rotate(angle);
+        ctx.fillStyle = '#64748b';
+        ctx.font = `${10 * dpr}px 'IBM Plex Mono'`;
+        ctx.textAlign = 'center';
+        ctx.fillText(len.toFixed(2) + ' m', 0, -8 * dpr);
+        ctx.restore();
+    }
+}
+
+function drawOpening(op, floor, type) {
+    const w = floor.walls.find(x => x.id === op.wallId);
+    if (!w) return;
+    const t = op.t;
+    const cx = w.x1 + (w.x2 - w.x1) * t;
+    const cy = w.y1 + (w.y2 - w.y1) * t;
+    const ang = Math.atan2(w.y2 - w.y1, w.x2 - w.x1);
+    const half = op.width / 2;
+    const sx = cx - Math.cos(ang) * half, sy = cy - Math.sin(ang) * half;
+    const ex = cx + Math.cos(ang) * half, ey = cy + Math.sin(ang) * half;
+    const a = worldToScreen(sx, sy), b = worldToScreen(ex, ey);
+    ctx.lineWidth = WALL_THICK * view.scale * dpr * 1.05;
+    ctx.strokeStyle = '#fcfcfd';
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    if (type === 'door') {
+        ctx.strokeStyle = '#0056f7';
+        ctx.lineWidth = 1.5 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        const arcR = Math.hypot(b.x - a.x, b.y - a.y);
+        ctx.arc(a.x, a.y, arcR, ang, ang - Math.PI / 2, true);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(a.x + Math.cos(ang - Math.PI / 2) * arcR, a.y + Math.sin(ang - Math.PI / 2) * arcR);
+        ctx.stroke();
+    } else {
+        ctx.strokeStyle = '#0056f7';
+        ctx.lineWidth = 1.5 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+        const cmid = worldToScreen(cx, cy);
+        ctx.beginPath();
+        const perp = ang + Math.PI / 2;
+        const off = WALL_THICK / 3 * view.scale * dpr;
+        ctx.moveTo(cmid.x - Math.cos(ang) * arcLength(a, b) / 2, cmid.y - Math.sin(ang) * arcLength(a, b) / 2);
+        ctx.lineTo(cmid.x + Math.cos(ang) * arcLength(a, b) / 2, cmid.y + Math.sin(ang) * arcLength(a, b) / 2);
+        ctx.stroke();
+    }
+}
+function arcLength(a, b) { return Math.hypot(b.x - a.x, b.y - a.y); }
+
+function drawColumn(c, selected) {
+    const p = worldToScreen(c.x, c.y);
+    const sz = c.size * view.scale * dpr;
+    ctx.fillStyle = selected ? '#0056f7' : 'rgba(0, 86, 247, 0.85)';
+    ctx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+    if (selected) {
+        ctx.strokeStyle = '#0056f7';
+        ctx.lineWidth = 2 * dpr;
+        ctx.strokeRect(p.x - sz / 2 - 4, p.y - sz / 2 - 4, sz + 8, sz + 8);
+    }
+}
+
+function drawDraft(d) {
+    if (d.kind === 'wall') {
+        const a = worldToScreen(d.x1, d.y1);
+        const b = worldToScreen(cursor.snapped.x, cursor.snapped.y);
+        ctx.strokeStyle = '#0056f7';
+        ctx.lineWidth = WALL_THICK * view.scale * dpr;
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        const len = Math.hypot(cursor.snapped.x - d.x1, cursor.snapped.y - d.y1);
+        ctx.fillStyle = '#0056f7';
+        ctx.font = `${11 * dpr}px 'IBM Plex Mono'`;
+        ctx.textAlign = 'center';
+        ctx.fillText(len.toFixed(2) + ' m', (a.x + b.x) / 2, (a.y + b.y) / 2 - 10 * dpr);
+    }
+}
+
+// =====================================================================
+// INTERACTION
+// =====================================================================
+let pointer = { down: false, dragX: 0, dragY: 0, mode: null };
+
+canvas.addEventListener('mousemove', onPointerMove);
+canvas.addEventListener('mousedown', onPointerDown);
+canvas.addEventListener('mouseup', onPointerUp);
+canvas.addEventListener('mouseleave', onPointerUp);
+canvas.addEventListener('wheel', onWheel, { passive: false });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// Touch
+canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+        const t = e.touches[0];
+        const r = canvas.getBoundingClientRect();
+        onPointerDown({ clientX: t.clientX, clientY: t.clientY, button: 0, target: canvas, _r: r });
+    }
+});
+canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 1) {
+        e.preventDefault();
+        const t = e.touches[0];
+        onPointerMove({ clientX: t.clientX, clientY: t.clientY });
+    }
+}, { passive: false });
+canvas.addEventListener('touchend', () => onPointerUp());
+
+function onPointerMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = (e.clientX - rect.left) * dpr;
+    const sy = (e.clientY - rect.top) * dpr;
+    const w = screenToWorld(sx, sy);
+    cursor.x = w.x; cursor.y = w.y;
+    cursor.snapped = { x: snap(w.x), y: snap(w.y) };
+    cursorInfoEl.textContent = cursor.snapped.x.toFixed(2) + ', ' + cursor.snapped.y.toFixed(2) + ' m';
+
+    if (pointer.down && pointer.mode === 'pan') {
+        const dx = (e.clientX - pointer.dragX) * dpr;
+        const dy = (e.clientY - pointer.dragY) * dpr;
+        view.offsetX += dx;
+        view.offsetY += dy;
+        pointer.dragX = e.clientX;
+        pointer.dragY = e.clientY;
+    }
+    render();
+}
+
+function onPointerDown(e) {
+    pointer.down = true;
+    pointer.dragX = e.clientX;
+    pointer.dragY = e.clientY;
+    if (active.tool === 'pan' || e.button === 1 || e.button === 2) {
+        pointer.mode = 'pan';
+        return;
+    }
+    pointer.mode = 'tool';
+
+    const floor = project.floors[active.floorIdx];
+
+    if (active.tool === 'wall') {
+        if (!active.draft) {
+            active.draft = { kind: 'wall', x1: cursor.snapped.x, y1: cursor.snapped.y };
+        } else {
+            const w = {
+                id: uid(),
+                x1: active.draft.x1, y1: active.draft.y1,
+                x2: cursor.snapped.x, y2: cursor.snapped.y
+            };
+            if (Math.hypot(w.x2 - w.x1, w.y2 - w.y1) > 0.1) {
+                floor.walls.push(w);
+                persist(); recalcAll();
+            }
+            active.draft = { kind: 'wall', x1: w.x2, y1: w.y2 }; // chain
+        }
+    } else if (active.tool === 'column') {
+        floor.columns.push({ id: uid(), x: cursor.snapped.x, y: cursor.snapped.y, size: COL_DEFAULT });
+        persist(); recalcAll();
+    } else if (active.tool === 'door' || active.tool === 'window') {
+        const hit = pickWall(cursor.x, cursor.y, 0.3);
+        if (hit) {
+            const arr = active.tool === 'door' ? floor.doors : floor.windows;
+            arr.push({
+                id: uid(), wallId: hit.id, t: hit.t,
+                width: active.tool === 'door' ? DOOR_W : WIN_W
+            });
+            persist(); recalcAll();
+        }
+    } else if (active.tool === 'select') {
+        const hit = pickAny(cursor.x, cursor.y);
+        active.selectedId = hit ? hit.id : null;
+        renderProps();
+    } else if (active.tool === 'eraser') {
+        const hit = pickAny(cursor.x, cursor.y);
+        if (hit) {
+            const f = project.floors[active.floorIdx];
+            f.walls = f.walls.filter(x => x.id !== hit.id);
+            f.columns = f.columns.filter(x => x.id !== hit.id);
+            f.doors = f.doors.filter(x => x.id !== hit.id);
+            f.windows = f.windows.filter(x => x.id !== hit.id);
+            // Also clean openings whose wall was deleted
+            f.doors = f.doors.filter(d => f.walls.some(w => w.id === d.wallId));
+            f.windows = f.windows.filter(d => f.walls.some(w => w.id === d.wallId));
+            persist(); recalcAll();
+        }
+    }
+    render();
+}
+
+function onPointerUp() { pointer.down = false; pointer.mode = null; }
+
+function onWheel(e) {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const sx = (e.clientX - rect.left) * dpr;
+    const sy = (e.clientY - rect.top) * dpr;
+    const before = screenToWorld(sx, sy);
+    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    view.scale = Math.max(5, Math.min(200, view.scale * factor));
+    const after = screenToWorld(sx, sy);
+    view.offsetX += (after.x - before.x) * view.scale * dpr;
+    view.offsetY -= (after.y - before.y) * view.scale * dpr;
+    statusZoomEl.textContent = Math.round(view.scale / 30 * 100) + '%';
+    render();
+}
+
+function pickWall(x, y, tol) {
+    const floor = project.floors[active.floorIdx];
+    for (const w of floor.walls) {
+        const t = projectOnSegment(x, y, w.x1, w.y1, w.x2, w.y2);
+        if (t < 0 || t > 1) continue;
+        const px = w.x1 + (w.x2 - w.x1) * t;
+        const py = w.y1 + (w.y2 - w.y1) * t;
+        if (Math.hypot(px - x, py - y) < tol) return { id: w.id, t, kind: 'wall' };
+    }
+    return null;
+}
+function pickAny(x, y) {
+    const floor = project.floors[active.floorIdx];
+    // Columns first
+    for (const c of floor.columns) {
+        if (Math.abs(c.x - x) < c.size / 2 && Math.abs(c.y - y) < c.size / 2) return { ...c, kind: 'column' };
+    }
+    // Doors / windows
+    for (const d of floor.doors) {
+        const w = floor.walls.find(x2 => x2.id === d.wallId);
+        if (!w) continue;
+        const cx = w.x1 + (w.x2 - w.x1) * d.t;
+        const cy = w.y1 + (w.y2 - w.y1) * d.t;
+        if (Math.hypot(cx - x, cy - y) < d.width / 2) return { ...d, kind: 'door' };
+    }
+    for (const d of floor.windows) {
+        const w = floor.walls.find(x2 => x2.id === d.wallId);
+        if (!w) continue;
+        const cx = w.x1 + (w.x2 - w.x1) * d.t;
+        const cy = w.y1 + (w.y2 - w.y1) * d.t;
+        if (Math.hypot(cx - x, cy - y) < d.width / 2) return { ...d, kind: 'window' };
+    }
+    // Walls
+    const wh = pickWall(x, y, WALL_THICK);
+    if (wh) return wh;
+    return null;
+}
+function projectOnSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len2 = dx * dx + dy * dy;
+    if (len2 === 0) return -1;
+    return ((px - x1) * dx + (py - y1) * dy) / len2;
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    const map = { s: 'select', h: 'pan', w: 'wall', c: 'column', d: 'door', n: 'window', e: 'eraser' };
+    const key = e.key.toLowerCase();
+    if (map[key]) { setTool(map[key]); }
+    if (e.key === 'Escape') { active.draft = null; render(); }
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (active.selectedId) {
+            const f = project.floors[active.floorIdx];
+            f.walls = f.walls.filter(x => x.id !== active.selectedId);
+            f.columns = f.columns.filter(x => x.id !== active.selectedId);
+            f.doors = f.doors.filter(x => x.id !== active.selectedId);
+            f.windows = f.windows.filter(x => x.id !== active.selectedId);
+            f.doors = f.doors.filter(d => f.walls.some(w => w.id === d.wallId));
+            f.windows = f.windows.filter(d => f.walls.some(w => w.id === d.wallId));
+            active.selectedId = null;
+            persist(); recalcAll(); render();
+        }
+    }
+});
+
+// =====================================================================
+// TOOLS
+// =====================================================================
+const toolsEl = document.getElementById('tools');
+function setTool(name) {
+    active.tool = name;
+    active.draft = null;
+    toolsEl.querySelectorAll('.tool').forEach(b => b.classList.toggle('active', b.dataset.tool === name));
+    canvas.className = '';
+    canvas.classList.add('tool-' + name);
+    statusToolEl.textContent = ({
+        select: 'تحديد', pan: 'تحريك', wall: 'جدار', column: 'عمود',
+        door: 'باب', window: 'شباك', eraser: 'مسح'
+    })[name] || name;
+    render();
+}
+toolsEl.addEventListener('click', e => {
+    const t = e.target.closest('.tool');
+    if (t) setTool(t.dataset.tool);
+});
+
+// =====================================================================
+// FLOORS
+// =====================================================================
+const floorTabsEl = document.getElementById('floorTabs');
+function renderFloorTabs() {
+    floorTabsEl.innerHTML = '';
+    project.floors.forEach((f, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'floor-tab' + (i === active.floorIdx ? ' active' : '');
+        btn.innerHTML = `<span>${f.name}</span>` +
+            (project.floors.length > 1 ? '<button class="x" data-rm="1">×</button>' : '');
+        btn.addEventListener('click', e => {
+            if (e.target.dataset.rm) {
+                if (project.floors.length > 1) {
+                    project.floors.splice(i, 1);
+                    if (active.floorIdx >= project.floors.length) active.floorIdx = project.floors.length - 1;
+                    persist(); recalcAll(); render(); renderFloorTabs();
+                }
+            } else {
+                active.floorIdx = i;
+                active.selectedId = null;
+                renderFloorTabs(); renderProps(); render();
+            }
+        });
+        floorTabsEl.appendChild(btn);
+    });
+    const add = document.createElement('button');
+    add.className = 'floor-add';
+    add.textContent = '+';
+    add.title = 'إضافة دور';
+    add.addEventListener('click', () => {
+        // Clone the active floor's walls/columns as a starting point
+        const src = project.floors[active.floorIdx];
+        const nf = makeFloor('الدور ' + (project.floors.length + 1));
+        nf.walls = src.walls.map(w => ({ ...w, id: uid() }));
+        const idMap = {};
+        src.walls.forEach((w, i) => { idMap[w.id] = nf.walls[i].id; });
+        nf.columns = src.columns.map(c => ({ ...c, id: uid() }));
+        // Doors/windows reset since they reference old wall ids — re-map
+        nf.doors = src.doors.map(d => ({ ...d, id: uid(), wallId: idMap[d.wallId] })).filter(d => d.wallId);
+        nf.windows = src.windows.map(d => ({ ...d, id: uid(), wallId: idMap[d.wallId] })).filter(d => d.wallId);
+        project.floors.push(nf);
+        active.floorIdx = project.floors.length - 1;
+        persist(); recalcAll(); render(); renderFloorTabs();
+    });
+    floorTabsEl.appendChild(add);
+}
+
+// =====================================================================
+// SIDE PANELS
+// =====================================================================
+document.querySelectorAll('.side-tab').forEach(t => {
+    t.addEventListener('click', () => {
+        document.querySelectorAll('.side-tab').forEach(x => x.classList.toggle('active', x === t));
+        document.getElementById('paneBoq').style.display = t.dataset.pane === 'boq' ? '' : 'none';
+        document.getElementById('paneProps').style.display = t.dataset.pane === 'props' ? '' : 'none';
+        document.getElementById('paneAI').style.display = t.dataset.pane === 'ai' ? '' : 'none';
+    });
+});
+
+function calcQuantities() {
+    let totals = {
+        slabArea: 0, slabConcrete: 0,
+        beamConcrete: 0,
+        colConcrete: 0, colCount: 0,
+        wallArea: 0, wallNet: 0,
+        doorCount: 0, windowCount: 0,
+        steel: 0,
+        finishingArea: 0,
+        footingConcrete: 0,
+    };
+
+    // Footing once at bottom (assume entire footprint of ground floor)
+    const ground = project.floors[0];
+    let groundArea = floorArea(ground);
+    totals.footingConcrete = groundArea * FOOTING_DEPTH;
+
+    project.floors.forEach((f, idx) => {
+        const area = floorArea(f);
+        totals.slabArea += area;
+        totals.slabConcrete += area * SLAB_THICK;
+        totals.finishingArea += area;
+
+        // Beams along walls
+        const wallLen = f.walls.reduce((s, w) => s + Math.hypot(w.x2 - w.x1, w.y2 - w.y1), 0);
+        totals.beamConcrete += wallLen * BEAM_W * BEAM_H;
+
+        // Columns
+        f.columns.forEach(c => {
+            totals.colConcrete += c.size * c.size * f.height;
+            totals.colCount += 1;
+        });
+
+        // Walls (block) — height × length minus openings
+        f.walls.forEach(w => {
+            const len = Math.hypot(w.x2 - w.x1, w.y2 - w.y1);
+            const wallArea = len * f.height;
+            totals.wallArea += wallArea;
+            const openings = [
+                ...f.doors.filter(d => d.wallId === w.id).map(d => d.width * DOOR_H),
+                ...f.windows.filter(d => d.wallId === w.id).map(d => d.width * WIN_H),
+            ].reduce((s, a) => s + a, 0);
+            totals.wallNet += Math.max(0, wallArea - openings);
+        });
+
+        totals.doorCount += f.doors.length;
+        totals.windowCount += f.windows.length;
+    });
+
+    const totalConcrete = totals.slabConcrete + totals.beamConcrete + totals.colConcrete + totals.footingConcrete;
+    totals.steel = (totalConcrete * STEEL_KG_PER_M3) / 1000; // tons
+    totals.totalConcrete = totalConcrete;
+
+    // Costs
+    const cost =
+        totals.totalConcrete * prices.concrete +
+        totals.steel * prices.steel +
+        totals.wallNet * prices.wall +
+        totals.doorCount * prices.door +
+        totals.windowCount * prices.window +
+        totals.finishingArea * prices.finish;
+    totals.cost = cost;
+    return totals;
+}
+
+function floorArea(f) {
+    // Convex-hull-ish: use bounding rectangle of all wall endpoints as a fallback area
+    if (!f.walls.length) return 0;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    f.walls.forEach(w => {
+        minX = Math.min(minX, w.x1, w.x2);
+        maxX = Math.max(maxX, w.x1, w.x2);
+        minY = Math.min(minY, w.y1, w.y2);
+        maxY = Math.max(maxY, w.y1, w.y2);
+    });
+    return Math.max(0, maxX - minX) * Math.max(0, maxY - minY);
+}
+
+const paneBoqEl = document.getElementById('paneBoq');
+function renderBoq() {
+    const t = calcQuantities();
+    const fmt = new Intl.NumberFormat('en-US');
+    const f2 = (n) => n.toFixed(2);
+    const sar = (n) => fmt.format(Math.round(n));
+
+    paneBoqEl.innerHTML = `
+        <div class="boq-totals">
+            <div class="label">إجمالي تكلفة العظم + التشطيب التقديري</div>
+            <div class="value">${sar(t.cost)}<span class="unit">SAR</span></div>
+        </div>
+
+        <div class="boq-section">
+            <div class="boq-section-head"><span>الخرسانة</span><span>${f2(t.totalConcrete)} م³</span></div>
+            <div class="boq-row"><span class="desc">أساس مسلّح</span><span class="qty">${f2(t.footingConcrete)} م³</span><span class="price">${sar(t.footingConcrete * prices.concrete)}</span></div>
+            <div class="boq-row"><span class="desc">بلاطات</span><span class="qty">${f2(t.slabConcrete)} م³</span><span class="price">${sar(t.slabConcrete * prices.concrete)}</span></div>
+            <div class="boq-row"><span class="desc">كمرات</span><span class="qty">${f2(t.beamConcrete)} م³</span><span class="price">${sar(t.beamConcrete * prices.concrete)}</span></div>
+            <div class="boq-row"><span class="desc">أعمدة (${t.colCount})</span><span class="qty">${f2(t.colConcrete)} م³</span><span class="price">${sar(t.colConcrete * prices.concrete)}</span></div>
+        </div>
+
+        <div class="boq-section">
+            <div class="boq-section-head"><span>حديد التسليح</span><span>${f2(t.steel)} طن</span></div>
+            <div class="boq-row"><span class="desc">تقديري ${STEEL_KG_PER_M3} كجم/م³</span><span class="qty">${f2(t.steel)} طن</span><span class="price">${sar(t.steel * prices.steel)}</span></div>
+        </div>
+
+        <div class="boq-section">
+            <div class="boq-section-head"><span>الجدران والفتحات</span><span>${f2(t.wallNet)} م²</span></div>
+            <div class="boq-row"><span class="desc">جدران (صافي بعد الفتحات)</span><span class="qty">${f2(t.wallNet)} م²</span><span class="price">${sar(t.wallNet * prices.wall)}</span></div>
+            <div class="boq-row"><span class="desc">أبواب</span><span class="qty">${t.doorCount}</span><span class="price">${sar(t.doorCount * prices.door)}</span></div>
+            <div class="boq-row"><span class="desc">شبابيك</span><span class="qty">${t.windowCount}</span><span class="price">${sar(t.windowCount * prices.window)}</span></div>
+        </div>
+
+        <div class="boq-section">
+            <div class="boq-section-head"><span>التشطيب</span><span>${f2(t.finishingArea)} م²</span></div>
+            <div class="boq-row"><span class="desc">سيراميك + دهان + كهرباء</span><span class="qty">${f2(t.finishingArea)} م²</span><span class="price">${sar(t.finishingArea * prices.finish)}</span></div>
+        </div>
+    `;
+    document.getElementById('previewFloors').textContent = project.floors.length + ' أدوار';
+    return t;
+}
+
+function renderProps() {
+    const el = document.getElementById('paneProps');
+    if (!active.selectedId) {
+        el.innerHTML = `<div class="props-empty">اختر عنصراً من المخطط لتعديل خصائصه.<br>استخدم أداة <strong>التحديد</strong> ثم اضغط على عمود أو جدار.</div>`;
+        return;
+    }
+    const f = project.floors[active.floorIdx];
+    const item = f.walls.find(x => x.id === active.selectedId)
+        || f.columns.find(x => x.id === active.selectedId)
+        || f.doors.find(x => x.id === active.selectedId)
+        || f.windows.find(x => x.id === active.selectedId);
+    if (!item) { el.innerHTML = ''; return; }
+
+    let html = `<div class="props-block"><div class="props-label">العنصر المحدّد</div>`;
+    if (item.size !== undefined) {
+        // Column
+        html += `<div class="props-row"><label>العرض (م)</label><input type="number" step="0.05" min="0.2" max="1" value="${item.size}" data-prop="size"></div>`;
+        html += `<div class="props-row"><label>x (م)</label><input type="number" step="0.25" value="${item.x}" data-prop="x"></div>`;
+        html += `<div class="props-row"><label>y (م)</label><input type="number" step="0.25" value="${item.y}" data-prop="y"></div>`;
+    } else if (item.x1 !== undefined) {
+        const len = Math.hypot(item.x2 - item.x1, item.y2 - item.y1);
+        html += `<div class="props-row"><label>الطول (م)</label><input type="number" step="0.1" value="${len.toFixed(2)}" disabled></div>`;
+        html += `<div class="props-row"><label>x1</label><input type="number" step="0.25" value="${item.x1}" data-prop="x1"></div>`;
+        html += `<div class="props-row"><label>y1</label><input type="number" step="0.25" value="${item.y1}" data-prop="y1"></div>`;
+        html += `<div class="props-row"><label>x2</label><input type="number" step="0.25" value="${item.x2}" data-prop="x2"></div>`;
+        html += `<div class="props-row"><label>y2</label><input type="number" step="0.25" value="${item.y2}" data-prop="y2"></div>`;
+    } else {
+        html += `<div class="props-row"><label>العرض (م)</label><input type="number" step="0.1" min="0.6" max="3" value="${item.width}" data-prop="width"></div>`;
+        html += `<div class="props-row"><label>الموضع</label><input type="number" step="0.05" min="0" max="1" value="${item.t.toFixed(2)}" data-prop="t"></div>`;
+    }
+    html += `</div>`;
+    html += `<div class="props-block"><div class="props-label">إعدادات الدور</div>`;
+    html += `<div class="props-row"><label>اسم الدور</label><input type="text" value="${f.name}" id="floorName"></div>`;
+    html += `<div class="props-row"><label>ارتفاع (م)</label><input type="number" step="0.1" min="2.5" max="5" value="${f.height}" id="floorH"></div>`;
+    html += `</div>`;
+    el.innerHTML = html;
+
+    el.querySelectorAll('[data-prop]').forEach(input => {
+        input.addEventListener('change', () => {
+            const v = parseFloat(input.value);
+            if (Number.isFinite(v)) {
+                item[input.dataset.prop] = v;
+                persist(); recalcAll(); render();
+            }
+        });
+    });
+    const nameI = document.getElementById('floorName');
+    if (nameI) nameI.addEventListener('change', () => { f.name = nameI.value; persist(); renderFloorTabs(); });
+    const hI = document.getElementById('floorH');
+    if (hI) hI.addEventListener('change', () => { const v = parseFloat(hI.value); if (Number.isFinite(v)) { f.height = v; persist(); recalcAll(); } });
+}
+
+function recalcAll() {
+    renderBoq();
+    update3D();
+}
+
+// =====================================================================
+// 3D PREVIEW (Three.js)
+// =====================================================================
+const preview3DEl = document.getElementById('preview3D');
+const scene3 = new THREE.Scene();
+const camera3 = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+const renderer3 = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer3.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+preview3DEl.appendChild(renderer3.domElement);
+scene3.add(new THREE.AmbientLight(0xffffff, 0.85));
+const sun = new THREE.DirectionalLight(0x0056f7, 0.9);
+sun.position.set(20, 30, 20);
+scene3.add(sun);
+const buildingGroup = new THREE.Group();
+scene3.add(buildingGroup);
+
+function size3D() {
+    const r = preview3DEl.getBoundingClientRect();
+    renderer3.setSize(r.width, r.height, false);
+    camera3.aspect = r.width / Math.max(1, r.height);
+    camera3.updateProjectionMatrix();
+}
+
+const disposables3 = [];
+function clear3D() {
+    while (disposables3.length) {
+        const d = disposables3.pop();
+        if (d.geometry) d.geometry.dispose();
+        if (d.material) d.material.dispose();
+    }
+    while (buildingGroup.children.length > 0) buildingGroup.remove(buildingGroup.children[0]);
+}
+
+function update3D() {
+    clear3D();
+    const wallMat = new THREE.MeshPhysicalMaterial({ color: 0xe2e8f0, roughness: 0.9 });
+    const colMat3 = new THREE.MeshPhysicalMaterial({ color: 0x0056f7, roughness: 0.4 });
+    const slabMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, roughness: 0.7 });
+    const footMat = new THREE.MeshPhysicalMaterial({ color: 0x64748b, roughness: 0.9 });
+    disposables3.push({ material: wallMat }, { material: colMat3 }, { material: slabMat }, { material: footMat });
+
+    let baseY = 0;
+    const ground = project.floors[0];
+    if (ground && ground.walls.length) {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        ground.walls.forEach(w => {
+            minX = Math.min(minX, w.x1, w.x2);
+            maxX = Math.max(maxX, w.x1, w.x2);
+            minY = Math.min(minY, w.y1, w.y2);
+            maxY = Math.max(maxY, w.y1, w.y2);
+        });
+        const fw = (maxX - minX) * 1.15, fd = (maxY - minY) * 1.15;
+        const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+        const footG = new THREE.BoxGeometry(fw, FOOTING_DEPTH, fd);
+        disposables3.push({ geometry: footG });
+        const foot = new THREE.Mesh(footG, footMat);
+        foot.position.set(cx, -FOOTING_DEPTH / 2, cy);
+        buildingGroup.add(foot);
+    }
+
+    project.floors.forEach((f) => {
+        f.walls.forEach(w => {
+            const len = Math.hypot(w.x2 - w.x1, w.y2 - w.y1);
+            if (len < 0.05) return;
+            const cx = (w.x1 + w.x2) / 2, cy = (w.y1 + w.y2) / 2;
+            const ang = Math.atan2(w.y2 - w.y1, w.x2 - w.x1);
+            const wallG = new THREE.BoxGeometry(len, f.height, WALL_THICK);
+            disposables3.push({ geometry: wallG });
+            const m = new THREE.Mesh(wallG, wallMat);
+            m.position.set(cx, baseY + f.height / 2, cy);
+            m.rotation.y = -ang;
+            buildingGroup.add(m);
+        });
+        f.columns.forEach(c => {
+            const colG = new THREE.BoxGeometry(c.size, f.height, c.size);
+            disposables3.push({ geometry: colG });
+            const m = new THREE.Mesh(colG, colMat3);
+            m.position.set(c.x, baseY + f.height / 2, c.y);
+            buildingGroup.add(m);
+        });
+        // Slab
+        if (f.walls.length) {
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            f.walls.forEach(w => {
+                minX = Math.min(minX, w.x1, w.x2); maxX = Math.max(maxX, w.x1, w.x2);
+                minY = Math.min(minY, w.y1, w.y2); maxY = Math.max(maxY, w.y1, w.y2);
+            });
+            const sw = maxX - minX, sd = maxY - minY;
+            if (sw > 0 && sd > 0) {
+                const slabG = new THREE.BoxGeometry(sw, SLAB_THICK, sd);
+                disposables3.push({ geometry: slabG });
+                const slab = new THREE.Mesh(slabG, slabMat);
+                slab.position.set((minX + maxX) / 2, baseY + f.height + SLAB_THICK / 2, (minY + maxY) / 2);
+                buildingGroup.add(slab);
+            }
+        }
+        baseY += f.height;
+    });
+
+    // Frame the camera around the model
+    const box = new THREE.Box3().setFromObject(buildingGroup);
+    if (box.isEmpty()) {
+        camera3.position.set(15, 12, 15);
+        camera3.lookAt(0, 2, 0);
+    } else {
+        const c = new THREE.Vector3(); box.getCenter(c);
+        const s = new THREE.Vector3(); box.getSize(s);
+        const r = Math.max(s.x, s.y, s.z) * 1.6 + 3;
+        camera3.position.set(c.x + r, c.y + r * 0.7, c.z + r);
+        camera3.lookAt(c.x, c.y, c.z);
+    }
+}
+
+let prevSpin = 0;
+function animate3() {
+    requestAnimationFrame(animate3);
+    if (!document.hidden) {
+        prevSpin += 0.003;
+        if (buildingGroup.children.length) {
+            const box = new THREE.Box3().setFromObject(buildingGroup);
+            const c = new THREE.Vector3(); box.getCenter(c);
+            const s = new THREE.Vector3(); box.getSize(s);
+            const r = Math.max(s.x, s.y, s.z) * 1.6 + 3;
+            camera3.position.x = c.x + Math.cos(prevSpin) * r;
+            camera3.position.z = c.z + Math.sin(prevSpin) * r;
+            camera3.position.y = c.y + r * 0.7;
+            camera3.lookAt(c.x, c.y, c.z);
+        }
+        renderer3.render(scene3, camera3);
+    }
+}
+animate3();
+
+// =====================================================================
+// EXPORTS
+// =====================================================================
+function download(name, content, mime) {
+    const blob = content instanceof Blob ? content : new Blob([content], { type: mime || 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+}
+
+document.getElementById('btnExportJSON').addEventListener('click', () => {
+    download((project.name || 'project') + '.json',
+        JSON.stringify(project, null, 2), 'application/json');
+});
+
+document.getElementById('btnExportCSV').addEventListener('click', () => {
+    const t = calcQuantities();
+    const fmt = (n) => n.toFixed(2);
+    const rows = [
+        ['البند', 'الكمية', 'الوحدة', 'سعر الوحدة (SAR)', 'الإجمالي (SAR)'],
+        ['أساس مسلّح', fmt(t.footingConcrete), 'م³', prices.concrete, fmt(t.footingConcrete * prices.concrete)],
+        ['بلاطات خرسانية', fmt(t.slabConcrete), 'م³', prices.concrete, fmt(t.slabConcrete * prices.concrete)],
+        ['كمرات', fmt(t.beamConcrete), 'م³', prices.concrete, fmt(t.beamConcrete * prices.concrete)],
+        ['أعمدة', fmt(t.colConcrete), 'م³', prices.concrete, fmt(t.colConcrete * prices.concrete)],
+        ['حديد التسليح', fmt(t.steel), 'طن', prices.steel, fmt(t.steel * prices.steel)],
+        ['جدران (صافي)', fmt(t.wallNet), 'م²', prices.wall, fmt(t.wallNet * prices.wall)],
+        ['أبواب', t.doorCount, 'وحدة', prices.door, fmt(t.doorCount * prices.door)],
+        ['شبابيك', t.windowCount, 'وحدة', prices.window, fmt(t.windowCount * prices.window)],
+        ['تشطيبات', fmt(t.finishingArea), 'م²', prices.finish, fmt(t.finishingArea * prices.finish)],
+        [],
+        ['الإجمالي', '', '', '', fmt(t.cost)],
+    ];
+    const csv = '﻿' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+    download((project.name || 'BOQ') + '.csv', csv, 'text/csv');
+});
+
+document.getElementById('btnExportSVG').addEventListener('click', () => {
+    const f = project.floors[active.floorIdx];
+    let minX = -5, maxX = 25, minY = -5, maxY = 25;
+    if (f.walls.length || f.columns.length) {
+        minX = Math.min(...f.walls.flatMap(w => [w.x1, w.x2]), ...f.columns.map(c => c.x), 0) - 2;
+        maxX = Math.max(...f.walls.flatMap(w => [w.x1, w.x2]), ...f.columns.map(c => c.x), 0) + 2;
+        minY = Math.min(...f.walls.flatMap(w => [w.y1, w.y2]), ...f.columns.map(c => c.y), 0) - 2;
+        maxY = Math.max(...f.walls.flatMap(w => [w.y1, w.y2]), ...f.columns.map(c => c.y), 0) + 2;
+    }
+    const W = maxX - minX, H = maxY - minY;
+    const SCALE = 30;
+    const svgW = W * SCALE, svgH = H * SCALE;
+    const tx = -minX * SCALE, ty = maxY * SCALE;
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">`;
+    svg += `<rect width="100%" height="100%" fill="#fcfcfd"/>`;
+    svg += `<g transform="translate(${tx} ${ty}) scale(${SCALE} -${SCALE})">`;
+    svg += `<g stroke="rgba(0,86,247,0.1)" stroke-width="${0.02}" fill="none">`;
+    for (let x = Math.floor(minX); x <= Math.ceil(maxX); x += 1) svg += `<line x1="${x}" y1="${minY}" x2="${x}" y2="${maxY}"/>`;
+    for (let y = Math.floor(minY); y <= Math.ceil(maxY); y += 1) svg += `<line x1="${minX}" y1="${y}" x2="${maxX}" y2="${y}"/>`;
+    svg += `</g>`;
+    f.walls.forEach(w => {
+        svg += `<line x1="${w.x1}" y1="${w.y1}" x2="${w.x2}" y2="${w.y2}" stroke="#1a1e23" stroke-width="${WALL_THICK}" stroke-linecap="butt"/>`;
+    });
+    f.columns.forEach(c => {
+        svg += `<rect x="${c.x - c.size / 2}" y="${c.y - c.size / 2}" width="${c.size}" height="${c.size}" fill="#0056f7"/>`;
+    });
+    svg += `</g></svg>`;
+    download((project.name || 'plan') + '-' + f.name + '.svg', svg, 'image/svg+xml');
+});
+
+document.getElementById('btnImport').addEventListener('click', () => {
+    const i = document.createElement('input');
+    i.type = 'file'; i.accept = 'application/json,.json';
+    i.onchange = () => {
+        const f = i.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+            try {
+                const p = JSON.parse(r.result);
+                if (p.floors) {
+                    project = p;
+                    active.floorIdx = 0; active.selectedId = null;
+                    document.getElementById('projName').value = project.name || 'مشروع جديد';
+                    persist(); recalcAll(); renderFloorTabs(); render();
+                }
+            } catch (e) { alert('ملف غير صالح'); }
+        };
+        r.readAsText(f);
+    };
+    i.click();
+});
+
+document.getElementById('btnNew').addEventListener('click', () => {
+    showModal('بدء مشروع جديد', 'سيتم استبدال المشروع الحالي. هل تريد المتابعة؟', () => {
+        project = newProject();
+        active.floorIdx = 0; active.selectedId = null;
+        document.getElementById('projName').value = project.name;
+        persist(); recalcAll(); renderFloorTabs(); render();
+    });
+});
+
+document.getElementById('projName').addEventListener('change', e => {
+    project.name = e.target.value || 'مشروع جديد';
+    persist();
+});
+
+['priceConcrete', 'priceSteel', 'priceWall', 'priceDoor', 'priceWindow', 'priceFinish'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = prices[id.replace('price', '').toLowerCase()];
+    el.addEventListener('change', () => {
+        const v = parseFloat(el.value);
+        if (Number.isFinite(v) && v >= 0) {
+            prices[id.replace('price', '').toLowerCase()] = v;
+            persist(); recalcAll();
+        }
+    });
+});
+
+// =====================================================================
+// AI: image → plan (mock — calls Claude API in real version)
+// =====================================================================
+const aiDrop = document.getElementById('aiDrop');
+const aiFile = document.getElementById('aiFile');
+aiDrop.addEventListener('dragover', e => { e.preventDefault(); aiDrop.classList.add('dragging'); });
+aiDrop.addEventListener('dragleave', () => aiDrop.classList.remove('dragging'));
+aiDrop.addEventListener('drop', e => {
+    e.preventDefault();
+    aiDrop.classList.remove('dragging');
+    if (e.dataTransfer.files[0]) handleAIFile(e.dataTransfer.files[0]);
+});
+aiFile.addEventListener('change', () => { if (aiFile.files[0]) handleAIFile(aiFile.files[0]); });
+
+function handleAIFile(file) {
+    showModal('تحويل الصورة بالذكاء الاصطناعي',
+        'هذه الميزة تحتاج اتصالاً بـ Claude API. حالياً سيُنشأ مشروع نموذجي مبني على أبعاد قياسية كمعاينة.<br><br>الملف: ' + file.name,
+        () => {
+            project = sampleProject();
+            active.floorIdx = 0;
+            document.getElementById('projName').value = project.name;
+            persist(); recalcAll(); renderFloorTabs(); render();
+        });
+}
+
+function sampleProject() {
+    const f = makeFloor('الدور الأرضي');
+    const W = 12, H = 10;
+    f.walls = [
+        { id: uid(), x1: 0, y1: 0, x2: W, y2: 0 },
+        { id: uid(), x1: W, y1: 0, x2: W, y2: H },
+        { id: uid(), x1: W, y1: H, x2: 0, y2: H },
+        { id: uid(), x1: 0, y1: H, x2: 0, y2: 0 },
+        { id: uid(), x1: 0, y1: H / 2, x2: W, y2: H / 2 },
+        { id: uid(), x1: W / 2, y1: 0, x2: W / 2, y2: H / 2 },
+    ];
+    f.columns = [
+        { id: uid(), x: 0, y: 0, size: 0.3 },
+        { id: uid(), x: W, y: 0, size: 0.3 },
+        { id: uid(), x: 0, y: H, size: 0.3 },
+        { id: uid(), x: W, y: H, size: 0.3 },
+        { id: uid(), x: W / 2, y: 0, size: 0.3 },
+        { id: uid(), x: W / 2, y: H, size: 0.3 },
+        { id: uid(), x: 0, y: H / 2, size: 0.3 },
+        { id: uid(), x: W, y: H / 2, size: 0.3 },
+    ];
+    f.doors = [{ id: uid(), wallId: f.walls[0].id, t: 0.45, width: DOOR_W }];
+    f.windows = [
+        { id: uid(), wallId: f.walls[1].id, t: 0.3, width: WIN_W },
+        { id: uid(), wallId: f.walls[1].id, t: 0.7, width: WIN_W },
+        { id: uid(), wallId: f.walls[2].id, t: 0.3, width: WIN_W },
+        { id: uid(), wallId: f.walls[2].id, t: 0.7, width: WIN_W },
+    ];
+    return { name: 'مشروع نموذجي · فيلا', floors: [f] };
+}
+
+// =====================================================================
+// MODAL
+// =====================================================================
+const modalBg = document.getElementById('modalBg');
+const modalTitle = document.getElementById('modalTitle');
+const modalBody = document.getElementById('modalBody');
+const modalOk = document.getElementById('modalOk');
+const modalCancel = document.getElementById('modalCancel');
+let modalCb = null;
+function showModal(title, body, cb) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = body;
+    modalCb = cb;
+    modalBg.classList.add('show');
+}
+modalOk.addEventListener('click', () => { modalBg.classList.remove('show'); if (modalCb) modalCb(); });
+modalCancel.addEventListener('click', () => modalBg.classList.remove('show'));
+modalBg.addEventListener('click', e => { if (e.target === modalBg) modalBg.classList.remove('show'); });
+
+// =====================================================================
+// REFS used early
+// =====================================================================
+const cursorInfoEl = document.getElementById('cursorInfo');
+const statusToolEl = document.getElementById('statusTool');
+const statusZoomEl = document.getElementById('statusZoom');
+const saveStatusEl = document.getElementById('saveStatus');
+
+// =====================================================================
+// BOOT
+// =====================================================================
+function boot() {
+    const projInput = document.getElementById('projName');
+    projInput.value = project.name;
+    setTool('wall');
+    renderFloorTabs();
+    recalcAll();
+    resizeCanvas();
+    size3D();
+    renderProps();
+
+    // First-run sample
+    const empty = project.floors.length === 1 && !project.floors[0].walls.length && !project.floors[0].columns.length;
+    if (empty) {
+        showModal('ابدأ بنموذج جاهز؟',
+            'يمكن أن نبدأ المشروع بفيلا 12×10م كمثال، أو ابدأ من الصفر.<br>أدوات الرسم: اضغط <strong>W</strong> لجدار، <strong>C</strong> لعمود.',
+            () => {
+                project = sampleProject();
+                document.getElementById('projName').value = project.name;
+                persist(); recalcAll(); renderFloorTabs(); render();
+            });
+    }
+}
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { resizeCanvas(); size3D(); }, 100);
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+
+boot();
+
+</script>
+</body>
+</html>
