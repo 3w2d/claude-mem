@@ -429,33 +429,116 @@
         /* Mobile */
         @media (max-width: 900px) {
             .app {
-                grid-template-rows: 56px 1fr auto 28px;
+                grid-template-rows: 52px 1fr 26px;
                 grid-template-columns: 1fr;
                 grid-template-areas:
                     "topbar"
                     "canvas"
-                    "side"
                     "status";
             }
+            .topbar { padding: 0 10px; gap: 8px; }
+            .topbar .project-name { min-width: 0; flex: 1; font-size: 13px; padding: 6px 8px; }
+            .topbar .btn span { display: none; }
+            .topbar .btn { padding: 8px 10px; }
+            .topbar .save-status { display: none; }
+
             .tools {
                 grid-area: canvas;
                 position: absolute;
-                left: 8px; top: 60px; bottom: 8px;
-                border-radius: 12px; border: 1px solid var(--border-light);
-                width: 52px; padding: 8px 0; gap: 2px;
-                box-shadow: 0 10px 25px -10px rgba(0,0,0,0.1);
+                right: 8px; top: 8px;
+                flex-direction: row;
+                border-radius: 10px; border: 1px solid var(--border-light);
+                padding: 4px; gap: 2px;
+                box-shadow: 0 6px 18px -6px rgba(0,0,0,0.15);
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
                 z-index: 10;
+                max-width: calc(100vw - 16px);
+                overflow-x: auto;
             }
+            .tools .divider { width: 1px; height: 28px; margin: 4px; }
             .tool { width: 36px; height: 36px; }
             .tool .icon { width: 18px; height: 18px; }
+            .tool::after { display: none; }
+
+            /* Side panel becomes a bottom sheet */
             .side {
-                max-height: 40vh; border-right: none;
-                border-top: 1px solid var(--border-light);
+                grid-area: canvas;
+                position: absolute;
+                left: 0; right: 0; bottom: 0;
+                height: 75vh;
+                border-radius: 16px 16px 0 0;
+                border: none; border-top: 1px solid var(--border-light);
+                box-shadow: 0 -8px 25px -8px rgba(0,0,0,0.12);
+                transform: translateY(calc(100% - 50px));
+                transition: transform 0.3s var(--physics-ease, ease);
+                z-index: 30;
             }
-            .preview-3d { width: 160px; height: 120px; }
-            .topbar .project-name { min-width: 0; flex: 1; }
-            .topbar .btn span { display: none; }
-            .canvas-overlay-tl { top: 8px; right: 70px; left: auto; }
+            .side.open { transform: translateY(0); }
+            .side::before {
+                content: '';
+                display: block; width: 36px; height: 4px;
+                background: var(--border-light); border-radius: 2px;
+                margin: 8px auto 4px;
+                cursor: pointer;
+            }
+            .side-tabs { padding-top: 0; }
+            .side-tab { padding: 10px; font-size: 12px; }
+
+            /* Floor tabs row at top */
+            .canvas-overlay-tl {
+                top: 56px; right: 8px; left: 8px;
+                justify-content: flex-start;
+            }
+            .floor-tabs { padding: 3px; }
+            .floor-tab { padding: 5px 10px; font-size: 11px; }
+
+            /* Cursor info compact */
+            .canvas-overlay-tr {
+                top: auto; bottom: 60px; right: 8px;
+                font-size: 10px; padding: 4px 8px;
+            }
+
+            /* 3D preview: hidden by default, toggleable */
+            .canvas-overlay-br {
+                bottom: 56px; right: 8px; gap: 6px;
+            }
+            .preview-3d {
+                width: 140px; height: 110px;
+                display: none;
+            }
+            .preview-3d.open { display: block; }
+            .preview-3d-bar { padding: 4px 8px; font-size: 10px; }
+            .preview-3d > div:last-child { height: 80px !important; }
+
+            /* FABs */
+            .fab-row {
+                position: absolute;
+                bottom: 60px; left: 8px;
+                display: flex; flex-direction: column; gap: 8px;
+                z-index: 20;
+            }
+            .fab {
+                width: 44px; height: 44px; border-radius: 50%;
+                background: var(--accent-blue); color: #fff; border: none;
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 6px 18px -6px rgba(0, 86, 247, 0.5);
+            }
+            .fab .icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+            .fab.toggled { background: var(--text-dark); }
+
+            /* Wall length labels smaller on mobile */
+            canvas#plan { touch-action: none; }
+        }
+        @media (min-width: 901px) {
+            .fab-row { display: none; }
+        }
+        @media (max-width: 540px) {
+            .topbar .btn:not(.btn-primary) { display: none; }
+            .topbar .logo { font-size: 18px; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .tpl-info h5 { font-size: 12px; }
+            .tpl-info .meta { font-size: 10px; }
         }
     </style>
 </head>
@@ -530,13 +613,22 @@
         <div class="canvas-overlay-tr" id="cursorInfo">0.00, 0.00 m</div>
 
         <div class="canvas-overlay-br">
-            <div class="preview-3d">
+            <div class="preview-3d" id="preview3DBox">
                 <div class="preview-3d-bar">
                     <span>عرض ثلاثي الأبعاد</span>
                     <span id="previewFloors">0 أدوار</span>
                 </div>
                 <div id="preview3D" style="height: 170px;"></div>
             </div>
+        </div>
+
+        <div class="fab-row">
+            <button class="fab" id="fab3D" title="معاينة 3D">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </button>
+            <button class="fab" id="fabSide" title="القوائم">
+                <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
         </div>
     </div>
 
@@ -2364,6 +2456,35 @@ const cursorInfoEl = document.getElementById('cursorInfo');
 const statusToolEl = document.getElementById('statusTool');
 const statusZoomEl = document.getElementById('statusZoom');
 const saveStatusEl = document.getElementById('saveStatus');
+
+// =====================================================================
+// MOBILE: bottom-sheet side panel + 3D preview toggle
+// =====================================================================
+const sideEl = document.querySelector('.side');
+const preview3DBox = document.getElementById('preview3DBox');
+const fabSide = document.getElementById('fabSide');
+const fab3D = document.getElementById('fab3D');
+
+function isMobile() { return window.matchMedia('(max-width: 900px)').matches; }
+
+fabSide.addEventListener('click', () => {
+    sideEl.classList.toggle('open');
+    fabSide.classList.toggle('toggled', sideEl.classList.contains('open'));
+});
+fab3D.addEventListener('click', () => {
+    preview3DBox.classList.toggle('open');
+    fab3D.classList.toggle('toggled', preview3DBox.classList.contains('open'));
+    if (preview3DBox.classList.contains('open')) setTimeout(size3D, 50);
+});
+// Tap the handle to toggle on mobile
+sideEl.addEventListener('click', (e) => {
+    if (!isMobile()) return;
+    const r = sideEl.getBoundingClientRect();
+    if (e.clientY - r.top < 20) {
+        sideEl.classList.toggle('open');
+        fabSide.classList.toggle('toggled', sideEl.classList.contains('open'));
+    }
+});
 
 // =====================================================================
 // AI CHAT — design assistant
