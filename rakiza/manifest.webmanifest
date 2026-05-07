@@ -1,0 +1,40 @@
+{
+  "name": "رَكيزة · المحرّر الهندسي",
+  "short_name": "رَكيزة",
+  "description": "محرّر مخططات هندسية ذكي — تصميم فلل ومنازل بحساب كميات وتكلفة فوري",
+  "start_url": "./editor.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fcfcfd",
+  "theme_color": "#0056f7",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["productivity", "business", "utilities"],
+  "icons": [
+    {
+      "src": "icon-192.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "مشروع جديد",
+      "url": "./editor.html?new=1",
+      "icons": [{ "src": "icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "نماذج جاهزة",
+      "url": "./editor.html?templates=1",
+      "icons": [{ "src": "icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}
