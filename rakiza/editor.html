@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#fcfcfd">
+    <meta name="theme-color" content="#0056f7">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="icon-192.svg">
+    <link rel="apple-touch-icon" href="icon-192.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="رَكيزة">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>رَكيزة · المحرّر</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -114,6 +120,8 @@
         .tool.active { background: var(--accent-blue); color: #fff; }
         .tool.active:hover { background: var(--accent-blue-hover); color: #fff; }
         .tool .icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .tool.tool-action { color: var(--accent-blue); }
+        .tool.tool-action:disabled { opacity: 0.3; cursor: not-allowed; }
         .tool::after {
             content: attr(data-tip);
             position: absolute; right: 100%; margin-right: 8px; top: 50%;
@@ -588,6 +596,9 @@
         <button class="tool" data-tool="wall" data-tip="جدار · W">
             <svg class="icon" viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4"/></svg>
         </button>
+        <button class="tool" data-tool="room" data-tip="غرفة · R">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18"/></svg>
+        </button>
         <button class="tool" data-tool="column" data-tip="عمود · C">
             <svg class="icon" viewBox="0 0 24 24"><rect x="8" y="8" width="8" height="8"/></svg>
         </button>
@@ -597,9 +608,28 @@
         <button class="tool" data-tool="window" data-tip="شباك · N">
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
         </button>
+        <button class="tool" data-tool="dim" data-tip="بُعد · M">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="9" x2="3" y2="15"/><line x1="21" y1="9" x2="21" y2="15"/><line x1="9" y1="10" x2="9" y2="14"/><line x1="15" y1="10" x2="15" y2="14"/></svg>
+        </button>
         <div class="divider"></div>
         <button class="tool" data-tool="eraser" data-tip="مسح · E">
             <svg class="icon" viewBox="0 0 24 24"><path d="M18 13l-7-7-9 9 7 7h9z"/><line x1="22" y1="22" x2="13" y2="22"/></svg>
+        </button>
+        <div class="divider"></div>
+        <button class="tool tool-action" id="btnUndo" data-tip="تراجع · Ctrl+Z">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+        </button>
+        <button class="tool tool-action" id="btnRedo" data-tip="إعادة · Ctrl+Y">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+        </button>
+        <button class="tool tool-action" id="btnDuplicate" data-tip="تكرار · Ctrl+D">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <button class="tool tool-action" id="btnMirror" data-tip="مرآة · I">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="6 8 3 12 6 16"/><polyline points="18 8 21 12 18 16"/></svg>
+        </button>
+        <button class="tool tool-action" id="btnRotate" data-tip="تدوير 90° · O">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
     </div>
 
@@ -652,10 +682,11 @@
                 </div>
                 <div class="chat-msgs" id="chatMsgs"></div>
                 <div class="chat-suggestions" id="chatSuggestions">
-                    <span class="chat-chip">أضف غرفة 4×3 شمال شرق</span>
-                    <span class="chat-chip">احذف العمود الأوسط</span>
-                    <span class="chat-chip">كبّر المجلس</span>
-                    <span class="chat-chip">أضف دور علوي</span>
+                    <span class="chat-chip">صمّم لي فيلا 12×10 لعائلة 5</span>
+                    <span class="chat-chip">ابحث عن أسعار البلك السعودي اليوم</span>
+                    <span class="chat-chip">اقترح تحسينات للمخطط الحالي</span>
+                    <span class="chat-chip">كم تكلفة هذا المشروع تقريباً؟</span>
+                    <span class="chat-chip">حسّن التهوية والإضاءة الطبيعية</span>
                 </div>
                 <div class="chat-input-wrap">
                     <textarea class="chat-input" id="chatInput" placeholder="اكتب طلبك (مثل: أضف عموداً في 5,5)" rows="1"></textarea>
@@ -1027,21 +1058,40 @@ function drawColumn(c, selected) {
 }
 
 function drawDraft(d) {
-    if (d.kind === 'wall') {
+    if (d.kind === 'wall' || d.kind === 'dim') {
         const a = worldToScreen(d.x1, d.y1);
         const b = worldToScreen(cursor.snapped.x, cursor.snapped.y);
         ctx.strokeStyle = '#0056f7';
-        ctx.lineWidth = WALL_THICK * view.scale * dpr;
-        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = (d.kind === 'wall' ? WALL_THICK * view.scale * dpr : 1.5 * dpr);
+        if (d.kind === 'dim') ctx.setLineDash([4 * dpr, 4 * dpr]);
+        ctx.globalAlpha = d.kind === 'wall' ? 0.5 : 1;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
         ctx.stroke();
+        ctx.setLineDash([]);
         ctx.globalAlpha = 1;
         const len = Math.hypot(cursor.snapped.x - d.x1, cursor.snapped.y - d.y1);
         ctx.fillStyle = '#0056f7';
         ctx.font = `${11 * dpr}px 'IBM Plex Mono'`;
         ctx.textAlign = 'center';
         ctx.fillText(len.toFixed(2) + ' m', (a.x + b.x) / 2, (a.y + b.y) / 2 - 10 * dpr);
+    } else if (d.kind === 'room') {
+        const x1 = Math.min(d.x1, cursor.snapped.x);
+        const y1 = Math.min(d.y1, cursor.snapped.y);
+        const x2 = Math.max(d.x1, cursor.snapped.x);
+        const y2 = Math.max(d.y1, cursor.snapped.y);
+        const a = worldToScreen(x1, y1), b = worldToScreen(x2, y2);
+        ctx.strokeStyle = '#0056f7';
+        ctx.fillStyle = 'rgba(0, 86, 247, 0.08)';
+        ctx.lineWidth = WALL_THICK * view.scale * dpr;
+        ctx.globalAlpha = 0.5;
+        ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+        ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#0056f7';
+        ctx.font = `${12 * dpr}px 'IBM Plex Mono'`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${(x2 - x1).toFixed(2)} × ${(y2 - y1).toFixed(2)} م`, (a.x + b.x) / 2, (a.y + b.y) / 2);
     }
 }
 
@@ -1120,6 +1170,33 @@ function onPointerDown(e) {
                 persist(); recalcAll();
             }
             active.draft = { kind: 'wall', x1: w.x2, y1: w.y2 }; // chain
+        }
+    } else if (active.tool === 'room') {
+        if (!active.draft) {
+            active.draft = { kind: 'room', x1: cursor.snapped.x, y1: cursor.snapped.y };
+        } else {
+            const x1 = Math.min(active.draft.x1, cursor.snapped.x);
+            const y1 = Math.min(active.draft.y1, cursor.snapped.y);
+            const x2 = Math.max(active.draft.x1, cursor.snapped.x);
+            const y2 = Math.max(active.draft.y1, cursor.snapped.y);
+            if (x2 - x1 > 0.5 && y2 - y1 > 0.5) {
+                floor.walls.push(
+                    { id: uid(), x1, y1, x2, y2: y1 },
+                    { id: uid(), x1: x2, y1, x2, y2 },
+                    { id: uid(), x1: x2, y1: y2, x2: x1, y2 },
+                    { id: uid(), x1, y1: y2, x2: x1, y2: y1 }
+                );
+                persist(); recalcAll();
+            }
+            active.draft = null;
+        }
+    } else if (active.tool === 'dim') {
+        if (!active.draft) {
+            active.draft = { kind: 'dim', x1: cursor.snapped.x, y1: cursor.snapped.y };
+        } else {
+            const len = Math.hypot(cursor.snapped.x - active.draft.x1, cursor.snapped.y - active.draft.y1);
+            statusToolEl.textContent = 'بُعد: ' + len.toFixed(2) + ' م';
+            active.draft = null;
         }
     } else if (active.tool === 'column') {
         floor.columns.push({ id: uid(), x: cursor.snapped.x, y: cursor.snapped.y, size: COL_DEFAULT });
@@ -1217,8 +1294,13 @@ function projectOnSegment(px, py, x1, y1, x2, y2) {
 }
 
 window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return;
-    const map = { s: 'select', h: 'pan', w: 'wall', c: 'column', d: 'door', n: 'window', e: 'eraser' };
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicateSelection(); return; }
+    if (e.key.toLowerCase() === 'i') { mirrorSelection(); return; }
+    if (e.key.toLowerCase() === 'o') { rotateSelection(90); return; }
+    const map = { s: 'select', h: 'pan', w: 'wall', r: 'room', c: 'column', d: 'door', n: 'window', m: 'dim', e: 'eraser' };
     const key = e.key.toLowerCase();
     if (map[key]) { setTool(map[key]); }
     if (e.key === 'Escape') { active.draft = null; render(); }
@@ -2458,6 +2540,199 @@ const statusZoomEl = document.getElementById('statusZoom');
 const saveStatusEl = document.getElementById('saveStatus');
 
 // =====================================================================
+// UNDO / REDO — snapshot stack of project + active.floorIdx
+// =====================================================================
+const history = { past: [], future: [] };
+const HISTORY_MAX = 80;
+let historyTimer = null;
+
+function snapshot() {
+    return JSON.stringify({ p: project, idx: active.floorIdx });
+}
+function restoreSnapshot(s) {
+    const o = JSON.parse(s);
+    project = o.p;
+    active.floorIdx = Math.min(o.idx, project.floors.length - 1);
+    active.selectedId = null;
+    active.selectedIds = [];
+    document.getElementById('projName').value = project.name;
+    persist(); recalcAll(); renderFloorTabs(); render(); renderProps();
+}
+function pushHistory() {
+    clearTimeout(historyTimer);
+    historyTimer = setTimeout(() => {
+        const s = snapshot();
+        if (history.past[history.past.length - 1] === s) return;
+        history.past.push(s);
+        if (history.past.length > HISTORY_MAX) history.past.shift();
+        history.future.length = 0;
+        updateHistoryButtons();
+    }, 80);
+}
+function undo() {
+    if (!history.past.length) return;
+    history.future.push(snapshot());
+    restoreSnapshot(history.past.pop());
+    updateHistoryButtons();
+}
+function redo() {
+    if (!history.future.length) return;
+    history.past.push(snapshot());
+    restoreSnapshot(history.future.pop());
+    updateHistoryButtons();
+}
+function updateHistoryButtons() {
+    document.getElementById('btnUndo').disabled = !history.past.length;
+    document.getElementById('btnRedo').disabled = !history.future.length;
+}
+
+// Wrap persist so any change snapshots history
+const _persist = persist;
+persist = function() { _persist.apply(this, arguments); pushHistory(); };
+
+document.getElementById('btnUndo').addEventListener('click', undo);
+document.getElementById('btnRedo').addEventListener('click', redo);
+
+// =====================================================================
+// MULTI-SELECT + transform operations (mirror, rotate, duplicate)
+// =====================================================================
+active.selectedIds = [];
+
+function selectedItems() {
+    const f = project.floors[active.floorIdx];
+    const ids = active.selectedIds.length ? active.selectedIds : (active.selectedId ? [active.selectedId] : []);
+    const items = [];
+    for (const id of ids) {
+        const w = f.walls.find(x => x.id === id);
+        if (w) { items.push({ kind: 'wall', ref: w }); continue; }
+        const c = f.columns.find(x => x.id === id);
+        if (c) { items.push({ kind: 'column', ref: c }); continue; }
+        const d = f.doors.find(x => x.id === id);
+        if (d) { items.push({ kind: 'door', ref: d }); continue; }
+        const v = f.windows.find(x => x.id === id);
+        if (v) items.push({ kind: 'window', ref: v });
+    }
+    return items;
+}
+
+function selectionBBox() {
+    const items = selectedItems();
+    if (!items.length) {
+        const f = project.floors[active.floorIdx];
+        return bbox(f);
+    }
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    items.forEach(({ kind, ref }) => {
+        if (kind === 'wall') {
+            minX = Math.min(minX, ref.x1, ref.x2); maxX = Math.max(maxX, ref.x1, ref.x2);
+            minY = Math.min(minY, ref.y1, ref.y2); maxY = Math.max(maxY, ref.y1, ref.y2);
+        } else if (kind === 'column') {
+            minX = Math.min(minX, ref.x); maxX = Math.max(maxX, ref.x);
+            minY = Math.min(minY, ref.y); maxY = Math.max(maxY, ref.y);
+        }
+    });
+    return { minX, maxX, minY, maxY };
+}
+
+function duplicateSelection(dx = 0.5, dy = 0.5) {
+    const items = selectedItems();
+    if (!items.length) return;
+    const f = project.floors[active.floorIdx];
+    const newIds = [];
+    items.forEach(({ kind, ref }) => {
+        if (kind === 'wall') {
+            const w = { id: uid(), x1: ref.x1 + dx, y1: ref.y1 + dy, x2: ref.x2 + dx, y2: ref.y2 + dy };
+            f.walls.push(w); newIds.push(w.id);
+        } else if (kind === 'column') {
+            const c = { id: uid(), x: ref.x + dx, y: ref.y + dy, size: ref.size };
+            f.columns.push(c); newIds.push(c.id);
+        }
+    });
+    active.selectedIds = newIds;
+    active.selectedId = newIds[0] || null;
+    persist(); recalcAll(); render();
+}
+
+function mirrorSelection() {
+    const items = selectedItems();
+    if (!items.length) return;
+    const bb = selectionBBox();
+    const cx = (bb.minX + bb.maxX) / 2;
+    items.forEach(({ kind, ref }) => {
+        if (kind === 'wall') {
+            ref.x1 = 2 * cx - ref.x1;
+            ref.x2 = 2 * cx - ref.x2;
+        } else if (kind === 'column') {
+            ref.x = 2 * cx - ref.x;
+        }
+    });
+    persist(); recalcAll(); render();
+}
+
+function rotateSelection(degrees = 90) {
+    const items = selectedItems();
+    if (!items.length) return;
+    const bb = selectionBBox();
+    const cx = (bb.minX + bb.maxX) / 2;
+    const cy = (bb.minY + bb.maxY) / 2;
+    const a = degrees * Math.PI / 180;
+    const cos = Math.cos(a), sin = Math.sin(a);
+    const rot = (x, y) => ({ x: cx + (x - cx) * cos - (y - cy) * sin, y: cy + (x - cx) * sin + (y - cy) * cos });
+    items.forEach(({ kind, ref }) => {
+        if (kind === 'wall') {
+            const a1 = rot(ref.x1, ref.y1); const a2 = rot(ref.x2, ref.y2);
+            ref.x1 = snap(a1.x); ref.y1 = snap(a1.y);
+            ref.x2 = snap(a2.x); ref.y2 = snap(a2.y);
+        } else if (kind === 'column') {
+            const r = rot(ref.x, ref.y);
+            ref.x = snap(r.x); ref.y = snap(r.y);
+        }
+    });
+    persist(); recalcAll(); render();
+}
+
+document.getElementById('btnDuplicate').addEventListener('click', () => duplicateSelection());
+document.getElementById('btnMirror').addEventListener('click', mirrorSelection);
+document.getElementById('btnRotate').addEventListener('click', () => rotateSelection(90));
+
+// =====================================================================
+// DIMENSIONS — temporary (not persisted, computed live in render)
+// =====================================================================
+// (drawn by drawWall already; "dim" tool measures distances on click-click)
+let dimDraft = null;
+
+// =====================================================================
+// SERVICE WORKER — install for PWA + offline
+// =====================================================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+}
+
+// Install prompt
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstall = e;
+    showInstallChip();
+});
+
+function showInstallChip() {
+    if (document.getElementById('installChip')) return;
+    const chip = document.createElement('button');
+    chip.id = 'installChip';
+    chip.className = 'btn btn-primary';
+    chip.style.cssText = 'position:fixed;bottom:60px;left:12px;z-index:50;display:inline-flex;gap:6px;align-items:center;';
+    chip.innerHTML = '<svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ثبّت التطبيق';
+    chip.onclick = async () => {
+        if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; chip.remove(); }
+    };
+    document.body.appendChild(chip);
+    setTimeout(() => chip.remove(), 30000);
+}
+
+// =====================================================================
 // MOBILE: bottom-sheet side panel + 3D preview toggle
 // =====================================================================
 const sideEl = document.querySelector('.side');
@@ -2496,7 +2771,7 @@ const apiKeyEl = document.getElementById('apiKey');
 const aiModelEl = document.getElementById('aiModel');
 
 apiKeyEl.value = localStorage.getItem(STORAGE_KEY + ':apiKey') || '';
-aiModelEl.value = localStorage.getItem(STORAGE_KEY + ':model') || 'claude-haiku-4-5';
+aiModelEl.value = localStorage.getItem(STORAGE_KEY + ':model') || 'claude-sonnet-4-6';
 apiKeyEl.addEventListener('change', () => localStorage.setItem(STORAGE_KEY + ':apiKey', apiKeyEl.value));
 aiModelEl.addEventListener('change', () => localStorage.setItem(STORAGE_KEY + ':model', aiModelEl.value));
 
@@ -2653,9 +2928,10 @@ function bbox(f) {
 
 // ---- Anthropic tool schemas ----
 const ANTHROPIC_TOOLS = [
+    { type: 'web_search_20250305', name: 'web_search', max_uses: 4 },
     { name: 'describe_project', description: 'يصف حالة المشروع: عدد الأدوار، أبعاد كل دور، عدد الجدران/الأعمدة', input_schema: { type: 'object', properties: {} } },
     { name: 'describe_floor', description: 'يرجع جدران وأعمدة وأبواب وشبابيك دور معين', input_schema: { type: 'object', properties: { floor: { type: 'integer', description: 'فهرس الدور (0 = الأرضي)' } } } },
-    { name: 'add_wall', description: 'يضيف جداراً من نقطة (x1,y1) إلى (x2,y2) بالأمتار. مبدأ الإحداثيات: x شرقاً، y شمالاً، 0,0 الزاوية الجنوبية الغربية', input_schema: { type: 'object', properties: { x1:{type:'number'}, y1:{type:'number'}, x2:{type:'number'}, y2:{type:'number'}, floor:{type:'integer'} }, required:['x1','y1','x2','y2'] } },
+    { name: 'add_wall', description: 'يضيف جداراً من نقطة (x1,y1) إلى (x2,y2) بالأمتار. الإحداثيات: x شرقاً، y شمالاً، (0,0) الزاوية الجنوبية الغربية', input_schema: { type: 'object', properties: { x1:{type:'number'}, y1:{type:'number'}, x2:{type:'number'}, y2:{type:'number'}, floor:{type:'integer'} }, required:['x1','y1','x2','y2'] } },
     { name: 'add_column', description: 'يضيف عمود في النقطة (x,y) بحجم size (افتراضي 0.30م)', input_schema: { type: 'object', properties: { x:{type:'number'}, y:{type:'number'}, size:{type:'number'}, floor:{type:'integer'} }, required:['x','y'] } },
     { name: 'add_door', description: 'يضيف باباً على أقرب جدار للنقطة (x,y)', input_schema: { type: 'object', properties: { x:{type:'number'}, y:{type:'number'}, width:{type:'number'}, floor:{type:'integer'} }, required:['x','y'] } },
     { name: 'add_window', description: 'يضيف شباكاً على أقرب جدار للنقطة', input_schema: { type: 'object', properties: { x:{type:'number'}, y:{type:'number'}, width:{type:'number'}, floor:{type:'integer'} }, required:['x','y'] } },
@@ -2667,27 +2943,45 @@ const ANTHROPIC_TOOLS = [
     { name: 'apply_template', description: 'يطبّق قالباً جاهزاً بالاسم (مثل: فيلا اقتصادية، فيلا فاخرة، استراحة)', input_schema: { type: 'object', properties: { name:{type:'string'} }, required:['name'] } },
 ];
 
-const SYSTEM_PROMPT = `أنت مهندس معماري سعودي يساعد المستخدم في تعديل مخطط فيلا/مبنى داخل تطبيق ويب.
+const SYSTEM_PROMPT = `أنت مهندس معماري سعودي خبير ومستشار للمستخدم. لست منفّذاً صامتاً للأوامر — أنت زميل يفكّر معه.
 
-تستطيع تعديل المخطط مباشرة باستخدام الأدوات. الأبعاد بالأمتار. نظام الإحداثيات:
-- x: من الغرب (0) إلى الشرق (موجب)
-- y: من الجنوب (0) إلى الشمال (موجب)
+# سلوكك
+- **حاور المستخدم**: إن كان الطلب غامضاً، اسأله سؤالاً واحداً مركّزاً قبل التنفيذ.
+- **اقترح بدائل**: قبل تنفيذ تعديل كبير، اعرض 2-3 خيارات بمختصر سطر لكل واحد، واسمح للمستخدم بالاختيار.
+- **ابحث في الإنترنت** بأداة web_search عند الحاجة لمراجع تصميم، اشتراطات بلدية، أسعار سوق محدّثة، اتجاهات تصميم سعودية.
+- **أعطِ سبباً قصيراً** لكل قرار (مثلاً: "وجّهت المجلس للشمال لتقليل الحرارة").
+- **حذّر** إذا الطلب يخالف الكود السعودي للبناء أو الذوق العام.
 
-قواعد التصميم السعودي القياسية:
-- مجلس رجال: 4.5×6 م (مدخل منفصل عن العائلة إن أمكن)
-- غرفة نوم رئيسية: 4×4 م مع حمام داخلي
-- غرفة نوم عادية: 3×3.5 م
-- مطبخ: 4×3.75 م
+# عند البدء
+- إن لم تعرف حالة المشروع، استدعِ describe_project ثم describe_floor للدور الفعّال.
+- إن كان المشروع فارغاً، اسأل: "كم تبي عدد الأدوار وعدد غرف النوم والمساحة المتاحة؟" قبل البناء.
+
+# نظام الإحداثيات
+- x: من الغرب (0) إلى الشرق (موجب) — متر
+- y: من الجنوب (0) إلى الشمال (موجب) — متر
+
+# المعايير السعودية القياسية (استند إليها بدون إعادة بحث إلا لو طُلب)
+- مجلس رجال: 4.5×6 م، يفضّل مدخل منفصل
+- مجلس نساء/صالة استقبال: 4×5 م
+- غرفة رئيسية: 4×4 م + حمام داخلي 2×2.5 م + خزانة ملابس
+- غرفة نوم عادية: 3×3.5 م (لا أقل من 9 م²)
+- مطبخ رئيسي: 4×3.75 م + مطبخ تحضير 2×3 م في الفلل الكبيرة
 - حمام: 1.5×2 م
-- ممر: عرض ≥ 1.2 م
-- ارتفاع الدور: 3.3-3.8 م
+- ممر داخلي: ≥ 1.2 م
+- درج: 1.2×3 م مع راحة في المنتصف
+- ارتفاع الدور: 3.3 م شقق · 3.5 م فلل عادية · 3.6-3.8 م فاخرة
+- ملحق خادمة: غرفة 2.5×3 م + حمامها
 
-عند طلب تعديل:
-1. ابدأ بـ describe_project إن لم تعرف الحالة
-2. نفّذ التعديلات بالأدوات
-3. أكمل بجملة قصيرة بالعربية عما فعلته
+# قواعد التنفيذ
+1. اقرأ الحالة (describe_*) قبل أي تعديل بالإحداثيات.
+2. استخدم web_search لو احتجت معلومة محدّثة (سعر مادة، اشتراط بلدي، نمط تصميم رائج).
+3. نفّذ التغييرات بالأدوات.
+4. اختم بجملة عربية قصيرة تشرح ماذا غيّرت ولماذا، واقترح خطوة تالية إن وُجدت.
 
-كن مختصراً وعملياً. لا تشرح بإسهاب.`;
+# أسلوب الكلام
+- مختصر، عملي، باللهجة العربية الفصحى المبسّطة.
+- لا تسرد كل التفاصيل التقنية. تركّز على ما يهم المستخدم.
+- استخدم الأرقام والإحداثيات بصيغة LTR داخل النص العربي.`;
 
 async function sendChat(text) {
     if (!text.trim()) return;
@@ -2715,11 +3009,11 @@ async function sendChat(text) {
 }
 
 async function runAgentLoop(apiKey) {
-    const model = aiModelEl.value || 'claude-haiku-4-5';
+    const model = aiModelEl.value || 'claude-sonnet-4-6';
     let safety = 0;
     const messages = chatHistory.map(m => ({ role: m.role, content: m.content }));
 
-    while (safety++ < 10) {
+    while (safety++ < 12) {
         const resp = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -2729,7 +3023,7 @@ async function runAgentLoop(apiKey) {
                 'content-type': 'application/json',
             },
             body: JSON.stringify({
-                model, max_tokens: 1024,
+                model, max_tokens: 2048,
                 system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
                 tools: ANTHROPIC_TOOLS,
                 messages,
@@ -2742,27 +3036,35 @@ async function runAgentLoop(apiKey) {
         const data = await resp.json();
         messages.push({ role: 'assistant', content: data.content });
 
-        // Render text blocks + collect tool_use
-        const toolUses = [];
+        // Render text blocks + collect client-side tool_use (skip server-side web_search)
+        const clientToolUses = [];
         for (const block of data.content) {
             if (block.type === 'text' && block.text) {
                 addMsg('bot', block.text, 'مهندس AI');
             } else if (block.type === 'tool_use') {
-                addMsg('tool', `${block.name}(${JSON.stringify(block.input)})`);
-                toolUses.push(block);
+                if (block.name === 'web_search') {
+                    addMsg('tool', `🌐 web_search: ${JSON.stringify(block.input).slice(0, 100)}`);
+                } else {
+                    addMsg('tool', `🔧 ${block.name}(${JSON.stringify(block.input)})`);
+                    clientToolUses.push(block);
+                }
+            } else if (block.type === 'server_tool_use') {
+                addMsg('tool', `🌐 ${block.name}: ${JSON.stringify(block.input).slice(0, 100)}`);
+            } else if (block.type === 'web_search_tool_result') {
+                const items = (block.content || []).slice(0, 3);
+                if (items.length) addMsg('tool', '📰 ' + items.map(r => r.title || r.url || '').filter(Boolean).join(' · ').slice(0, 200));
             }
         }
 
-        if (data.stop_reason !== 'tool_use' || !toolUses.length) {
-            // Final assistant message — store last text in history for context
+        if (data.stop_reason !== 'tool_use' || !clientToolUses.length) {
             const finalText = data.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
-            chatHistory.push({ role: 'assistant', content: finalText });
+            if (finalText) chatHistory.push({ role: 'assistant', content: finalText });
             recalcAll(); render(); renderFloorTabs(); persist();
             return;
         }
 
         const toolResults = [];
-        for (const tu of toolUses) {
+        for (const tu of clientToolUses) {
             const fn = designTools[tu.name];
             let result;
             try {
@@ -2778,7 +3080,7 @@ async function runAgentLoop(apiKey) {
         messages.push({ role: 'user', content: toolResults });
         recalcAll(); render(); renderFloorTabs();
     }
-    addMsg('err', 'تم إيقاف الحلقة بعد 10 دورات');
+    addMsg('err', 'تم إيقاف الحلقة بعد 12 دورة');
 }
 
 // ---- Local rule-based fallback ----
@@ -2865,8 +3167,9 @@ function boot() {
     // Welcome message in chat
     if (!chatHistory.length) {
         addMsg('bot',
-            'مرحباً! أنا مهندس AI. اطلب أي تعديل (مثلاً: «أضف عموداً في 5,5» أو «اجعل المجلس أكبر» أو «طبّق قالب فيلا فاخرة»). إذا أدخلت مفتاح Anthropic API أستطيع فهم طلبات معقدة وتنفيذها.',
+            'أهلاً! أنا مهندسك المعماري. أقدر أحاورك، أبحث عن مراجع وأسعار سوق سعودية على الإنترنت، أقترح بدائل، وأنفّذ التعديلات على مخططك مباشرة. ابدأ بسؤال أو طلب — مثلاً: «صمّم فيلا لعائلة من 6 أشخاص بميزانية 800 ألف» أو «ابحث عن آخر اشتراطات بلدية الرياض للارتدادات». لو ما عندك مفتاح Anthropic API، أفهم الأوامر البسيطة فقط.',
             'مهندس AI');
+        updateHistoryButtons();
     }
 }
 
