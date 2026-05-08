@@ -1,4 +1,4 @@
-name: Deploy NAZM app + landing to GitHub Pages
+name: Deploy NAZM app + landing + rakiza-app to GitHub Pages
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - 'landing/**'
       - 'nazm-app/**'
       - 'rakiza/**'
+      - 'rakiza-app/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -31,9 +32,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: nazm-app/package-lock.json
 
-      - name: Install app dependencies
+      # ── NAZM ─────────────────────────────────────────────
+      - name: Install NAZM dependencies
         working-directory: nazm-app
         run: npm ci
 
@@ -45,14 +46,33 @@ jobs:
           VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
         run: npm run build
 
+      # ── Rakiza Expo Web export ───────────────────────────
+      - name: Install rakiza-app dependencies
+        working-directory: rakiza-app
+        run: npm install --no-audit --no-fund
+
+      - name: Export rakiza-app to web
+        working-directory: rakiza-app
+        env:
+          EXPO_PUBLIC_BASE_PATH: /claude-mem/rakiza-web/
+        run: npx expo export --platform web
+
+      # ── Assemble ────────────────────────────────────────
       - name: Assemble site
         run: |
           mkdir -p _site
           cp -r landing/. _site/
+
           mkdir -p _site/app
           cp -r nazm-app/dist/. _site/app/
+
           mkdir -p _site/rakiza
           cp -r rakiza/. _site/rakiza/
+
+          if [ -d rakiza-app/dist ]; then
+            mkdir -p _site/rakiza-web
+            cp -r rakiza-app/dist/. _site/rakiza-web/
+          fi
 
       - uses: actions/upload-pages-artifact@v3
         with:
