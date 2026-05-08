@@ -31,14 +31,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      # ── NAZM ─────────────────────────────────────────────
+      # ── NAZM build (best-effort; never blocks rakiza) ──────────────
       - name: Install NAZM dependencies
+        id: nazm-install
+        continue-on-error: true
         working-directory: nazm-app
         run: npm ci
 
       - name: Build NAZM app
+        id: nazm-build
+        if: steps.nazm-install.outcome == 'success'
+        continue-on-error: true
         working-directory: nazm-app
         env:
           BASE: /${{ github.event.repository.name }}/app/
@@ -46,32 +50,64 @@ jobs:
           VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
         run: npm run build
 
-      # ── Rakiza Expo Web export ───────────────────────────
+      # ── rakiza-app web export (independent) ────────────────────────
       - name: Install rakiza-app dependencies
+        id: rk-install
+        continue-on-error: true
         working-directory: rakiza-app
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Export rakiza-app to web
+        id: rk-export
+        if: steps.rk-install.outcome == 'success'
+        continue-on-error: true
         working-directory: rakiza-app
         env:
-          EXPO_PUBLIC_BASE_PATH: /claude-mem/rakiza-web/
-        run: npx expo export --platform web
+          CI: '1'
+          EXPO_NO_TELEMETRY: '1'
+        run: npx expo export --platform web --output-dir dist
 
-      # ── Assemble ────────────────────────────────────────
+      # ── Assemble whatever succeeded ────────────────────────────────
       - name: Assemble site
         run: |
+          set -e
           mkdir -p _site
-          cp -r landing/. _site/
 
-          mkdir -p _site/app
-          cp -r nazm-app/dist/. _site/app/
+          if [ -d landing ]; then
+            cp -r landing/. _site/
+            echo "✓ landing copied"
+          fi
 
-          mkdir -p _site/rakiza
-          cp -r rakiza/. _site/rakiza/
+          if [ -d nazm-app/dist ]; then
+            mkdir -p _site/app
+            cp -r nazm-app/dist/. _site/app/
+            echo "✓ nazm-app/dist copied to /app/"
+          else
+            echo "⚠ nazm-app/dist missing, skipping"
+          fi
+
+          if [ -d rakiza ]; then
+            mkdir -p _site/rakiza
+            cp -r rakiza/. _site/rakiza/
+            echo "✓ rakiza copied"
+          fi
 
           if [ -d rakiza-app/dist ]; then
             mkdir -p _site/rakiza-web
             cp -r rakiza-app/dist/. _site/rakiza-web/
+            echo "✓ rakiza-app/dist copied to /rakiza-web/"
+          else
+            echo "⚠ rakiza-app/dist missing, skipping"
+          fi
+
+          echo "── _site tree ──"
+          find _site -maxdepth 2 -type d | sort
+
+      - name: Fail if nothing was built
+        run: |
+          if [ ! -f _site/index.html ] && [ ! -d _site/rakiza-web ] && [ ! -d _site/app ]; then
+            echo "Nothing was built — failing the job"
+            exit 1
           fi
 
       - uses: actions/upload-pages-artifact@v3
