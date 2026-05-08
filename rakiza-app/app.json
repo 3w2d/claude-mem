@@ -5,28 +5,17 @@
     "scheme": "rakiza",
     "version": "0.2.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0a0a10"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ai.claude.rakiza"
     },
     "android": {
-      "package": "ai.claude.rakiza",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0a0a10"
-      }
+      "package": "ai.claude.rakiza"
     },
     "web": {
-      "bundler": "metro",
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro"
     },
     "plugins": ["expo-router"],
     "experiments": {
