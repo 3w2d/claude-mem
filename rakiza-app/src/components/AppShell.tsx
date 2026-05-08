@@ -9,12 +9,14 @@ import { Dashboard } from '../screens/Dashboard';
 import { Calculator } from '../screens/Calculator';
 import { Projects } from '../screens/Projects';
 import { Reports } from '../screens/Reports';
+import { AI } from '../screens/AI';
 import { RukizaLogo } from './RukizaLogo';
 import { FONT, RADIUS, SP } from '../theme';
 
 const NAV: { id: Page; label: string; icon: string }[] = [
   { id: 'dashboard',  label: 'لوحة التحكم',         icon: '⊞' },
   { id: 'calculator', label: 'الحاسبة الإنشائية',    icon: '⚡' },
+  { id: 'ai',         label: 'مساعد AI',            icon: '💬' },
   { id: 'projects',   label: 'مشاريعي',             icon: '🗂' },
   { id: 'reports',    label: 'التقارير',            icon: '📊' },
 ];
@@ -51,6 +53,7 @@ export function AppShell() {
     switch (page) {
       case 'dashboard': return <Dashboard />;
       case 'calculator': return <Calculator />;
+      case 'ai': return <AI />;
       case 'projects': return <Projects />;
       case 'reports': return <Reports />;
       default: return <Dashboard />;
