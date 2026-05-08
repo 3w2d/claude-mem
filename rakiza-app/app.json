@@ -1,41 +1,34 @@
 {
   "expo": {
-    "name": "رَكيزة",
+    "name": "ركيزة",
     "slug": "rakiza-app",
     "scheme": "rakiza",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#fcfcfd"
+      "backgroundColor": "#0a0a10"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ai.claude.rakiza",
-      "infoPlist": {
-        "NSUserNotificationsUsageDescription": "رَكيزة تستخدم الإشعارات لتذكيرك بمهام مشروعك في أنسب وقت."
-      }
+      "bundleIdentifier": "ai.claude.rakiza"
     },
     "android": {
       "package": "ai.claude.rakiza",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0056f7"
-      },
-      "permissions": ["NOTIFICATIONS", "SCHEDULE_EXACT_ALARM"]
+        "backgroundColor": "#0a0a10"
+      }
     },
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-router",
-      ["expo-notifications", { "color": "#0056f7" }]
-    ],
+    "plugins": ["expo-router"],
     "experiments": { "typedRoutes": true }
   }
 }

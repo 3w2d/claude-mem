@@ -1,74 +1,53 @@
-// Resilient persistence: AsyncStorage primary + secondary backup, schema-versioned.
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AppState } from '../types';
-import { SCHEMA_VERSION, DEFAULT_SETTINGS, DEFAULT_PRICING } from '../types';
+import type { Project, ThemeMode } from '../types';
 
-const KEY_PRIMARY = 'rakiza:state:v1';
-const KEY_BACKUP  = 'rakiza:state:backup';
-
-export const EMPTY_STATE: AppState = {
-  projects: [],
-  logs: [],
-  settings: DEFAULT_SETTINGS,
-  schemaVersion: SCHEMA_VERSION,
-};
+const KEY_PROJECTS_PRIMARY = 'rk:projects:v2';
+const KEY_PROJECTS_BACKUP  = 'rk:projects:backup';
+const KEY_THEME            = 'rk:theme';
+const KEY_PAGE             = 'rk:page';
 
 let writeTimer: ReturnType<typeof setTimeout> | null = null;
-let pending: AppState | null = null;
+let pending: Project[] | null = null;
 
-export async function loadState(): Promise<AppState> {
+export async function loadProjects(): Promise<Project[]> {
   try {
-    const raw = await AsyncStorage.getItem(KEY_PRIMARY);
-    if (raw) return migrate(JSON.parse(raw));
+    const raw = await AsyncStorage.getItem(KEY_PROJECTS_PRIMARY);
+    if (raw) return JSON.parse(raw);
   } catch {}
   try {
-    const raw = await AsyncStorage.getItem(KEY_BACKUP);
-    if (raw) return migrate(JSON.parse(raw));
+    const raw = await AsyncStorage.getItem(KEY_PROJECTS_BACKUP);
+    if (raw) return JSON.parse(raw);
   } catch {}
-  return EMPTY_STATE;
+  return [];
 }
 
-export function persistState(s: AppState) {
-  pending = s;
+export function saveProjects(projects: Project[]) {
+  pending = projects;
   if (writeTimer) return;
   writeTimer = setTimeout(async () => {
-    const v = pending!;
-    pending = null;
-    writeTimer = null;
+    const v = pending!; pending = null; writeTimer = null;
     try {
       const raw = JSON.stringify(v);
-      await AsyncStorage.setItem(KEY_PRIMARY, raw);
-      await AsyncStorage.setItem(KEY_BACKUP, raw);
+      await AsyncStorage.setItem(KEY_PROJECTS_PRIMARY, raw);
+      await AsyncStorage.setItem(KEY_PROJECTS_BACKUP, raw);
     } catch {}
   }, 150);
 }
 
-export async function flushPending() {
-  if (!pending) return;
-  if (writeTimer) { clearTimeout(writeTimer); writeTimer = null; }
-  const v = pending; pending = null;
+export async function loadTheme(): Promise<ThemeMode> {
   try {
-    const raw = JSON.stringify(v);
-    await AsyncStorage.setItem(KEY_PRIMARY, raw);
-    await AsyncStorage.setItem(KEY_BACKUP, raw);
+    const v = await AsyncStorage.getItem(KEY_THEME);
+    if (v === 'light' || v === 'dark') return v;
   } catch {}
+  return 'dark';
+}
+export async function saveTheme(t: ThemeMode) {
+  try { await AsyncStorage.setItem(KEY_THEME, t); } catch {}
 }
 
-function migrate(s: any): AppState {
-  if (!s || typeof s !== 'object') return EMPTY_STATE;
-  if (!Array.isArray(s.projects) || !Array.isArray(s.logs)) return EMPTY_STATE;
-  return {
-    projects: s.projects,
-    logs: s.logs,
-    settings: {
-      ...DEFAULT_SETTINGS,
-      ...(s.settings || {}),
-      pricing: { ...DEFAULT_PRICING, ...((s.settings || {}).pricing || {}) },
-    },
-    schemaVersion: SCHEMA_VERSION,
-  };
+export async function loadPage(): Promise<string> {
+  try { return (await AsyncStorage.getItem(KEY_PAGE)) ?? 'landing'; } catch { return 'landing'; }
 }
-
-export async function clearAll() {
-  await AsyncStorage.multiRemove([KEY_PRIMARY, KEY_BACKUP]);
+export async function savePage(p: string) {
+  try { await AsyncStorage.setItem(KEY_PAGE, p); } catch {}
 }
