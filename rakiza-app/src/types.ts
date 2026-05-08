@@ -53,6 +53,18 @@ export interface ProjectResults {
   timestamp: string;
 }
 
+export interface Wall { id: string; x1: number; y1: number; x2: number; y2: number; }
+export interface Column { id: string; x: number; y: number; size: number; }
+export interface Opening { id: string; wallId: string; t: number; width: number; }
+
+export interface FloorGeometry {
+  name: string;
+  walls: Wall[];
+  columns: Column[];
+  doors: Opening[];
+  windows: Opening[];
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -60,6 +72,7 @@ export interface Project {
   date: string;
   params: ProjectParams;
   results?: ProjectResults;
+  geometry?: FloorGeometry[]; // optional hand-drawn floors override the parametric box
 }
 
 export const DEFAULT_PARAMS: ProjectParams = {

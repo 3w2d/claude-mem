@@ -3,7 +3,7 @@ import type { Project, ThemeMode } from '../types';
 import { loadProjects, saveProjects, loadTheme, saveTheme, loadPage, savePage } from '../lib/storage';
 import { calculate } from '../lib/sbc';
 
-export type Page = 'landing' | 'dashboard' | 'calculator' | 'projects' | 'reports' | 'ai';
+export type Page = 'landing' | 'dashboard' | 'calculator' | 'editor' | 'ai' | 'projects' | 'reports';
 
 const SEED: Project[] = [
   { id: 'seed-1', name: 'فيلا سكنية — حي النرجس', status: 'complete',
@@ -38,6 +38,15 @@ interface State {
   saveProject: (p: Omit<Project, 'id'> & { id?: string }) => Project;
   deleteProject: (id: string) => void;
   resetProjects: () => void;
+  // Geometry editing
+  ensureGeometry: (id: string) => void;
+  addFloor: (id: string, after?: number) => void;
+  removeFloor: (id: string, index: number) => void;
+  renameFloor: (id: string, index: number, name: string) => void;
+  addWall: (id: string, fi: number, w: { x1: number; y1: number; x2: number; y2: number }) => void;
+  addColumn: (id: string, fi: number, c: { x: number; y: number; size: number }) => void;
+  addOpening: (id: string, fi: number, kind: 'doors' | 'windows', o: { wallId: string; t: number; width: number }) => void;
+  deleteElement: (id: string, fi: number, elId: string) => void;
 }
 
 let _id = 0;
@@ -98,4 +107,108 @@ export const useStore = create<State>((set, get) => ({
     saveProjects(SEED);
     set({ projects: SEED });
   },
+
+  ensureGeometry: (id) => set(s => {
+    const projects = s.projects.map(p => {
+      if (p.id !== id) return p;
+      if (p.geometry && p.geometry.length) return p;
+      const floors = Array.from({ length: p.params.floors }, (_, i) => ({
+        name: i === 0 ? 'الدور الأرضي' : `الدور ${i + 1}`,
+        walls: [], columns: [], doors: [], windows: [],
+      }));
+      const next: Project = { ...p, geometry: floors };
+      saveProjects(s.projects.map(x => x.id === id ? next : x));
+      return next;
+    });
+    return { projects };
+  }),
+
+  addFloor: (id, after) => set(s => {
+    const projects = s.projects.map(p => {
+      if (p.id !== id) return p;
+      const geo = [...(p.geometry ?? [])];
+      const insertAt = after != null ? after + 1 : geo.length;
+      geo.splice(insertAt, 0, { name: `الدور ${geo.length + 1}`, walls: [], columns: [], doors: [], windows: [] });
+      return { ...p, geometry: geo, params: { ...p.params, floors: geo.length } };
+    });
+    saveProjects(projects);
+    return { projects };
+  }),
+
+  removeFloor: (id, index) => set(s => {
+    const projects = s.projects.map(p => {
+      if (p.id !== id || !p.geometry || p.geometry.length <= 1) return p;
+      const geo = p.geometry.filter((_, i) => i !== index);
+      return { ...p, geometry: geo, params: { ...p.params, floors: geo.length } };
+    });
+    saveProjects(projects);
+    return { projects };
+  }),
+
+  renameFloor: (id, index, name) => set(s => {
+    const projects = s.projects.map(p => {
+      if (p.id !== id || !p.geometry) return p;
+      const geo = p.geometry.map((f, i) => i === index ? { ...f, name } : f);
+      return { ...p, geometry: geo };
+    });
+    saveProjects(projects);
+    return { projects };
+  }),
+
+  addWall: (id, fi, w) => set(s => {
+    const projects = s.projects.map(p => {
+      if (p.id !== id || !p.geometry) return p;
+      const geo = p.geometry.map((f, i) => i === fi
+        ? { ...f, walls: [...f.walls, { id: newId(), ...w }] }
+        : f);
+      return { ...p, geometry: geo };
+    });
+    saveProjects(projects);
+    return { projects };
+  }),
+
+  addColumn: (id, fi, c) => set(s => {
+    const projects = s.projects.map(p => {
+      if (p.id !== id || !p.geometry) return p;
+      const geo = p.geometry.map((f, i) => i === fi
+        ? { ...f, columns: [...f.columns, { id: newId(), ...c }] }
+        : f);
+      return { ...p, geometry: geo };
+    });
+    saveProjects(projects);
+    return { projects };
+  }),
+
+  addOpening: (id, fi, kind, o) => set(s => {
+    const projects = s.projects.map(p => {
+      if (p.id !== id || !p.geometry) return p;
+      const geo = p.geometry.map((f, i) => i === fi
+        ? { ...f, [kind]: [...f[kind], { id: newId(), ...o }] }
+        : f);
+      return { ...p, geometry: geo };
+    });
+    saveProjects(projects);
+    return { projects };
+  }),
+
+  deleteElement: (id, fi, elId) => set(s => {
+    const projects = s.projects.map(p => {
+      if (p.id !== id || !p.geometry) return p;
+      const geo = p.geometry.map((f, i) => {
+        if (i !== fi) return f;
+        const walls = f.walls.filter(w => w.id !== elId);
+        const remainingIds = new Set(walls.map(w => w.id));
+        return {
+          ...f,
+          walls,
+          columns: f.columns.filter(c => c.id !== elId),
+          doors: f.doors.filter(d => d.id !== elId && remainingIds.has(d.wallId)),
+          windows: f.windows.filter(d => d.id !== elId && remainingIds.has(d.wallId)),
+        };
+      });
+      return { ...p, geometry: geo };
+    });
+    saveProjects(projects);
+    return { projects };
+  }),
 }));
