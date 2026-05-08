@@ -1,8 +1,6 @@
-# رَكيزة · Rakiza App
+# ركيزة · Rakiza App (v0.2 — port of Rukiza standalone)
 
-تطبيق React Native (Expo) متكامل للهندسة الإنشائية: رسم + حساب كميات + تسعير + ذكاء اصطناعي + ستريك يومي للتقدّم.
-
-يعمل على **iOS / Android / Web** من نفس الكود.
+تطبيق Expo (React Native) يطابق هوية **ركيزة** البصرية التي شاركتها — منصّة تقدير إنشائي ذكية وفق SBC 304/ACI 318. يعمل من نفس الكود على **iOS · Android · Web**.
 
 ## التشغيل
 
@@ -12,101 +10,91 @@ npm install
 npx expo start
 ```
 
-ثم:
-- اضغط `i` لـ iOS Simulator (يحتاج macOS + Xcode)
-- اضغط `a` لـ Android Emulator (يحتاج Android Studio)
-- اضغط `w` للويب
-- أو امسح QR من تطبيق **Expo Go** على جوالك
+ثم اضغط:
+- `i` لـ iOS Simulator
+- `a` لـ Android Emulator
+- `w` للمتصفح
+- أو امسح الـ QR من **Expo Go** على جوالك
 
-## الميزات
+## ما الذي تم تنفيذه
 
-### 🎨 الواجهة (Light Engineering)
-- خلفية بيضاء نقية + أزرق هندسي (`#0056f7`)
-- بطاقات بحدود ناعمة + ظلال خفيفة
-- ألوان لكل تصنيف مشروع: سكني · تجاري · صناعي · خدمي/عام
-- يدعم RTL تلقائياً
+### الشاشات (مطابقة المرجع 1:1)
+- **Landing**: hero بـ gradient ذهبي، نافذة معاينة 3D بإطار تطبيق macOS، شريط KPI، grid لأربع ميزات، CTA panel
+- **Dashboard**: 4 KPI cards، آخر مشروع مع 3D، إجراءات سريعة، جدول آخر 5 مشاريع
+- **Calculator**: لوحة مدخلات بعرض 380px (sticky على الويب)، 4 stat cards، جدول كميات، تكاليف تفصيلية
+- **Projects**: شبكة بطاقات 3 أعمدة بصور 3D، بحث، حذف
+- **Reports**: 3 KPI، توزيع نسبي حسب نوع الاستخدام بأشرطة gradient
 
-### 📐 الرسم
-- لوحة SVG تفاعلية تعمل باللمس
-- 6 أدوات: تحديد · جدار · عمود · باب · شباك · مسح
-- شبكة Snap بـ 0.25 م
-- متعدّد الأدوار (Floor tabs)
-- زر `+` لنسخ الدور الحالي
+### نظام التصميم
+- **اللوحة**: ذهبي `#c9973a → #e6b34a`، خلفية داكنة `#0a0a10 → #171922`، أزرق مخططات `#5294e8`، نص `#ebebef`
+- **الخطوط**: IBM Plex Sans Arabic (واجهة) + IBM Plex Mono (أرقام تقنية)
+- **المسافات**: قاعدة 4px (4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80)
+- **Radius**: 4 / 6 / 10 / 14 / 20
+- **RTL** كامل + Light/Dark Theme toggle
 
-### 💰 الكميات والتسعير
-- **حساب فوري** للخرسانة والحديد والجدران والفتحات
-- أساس + بلاطات + كمرات + أعمدة
-- صافي مساحة الجدران (يحسم الفتحات)
-- أسعار سعودية قابلة للتعديل من تبويب الإعدادات
+### النواة الحاسبية
+محرك SBC 304 / ACI 318 منقول حرفياً من المرجع:
+- أحمال `1.2D + 1.6L` ULS
+- `colsX × colsY` على شبكة column spacing
+- بلاطات `min(0.25, max(0.15, span/30))`
+- أساسات معزولة `colSide × 4.5`
+- نسب حديد قياسية: 85/180/130/90 kg/m³
+- تكاليف: خرسانة + حديد + قوالب + عمالة + تشطيبات + 18% overhead
 
-### 🔥 محرّك الستريك
-- تتبّع يومي للجلسات على كل مشروع
-- ستريك حالي · أطول ستريك · إجمالي الجلسات
-- نسبة الإنجاز أسبوعي / شهري / كل الوقت
-- Heatmap على آخر 12 أسبوع لكل مشروع
+### المعاينة ثلاثية الأبعاد
+بدلاً من Three.js (يحتاج WebGL وحجم حزمة كبير على RN)، استخدمنا **isometric SVG**:
+- إسقاط isometric بزاوية 30°
+- 3 أوجه (top + front + right) بـ gradients ذهبية
+- شبكة أعمدة عند تقاطعات الـ grid
+- خطوط بلاطات أفقية لكل دور
+- ground grid blueprint
+- يعمل بنفس الجودة على iOS و Android و Web بدون GPU dependency
 
-### 🔔 إشعارات ذكية
-- تذكير يومي (اختر الساعة)
-- وضع "ذكي" يضبط الوقت تلقائياً حسب متى تكمل المشروع عادةً (median completion hour)
-- يحترم أوقات الهدوء التي تحدّدها (DND)
-- يُعاد جدولتها تلقائياً عند أي تغيير
+### المكوّنات القابلة لإعادة الاستخدام
+- `RukizaLogo` (5 أعمدة + قوس + gradient)
+- `Card` · `Btn` (primary/secondary/ghost/danger × sm/md/lg) · `Badge` · `Stat`
+- `Field` + `Input` + `Select` (chip-style بدلاً من dropdown لراحة اللمس) + `Slider`
+- `SectionHead` بـ eyebrow ذهبي + خط مزخرف
+- `BlueprintGrid` خلفية شفافة
+- `Building3D`
+- `AppShell` تكيّف تلقائي: sidebar 248px على ≥900px، Bottom Tabs على الجوال
 
-### 🤖 شات AI
-- يحاور المستخدم، يبحث في الإنترنت، يقترح بدائل
-- يستخدم Claude API مباشرة (Haiku 4.5 / Sonnet 4.6 / Opus 4.7)
-- مفتاح API يُحفظ محلياً في AsyncStorage
-- نظام prompt مهيأ للعمارة السعودية + معايير الغرف القياسية
-
-### 📊 لوحة تحليلات
-- ملخّص كل المشاريع (this week / this month)
-- لكل مشروع: مخطط أعمدة أسبوعي + heatmap نشاط + كميات + تكلفة
-- مؤشّر الستريك بألوان متدرّجة (cold → blazing) من نظرة
-
-### 💾 ثبات البيانات
-- AsyncStorage أساسي + نسخة احتياطية ثانية
-- Schema versioning مع migration
-- Debounced writes (150ms) — UI لا يلمس الـ I/O
-- إعادة جدولة الإشعارات بعد كل تغيير
+### ثبات البيانات
+- `AsyncStorage` primary + backup (debounced 150ms)
+- Schema versioning v2
+- Seed projects (3 فلل/مكاتب/تجاري) للتجربة الأولى
+- زرّ Reset في الـ Sidebar
 
 ## البنية
 
 ```
 rakiza-app/
-├── app/                  # expo-router (file-based)
-│   ├── _layout.tsx       # root: theme, hydrate, RTL
-│   ├── (tabs)/
-│   │   ├── _layout.tsx   # bottom-floating tab bar
-│   │   ├── index.tsx     # 🏠 Home
-│   │   ├── ai.tsx        # 🤖 AI chat
-│   │   ├── analytics.tsx # 📈 Analytics
-│   │   └── settings.tsx  # ⚙️ Pricing + DND
-│   ├── new.tsx           # modal: create project
-│   └── project/[id].tsx  # detail + drawing canvas
+├── app/
+│   ├── _layout.tsx          # Root: SafeArea + Theme + Stack
+│   └── index.tsx            # AppShell entrypoint
 ├── src/
-│   ├── theme.ts          # Light Engineering palette
-│   ├── types.ts          # all TS contracts
-│   ├── store/
-│   │   └── projects.ts   # Zustand + persist
+│   ├── theme.ts             # Dark/Light tokens + spacing/radius scale
+│   ├── types.ts             # ProjectParams / ProjectResults / labels
 │   ├── lib/
-│   │   ├── date.ts       # day keys YYYY-MM-DD
-│   │   ├── storage.ts    # primary + backup AsyncStorage
-│   │   ├── streak.ts     # streak engine
-│   │   ├── insights.ts   # weekly / heatmap / aggregate
-│   │   ├── notifications.ts  # smart scheduling
-│   │   ├── boq.ts        # bill of quantities math
-│   │   └── ai.ts         # Anthropic API client
-│   └── components/
-│       ├── Card.tsx
-│       ├── ProjectCard.tsx
-│       ├── StreakRing.tsx
-│       ├── CompleteToggle.tsx
-│       ├── Heatmap.tsx
-│       └── DrawingCanvas.tsx
-└── assets/               # icons, splash (add your own)
+│   │   ├── sbc.ts           # SBC 304 calculator engine
+│   │   ├── format.ts        # number / currency / compact
+│   │   └── storage.ts       # AsyncStorage primary + backup
+│   ├── store/
+│   │   └── projects.ts      # Zustand: page, theme, projects
+│   ├── components/
+│   │   ├── ThemeProvider.tsx
+│   │   ├── RukizaLogo.tsx
+│   │   ├── primitives.tsx   # Card / Btn / Badge / Stat / Field / Input / Select / Slider / SectionHead / BlueprintGrid
+│   │   ├── Building3D.tsx   # Isometric SVG viewer
+│   │   └── AppShell.tsx     # Sidebar + BottomTabs adaptive layout
+│   └── screens/
+│       ├── Landing.tsx
+│       ├── Dashboard.tsx
+│       ├── Calculator.tsx
+│       ├── Projects.tsx
+│       └── Reports.tsx
+└── assets/                  # icons (placeholder)
 ```
 
-## المنصّات
-
-- **iOS**: 16.0+
-- **Android**: API 24+ (Android 7)
-- **Web**: أي متصفح حديث (Chromium / Firefox / Safari)
+## ⚠ تنبيه هندسي
+ركيزة مخصصة للتقدير الأولي. التصميم الإنشائي الفعلي يستوجب إشراف مهندس مدني مرخّص واستخدام برامج معتمدة (ETABS / SAFE / Robot) وفق الكود السعودي.
