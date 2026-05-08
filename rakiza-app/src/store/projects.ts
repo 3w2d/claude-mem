@@ -3,7 +3,7 @@ import type { Project, ThemeMode } from '../types';
 import { loadProjects, saveProjects, loadTheme, saveTheme, loadPage, savePage } from '../lib/storage';
 import { calculate } from '../lib/sbc';
 
-export type Page = 'landing' | 'dashboard' | 'calculator' | 'projects' | 'reports';
+export type Page = 'landing' | 'dashboard' | 'calculator' | 'projects' | 'reports' | 'ai';
 
 const SEED: Project[] = [
   { id: 'seed-1', name: 'فيلا سكنية — حي النرجس', status: 'complete',
