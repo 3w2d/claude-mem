@@ -3,32 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#070A12" />
-    <meta name="description" content="NAZM — نَظْم · Intelligence Hub. ذكاء يرتّب حياتك." />
-    <meta property="og:title" content="NAZM — نَظْم · Intelligence Hub" />
-    <meta property="og:description" content="نَظْم · ذكاء يرتّب حياتك." />
-    <meta property="og:type" content="website" />
-    <title>NAZM — نَظْم · Intelligence Hub</title>
-    <link rel="canonical" href="app/" />
-    <meta http-equiv="refresh" content="0; url=app/" />
+    <meta name="theme-color" content="#0a0a10" />
+    <title>رَكيزة — Engineering Suite</title>
+    <link rel="canonical" href="./rakiza-web/" />
+    <meta http-equiv="refresh" content="0; url=./rakiza-web/" />
     <style>
-      html, body { margin: 0; padding: 0; background: #070A12; color: #fff; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; height: 100%; }
-      body { display: flex; align-items: center; justify-content: center; text-align: center; }
-      a { color: #A5F3FC; }
-      .wrap { padding: 24px; }
-      h1 { margin: 0 0 12px; font-weight: 900; letter-spacing: -0.5px; }
-      p { margin: 0; opacity: 0.7; font-size: 14px; }
+      :root { color-scheme: dark; }
+      html, body { margin: 0; padding: 0; background: #0a0a10; color: #ebebef;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh; }
+      body { display: flex; align-items: center; justify-content: center; padding: 24px; }
+      .wrap { max-width: 460px; text-align: center; }
+      h1 { font-size: 28px; font-weight: 800; color: #c9973a; margin: 0 0 10px; letter-spacing: -0.5px; }
+      p { font-size: 14px; opacity: 0.7; margin: 0 0 20px; line-height: 1.7; }
+      a.btn { display: inline-block; padding: 12px 26px; border-radius: 8px;
+        background: linear-gradient(180deg, #e6b34a, #c9973a); color: #0a0a10;
+        text-decoration: none; font-weight: 700; }
+      .alts { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; font-size: 12px; opacity: 0.6; }
+      .alts a { color: #5294e8; text-decoration: none; }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <h1>نَظْم · NAZM</h1>
-      <p>
-        جاري التحويل إلى التطبيق…
-        <br />
-        <a href="app/">افتح التطبيق مباشرة</a>
-      </p>
+      <h1>رَكيزة</h1>
+      <p>تطبيق هندسي ذكي — تقدير الكميات والتكاليف وفق SBC 304.<br/>جارٍ التحويل…</p>
+      <a class="btn" href="./rakiza-web/">افتح التطبيق</a>
+      <div class="alts">
+        <a href="./rakiza/editor.html">المحرّر الكلاسيكي (HTML standalone)</a>
+        <a href="./app/">NAZM Intelligence Hub</a>
+      </div>
     </div>
-    <script>window.location.replace('app/');</script>
+    <script>window.location.replace('./rakiza-web/');</script>
   </body>
 </html>
