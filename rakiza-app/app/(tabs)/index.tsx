@@ -12,7 +12,7 @@ import { fmt, fmtCompact } from '../../src/lib/format';
 import { useMemo } from 'react';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
-type Route = '/calculator' | '/editor' | '/ai' | '/reports';
+type Route = '/calculator' | '/editor' | '/ai' | '/reports' | '/ncr';
 
 interface TaskCard {
   icon: IconName;
@@ -24,7 +24,7 @@ interface TaskCard {
 const ROLE_TASKS: Record<Specialty, TaskCard[]> = {
   project_manager: [
     { icon: 'briefcase',           label: 'نظرة عامة على المشاريع', hint: 'الحالة والتكاليف', route: '/reports' },
-    { icon: 'document-text',       label: 'اعتماد تقارير NCR',      hint: 'مراجعة وقبول', route: '/reports' },
+    { icon: 'document-text',       label: 'اعتماد تقارير NCR',      hint: 'مراجعة وقبول', route: '/ncr' },
     { icon: 'people',              label: 'متابعة الطاقم',          hint: 'الإنتاجية والمهام', route: '/reports' },
   ],
   civil_engineer: [
