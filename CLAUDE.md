@@ -1,5 +1,10 @@
 # Claude-Mem: AI Development Instructions
 
+## User communication rules (3w2d)
+- توكنز قليلة، ردود مختصرة، صفر أخطاء.
+- نفّذ الطلب مباشرة بدون شرح زائد.
+- لا تكرّر تأكيد ما تم بالفعل.
+
 Claude-mem is a Claude Code plugin providing persistent memory across sessions. It captures tool usage, compresses observations using the Claude Agent SDK, and injects relevant context into future sessions.
 
 ## Architecture
