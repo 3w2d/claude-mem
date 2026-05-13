@@ -53,19 +53,22 @@ jobs:
       # ── rakiza-app web export (independent) ────────────────────────
       - name: Install rakiza-app dependencies
         id: rk-install
-        continue-on-error: true
         working-directory: rakiza-app
         run: npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Export rakiza-app to web
         id: rk-export
-        if: steps.rk-install.outcome == 'success'
-        continue-on-error: true
         working-directory: rakiza-app
         env:
           CI: '1'
           EXPO_NO_TELEMETRY: '1'
-        run: npx expo export --platform web --output-dir dist
+        run: |
+          npx expo export --platform web --output-dir dist
+          echo "── dist/ contents ──"
+          ls -la dist/ || (echo "FATAL: dist/ does not exist" && exit 1)
+          if [ ! -f dist/index.html ]; then
+            echo "FATAL: dist/index.html missing"; exit 1
+          fi
 
       # ── Assemble whatever succeeded ────────────────────────────────
       - name: Assemble site
