@@ -10,7 +10,7 @@ import { useNCRs, NCR_STATUS_LABEL, type NCRStatus, type NCRRecord } from '../..
 import { useChat, type Conversation } from '../../src/store/chat';
 import { FONT, RADIUS, SP } from '../../src/theme';
 import { fmt, fmtCompact } from '../../src/lib/format';
-import { CATEGORIES } from '../../src/types';
+import { CATEGORIES, categoryFor } from '../../src/types';
 
 export default function ProjectDetail() {
   const { theme, fontsLoaded } = useTheme();
@@ -30,11 +30,20 @@ export default function ProjectDetail() {
   }, [hydrateNCRs, hydrateChat]);
 
   const ncrs = useMemo(() => (id ? byProject(id) : []), [id, byProject]);
-  // No project link on Conversation; surface the 3 most recent overall as "related".
-  const recentChats = useMemo(
-    () => [...conversations].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5),
-    [conversations]
+  // Only conversations tagged with this projectId.
+  const projectChats = useMemo(
+    () => conversations
+      .filter(c => c.projectId === id)
+      .sort((a, b) => b.updatedAt - a.updatedAt),
+    [conversations, id]
   );
+  const newConversation = useChat(s => s.newConversation);
+
+  const startChat = () => {
+    if (!id || !project) return;
+    newConversation({ projectId: id, title: `محادثة · ${project.name}` });
+    router.push('/ai');
+  };
 
   if (!project) {
     return (
@@ -50,7 +59,7 @@ export default function ProjectDetail() {
     );
   }
 
-  const cat = CATEGORIES[project.category];
+  const cat = CATEGORIES[categoryFor(project.params.buildingUse)];
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg.base }}>
@@ -60,7 +69,7 @@ export default function ProjectDetail() {
         <Card>
           <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: SP[3], marginBottom: SP[3] }}>
             <View style={[styles.emojiBox, { backgroundColor: theme.gold.soft, borderColor: theme.border.gold }]}>
-              <Text style={{ fontSize: 22 }}>{project.emoji || cat.emoji}</Text>
+              <Text style={{ fontSize: 22 }}>{cat.emoji}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{
@@ -125,7 +134,7 @@ export default function ProjectDetail() {
           </View>
         )}
         <Pressable
-          onPress={() => router.push('/ncr')}
+          onPress={() => router.push({ pathname: '/ncr', params: { projectId: project.id } })}
           style={({ pressed }) => [
             styles.addNCR,
             { borderColor: theme.border.gold, opacity: pressed ? 0.7 : 1 },
@@ -139,19 +148,37 @@ export default function ProjectDetail() {
         </Pressable>
 
         {/* Chats */}
-        <SectionTitle text="المحادثات السابقة" />
-        {recentChats.length === 0 ? (
+        <SectionTitle text={`المحادثات · ${projectChats.length}`} />
+        {projectChats.length === 0 ? (
           <Card style={{ alignItems: 'center', padding: SP[5] }}>
             <Text style={{
               color: theme.text.muted, fontSize: 13,
               fontFamily: fontsLoaded ? FONT.arabic : undefined,
-            }}>لا توجد محادثات بعد.</Text>
+            }}>لا توجد محادثات لهذا المشروع.</Text>
           </Card>
         ) : (
           <View style={{ gap: SP[2] }}>
-            {recentChats.map(c => <ChatCard key={c.id} c={c} onPress={() => router.push('/ai')} />)}
+            {projectChats.map(c => (
+              <ChatCard key={c.id} c={c} onPress={() => {
+                useChat.getState().setActive(c.id);
+                router.push('/ai');
+              }} />
+            ))}
           </View>
         )}
+        <Pressable
+          onPress={startChat}
+          style={({ pressed }) => [
+            styles.addNCR,
+            { borderColor: theme.border.gold, opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <Ionicons name="chatbubble-ellipses" size={18} color={theme.gold.base} />
+          <Text style={{
+            fontSize: 13, color: theme.gold.base, fontWeight: '600',
+            fontFamily: fontsLoaded ? FONT.arabic : undefined,
+          }}>ابدأ محادثة جديدة لهذا المشروع</Text>
+        </Pressable>
       </ScrollView>
     </View>
   );

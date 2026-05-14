@@ -71,7 +71,7 @@ export default function Onboarding() {
     }
     setSubmitting(true);
     await signIn(nationalId.trim(), specialty!);
-    router.replace('/(tabs)');
+    router.replace('/');
   };
 
   return (

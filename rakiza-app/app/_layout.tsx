@@ -38,7 +38,7 @@ function AuthGate() {
     if (!hydrated) return;
     const inOnboarding = segments[0] === 'onboarding';
     if (!onboarded && !inOnboarding) router.replace('/onboarding');
-    else if (onboarded && inOnboarding) router.replace('/(tabs)');
+    else if (onboarded && inOnboarding) router.replace('/');
   }, [hydrated, onboarded, segments, router]);
 
   if (!hydrated) return <View style={styles.root} />;

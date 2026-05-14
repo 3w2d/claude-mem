@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../src/components/ThemeProvider';
@@ -21,6 +22,7 @@ const rid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(3
 export default function NCRChat() {
   const { theme, fontsLoaded } = useTheme();
   const scrollRef = useRef<ScrollView>(null);
+  const { projectId } = useLocalSearchParams<{ projectId?: string }>();
 
   const [messages, setMessages] = useState<Msg[]>([
     { id: rid(), kind: 'text', mine: false, at: Date.now(),
@@ -52,7 +54,7 @@ export default function NCRChat() {
     }
     const r = camera
       ? await ImagePicker.launchCameraAsync({ quality: 0.85 })
-      : await ImagePicker.launchImageLibraryAsync({ quality: 0.85, mediaTypes: ImagePicker.MediaTypeOptions.Images });
+      : await ImagePicker.launchImageLibraryAsync({ quality: 0.85, mediaTypes: ['images'] });
     if (r.canceled || !r.assets?.[0]) return;
     push({ id: rid(), kind: 'image', mine: true, uri: r.assets[0].uri, at: Date.now() });
   };
@@ -73,7 +75,13 @@ export default function NCRChat() {
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
         >
           {messages.map(m => {
-            if (m.kind === 'ncr') return <NCRReport key={m.id} onRemove={() => remove(m.id)} />;
+            if (m.kind === 'ncr') return (
+              <NCRReport
+                key={m.id}
+                onRemove={() => remove(m.id)}
+                projectId={projectId}
+              />
+            );
             const align = m.mine ? 'flex-start' : 'flex-end';
             return (
               <View key={m.id} style={{ alignSelf: align, maxWidth: '85%', marginBottom: SP[3] }}>

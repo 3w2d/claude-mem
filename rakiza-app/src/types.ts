@@ -104,3 +104,21 @@ export const SEISMIC_LABELS: Record<SeismicZone, string> = {
 };
 
 export const SCHEMA_VERSION = 2;
+
+export type ThemeMode = 'dark' | 'light';
+
+export type ProjectCategory = 'residential' | 'commercial' | 'industrial' | 'public';
+export const CATEGORIES: Record<ProjectCategory, { label: string; emoji: string }> = {
+  residential: { label: 'سكني',         emoji: '🏠' },
+  commercial:  { label: 'تجاري',         emoji: '🏢' },
+  industrial:  { label: 'صناعي',         emoji: '🏭' },
+  public:      { label: 'خدمي/عام',      emoji: '🕌' },
+};
+
+// Map building use → display category for backward compatibility.
+export function categoryFor(use: BuildingUse): ProjectCategory {
+  if (use === 'residential') return 'residential';
+  if (use === 'commercial' || use === 'office') return 'commercial';
+  if (use === 'storage' || use === 'parking') return 'industrial';
+  return 'public';
+}

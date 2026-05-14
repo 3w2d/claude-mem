@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, useWindowDimensions } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '../components/ThemeProvider';
 import { Btn, Card, Field, SectionHead } from '../components/primitives';
 import { EditorCanvas, type DrawTool } from '../components/EditorCanvas';
@@ -27,7 +28,7 @@ export function Editor() {
   const addColumn = useStore(s => s.addColumn);
   const addOpening = useStore(s => s.addOpening);
   const deleteElement = useStore(s => s.deleteElement);
-  const setPage = useStore(s => s.setPage);
+  const router = useRouter();
 
   const { width } = useWindowDimensions();
   const wide = width >= 900;
@@ -61,8 +62,8 @@ export function Editor() {
             ادخل من لوحة التحكم أو "مشاريعي" واختر المشروع الذي تريد رسم مخططه.
           </Text>
           <View style={{ flexDirection: 'row-reverse', gap: SP[2] }}>
-            <Btn onPress={() => setPage('projects')}>كل المشاريع</Btn>
-            <Btn variant="secondary" onPress={() => setPage('calculator')}>إنشاء مشروع جديد</Btn>
+            <Btn onPress={() => router.push('/projects')}>كل المشاريع</Btn>
+            <Btn variant="secondary" onPress={() => router.push('/calculator')}>إنشاء مشروع جديد</Btn>
           </View>
         </Card>
       </View>
@@ -91,7 +92,7 @@ export function Editor() {
             }}>{project.name}</Text>
           </View>
           <View style={{ flexDirection: 'row-reverse', gap: SP[2], flexWrap: 'wrap' }}>
-            <Btn variant="ghost" size="sm" onPress={() => setPage('calculator')}>← الحاسبة</Btn>
+            <Btn variant="ghost" size="sm" onPress={() => router.push('/calculator')}>← الحاسبة</Btn>
             <Btn size="sm" onPress={() => setActive(project)}>محفوظ ✓</Btn>
           </View>
         </View>

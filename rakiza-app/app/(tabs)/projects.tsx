@@ -9,12 +9,12 @@ import { useStore } from '../../src/store/projects';
 import { useNCRs } from '../../src/store/ncrs';
 import { fmt, fmtCompact } from '../../src/lib/format';
 import { FONT, RADIUS, SP } from '../../src/theme';
-import { CATEGORIES } from '../../src/types';
+import { CATEGORIES, categoryFor } from '../../src/types';
 
 export default function ProjectsTab() {
   const { theme, fontsLoaded } = useTheme();
   const router = useRouter();
-  const projects = useStore(s => s.projects.filter(p => !p.archived));
+  const projects = useStore(s => s.projects);
   const hydrate = useNCRs(s => s.hydrate);
   const ncrs = useNCRs(s => s.ncrs);
 
@@ -55,7 +55,7 @@ export default function ProjectsTab() {
           ) : (
             <View style={{ gap: SP[3], marginTop: SP[5] }}>
               {projects.map(p => {
-                const cat = CATEGORIES[p.category];
+                const cat = CATEGORIES[categoryFor(p.params.buildingUse)];
                 const c = counts.get(p.id) ?? { total: 0, review: 0 };
                 return (
                   <Pressable
@@ -70,7 +70,7 @@ export default function ProjectsTab() {
                     ]}
                   >
                     <View style={[styles.projIcon, { backgroundColor: theme.gold.soft, borderColor: theme.border.gold }]}>
-                      <Text style={{ fontSize: 20 }}>{p.emoji || cat.emoji}</Text>
+                      <Text style={{ fontSize: 20 }}>{cat.emoji}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{

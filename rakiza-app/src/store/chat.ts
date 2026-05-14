@@ -21,6 +21,7 @@ export interface Conversation {
   model: string;
   systemPrompt: string;
   personaId?: string;
+  projectId?: string;
   messages: ChatMessage[];
   totalIn: number;
   totalOut: number;
