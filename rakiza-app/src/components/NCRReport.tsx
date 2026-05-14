@@ -8,6 +8,7 @@ import * as Sharing from 'expo-sharing';
 import { useTheme } from './ThemeProvider';
 import { FONT, RADIUS, SP } from '../theme';
 import { useAuth, specialtyLabel } from '../store/auth';
+import { useNCRs } from '../store/ncrs';
 
 export interface NCRData {
   reportNumber: string;
@@ -85,12 +86,16 @@ function buildHtml(d: NCRData, role: string): string {
 interface Props {
   initial?: Partial<NCRData>;
   onRemove?: () => void;
+  projectId?: string;
+  onSaved?: () => void;
 }
 
-export function NCRReport({ initial, onRemove }: Props) {
+export function NCRReport({ initial, onRemove, projectId, onSaved }: Props) {
   const { theme, fontsLoaded } = useTheme();
   const specialty = useAuth(s => s.specialty);
+  const addNCR = useNCRs(s => s.add);
   const [data, setData] = useState<NCRData>(() => defaultNCR(initial));
+  const [saved, setSaved] = useState(false);
 
   const set = <K extends keyof NCRData>(k: K, v: NCRData[K]) => setData(d => ({ ...d, [k]: v }));
 
@@ -188,6 +193,41 @@ export function NCRReport({ initial, onRemove }: Props) {
       </View>
 
       <View style={[styles.actions, { borderTopColor: theme.border.soft }]}>
+        {projectId && (
+          <Pressable
+            onPress={() => {
+              addNCR({
+                projectId,
+                number: data.reportNumber,
+                title: data.description.split('\n')[0].slice(0, 80) || 'تقرير NCR',
+                date: data.date,
+                status: 'review',
+                description: data.description,
+                codeReference: data.codeReference,
+                correctiveAction: data.correctiveAction,
+              });
+              setSaved(true);
+              onSaved?.();
+              setTimeout(() => setSaved(false), 2400);
+            }}
+            style={({ pressed }) => [
+              styles.btnGhost,
+              {
+                borderColor: saved ? theme.success : theme.border.soft,
+                backgroundColor: saved ? theme.success + '22' : 'transparent',
+                opacity: pressed ? 0.6 : 1,
+              },
+            ]}
+          >
+            <Ionicons name={saved ? 'checkmark' : 'save'} size={16}
+              color={saved ? theme.success : theme.text.primary} />
+            <Text style={{
+              fontSize: 13, fontWeight: '600',
+              color: saved ? theme.success : theme.text.primary,
+              fontFamily: fontsLoaded ? FONT.arabic : undefined,
+            }}>{saved ? 'تم الحفظ' : 'حفظ'}</Text>
+          </Pressable>
+        )}
         <Pressable
           onPress={onShare}
           style={({ pressed }) => [

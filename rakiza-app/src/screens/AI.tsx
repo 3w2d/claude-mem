@@ -66,7 +66,7 @@ export function AI() {
       return null;
     }
     const r = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       base64: true,
       quality: 0.85,
     });
