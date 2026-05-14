@@ -52,6 +52,7 @@ function AuthGate() {
       <Stack.Screen name="ai"            options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="reports"       options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="ncr"           options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="project/[id]"  options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="search"        options={{ presentation: 'modal' }} />
       <Stack.Screen name="notifications" options={{ presentation: 'modal' }} />
     </Stack>
