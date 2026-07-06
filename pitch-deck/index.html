@@ -3,432 +3,545 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SmartFlow — Investor Pitch Deck</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<title>SmartFlow — AI-Powered Workflow Automation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 <style>
-  :root{
-    --navy:#0B1F3B; --blue:#2563EB; --green:#22C55E; --amber:#F59E0B;
-    --light:#F5F7FA; --white:#FFFFFF; --dark:#1E293B; --muted:#64748B;
-    --border:#E2E8F0;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%;font-family:'Inter',sans-serif;background:#000;color:var(--dark);overflow:hidden}
-
-  /* Deck container */
-  .deck{position:relative;width:100vw;height:100vh;overflow:hidden}
-  .slide{
-    position:absolute;inset:0;display:flex;flex-direction:column;
-    padding:5vh 7vw;opacity:0;visibility:hidden;
-    transition:opacity .5s ease,transform .5s ease;
-    transform:translateX(30px);
-  }
-  .slide.active{opacity:1;visibility:visible;transform:translateX(0)}
-
-  .label{
-    font-size:.75rem;font-weight:700;letter-spacing:.25em;
-    color:var(--blue);margin-bottom:1rem;
-  }
-  .slide h1{font-size:3.2rem;font-weight:900;line-height:1.15;color:var(--navy);margin-bottom:1rem}
-  .slide h1.light{color:var(--white)}
-  .slide p.sub{font-size:1.2rem;color:var(--muted);line-height:1.6;max-width:680px}
-  .slide p.sub.light{color:rgba(255,255,255,.7)}
-
-  /* Slide 1 - Cover */
-  .slide.cover{background:var(--navy);justify-content:center}
-  .slide.cover::before{
-    content:'';position:absolute;top:-10%;right:-5%;width:40%;height:50%;
-    background:var(--blue);opacity:.15;transform:rotate(15deg);border-radius:20px;
-  }
-  .slide.cover::after{
-    content:'';position:absolute;top:-15%;right:-2%;width:30%;height:40%;
-    background:var(--blue);opacity:.08;transform:rotate(25deg);border-radius:20px;
-  }
-  .logo-row{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
-  .logo-mark{
-    width:56px;height:56px;background:var(--blue);border-radius:14px;
-    display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;
-  }
-  .brand{font-size:4rem;font-weight:900;color:#fff;letter-spacing:-.02em}
-  .tagline{font-size:1.3rem;color:var(--blue);font-weight:500;margin-bottom:3rem}
-  .hero-text{font-size:1.6rem;color:#fff;line-height:1.5;max-width:700px;font-weight:400}
-  .cover-footer{
-    position:absolute;bottom:2rem;left:7vw;right:7vw;
-    font-size:.85rem;color:rgba(255,255,255,.5);
-    padding-top:1rem;border-top:1px solid rgba(255,255,255,.1);
-  }
-
-  /* Card grid */
-  .grid{display:grid;gap:1.5rem;margin-top:2.5rem}
-  .grid-3{grid-template-columns:repeat(3,1fr)}
-  .grid-2{grid-template-columns:repeat(2,1fr)}
-
-  .card{
-    background:var(--light);border-radius:16px;padding:1.75rem;
-    box-shadow:0 4px 12px rgba(0,0,0,.04);
-    transition:transform .3s,box-shadow .3s;
-  }
-  .card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,.08)}
-  .card .icon{
-    width:48px;height:48px;border-radius:12px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:1.25rem;margin-bottom:1rem;
-  }
-  .card h3{font-size:1.15rem;font-weight:700;color:var(--navy);margin-bottom:.5rem}
-  .card p{font-size:.95rem;color:var(--muted);line-height:1.5}
-
-  .icon.amber{background:rgba(245,158,11,.15);color:var(--amber)}
-  .icon.blue{background:rgba(37,99,235,.15);color:var(--blue)}
-  .icon.green{background:rgba(34,197,94,.15);color:var(--green)}
-  .icon.blue-solid{background:var(--blue);color:#fff;width:72px;height:72px;font-size:1.75rem;margin:0 auto 1.25rem}
-
-  /* Flow (solution) */
-  .flow{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:3rem}
-  .flow-card{
-    flex:1;background:#fff;border:1px solid var(--border);border-radius:20px;
-    padding:2.5rem 1.5rem;text-align:center;
-    box-shadow:0 4px 12px rgba(0,0,0,.04);max-width:280px;
-  }
-  .flow-card h3{font-size:1.3rem;font-weight:700;color:var(--navy);margin-bottom:.35rem}
-  .flow-card p{font-size:.9rem;color:var(--muted)}
-  .flow-arrow{font-size:1.5rem;color:var(--blue);flex-shrink:0}
-  .flow-summary{
-    margin-top:3rem;text-align:center;font-size:1.05rem;color:var(--blue);font-weight:600;
-    letter-spacing:.05em;
-  }
-
-  /* Product mock */
-  .product-wrap{display:grid;grid-template-columns:1.6fr 1fr;gap:2rem;margin-top:2rem}
-  .mock{
-    background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;
-    box-shadow:0 8px 24px rgba(0,0,0,.08);
-  }
-  .mock-nav{background:var(--navy);color:#fff;padding:.85rem 1rem;font-size:.8rem;font-weight:500}
-  .mock-body{padding:1.25rem}
-  .mock-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem}
-  .mock-metric{background:var(--light);border-radius:10px;padding:1rem;text-align:center}
-  .mock-metric .n{font-size:1.75rem;font-weight:900}
-  .mock-metric .l{font-size:.7rem;color:var(--muted);margin-top:.25rem}
-  .mock-task{
-    display:flex;align-items:center;gap:.75rem;padding:.65rem .5rem;border-radius:8px;
-    font-size:.85rem;color:var(--dark);
-  }
-  .mock-task:nth-child(odd){background:var(--light)}
-  .mock-task i{color:var(--green)}
-
-  .side-features{display:flex;flex-direction:column;gap:1.5rem;justify-content:center}
-  .side-feat{display:flex;gap:1rem;align-items:flex-start}
-  .side-feat .icn{
-    width:40px;height:40px;border-radius:10px;background:rgba(37,99,235,.12);
-    color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  }
-  .side-feat h4{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:.25rem}
-  .side-feat p{font-size:.85rem;color:var(--muted);line-height:1.4}
-
-  /* Features grid */
-  .features-grid{grid-template-columns:repeat(3,1fr)}
-  .feature-card{display:flex;gap:1rem;align-items:flex-start}
-  .feature-card .icon{flex-shrink:0}
-
-  /* Tech stack */
-  .stack{margin-top:2rem;display:flex;flex-direction:column;gap:.5rem}
-  .stack-row{
-    display:grid;grid-template-columns:60px 180px 1fr;align-items:center;
-    gap:1rem;padding:1rem 1.25rem;border-radius:8px;
-    border-left:4px solid var(--blue);
-  }
-  .stack-row:nth-child(odd){background:var(--light)}
-  .stack-row .ic{font-size:1.25rem;color:var(--blue)}
-  .stack-row .lb{font-weight:700;color:var(--navy);font-size:1rem}
-  .stack-row .it{color:var(--muted);font-size:.95rem}
-
-  /* Impact (gradient) */
-  .slide.impact{background:linear-gradient(135deg,var(--blue) 0%,var(--navy) 100%)}
-  .impact .label{color:#fff}
-  .stats-grid{grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-top:2.5rem}
-  .stat-card{
-    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-    border-radius:16px;padding:2rem;display:flex;align-items:center;justify-content:space-between;
-    backdrop-filter:blur(10px);
-  }
-  .stat-card .num{font-size:3.5rem;font-weight:900;color:#fff;line-height:1}
-  .stat-card .lab{font-size:.95rem;color:rgba(255,255,255,.85);margin-top:.5rem;line-height:1.3}
-  .stat-card .sic{font-size:2rem;color:rgba(255,255,255,.5)}
-
-  /* Vision */
-  .slide.vision{background:var(--navy);justify-content:center;position:relative;overflow:hidden}
-  .vision::before{
-    content:'';position:absolute;top:-10%;right:-5%;width:500px;height:500px;
-    background:radial-gradient(circle,var(--blue) 0%,transparent 70%);opacity:.2;
-  }
-  .vision::after{
-    content:'';position:absolute;bottom:-20%;left:-10%;width:400px;height:400px;
-    background:radial-gradient(circle,var(--blue) 0%,transparent 70%);opacity:.15;
-  }
-  .vision-text{font-size:1.15rem;color:rgba(255,255,255,.7);line-height:1.6;max-width:700px;margin:1.5rem 0 2.5rem}
-  .cta{
-    display:inline-flex;align-items:center;gap:.75rem;background:var(--blue);color:#fff;
-    padding:1rem 2rem;border-radius:12px;font-weight:600;font-size:1rem;
-    text-decoration:none;transition:transform .2s,box-shadow .2s;width:fit-content;
-  }
-  .cta:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,99,235,.4)}
-  .contact{margin-top:2rem;color:rgba(255,255,255,.5);font-size:.95rem;position:relative;z-index:2}
-
-  /* Controls */
-  .controls{
-    position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
-    display:flex;align-items:center;gap:1rem;z-index:100;
-    background:rgba(255,255,255,.95);backdrop-filter:blur(10px);
-    padding:.6rem 1rem;border-radius:100px;
-    box-shadow:0 4px 20px rgba(0,0,0,.15);
-  }
-  .controls button{
-    background:none;border:none;cursor:pointer;width:36px;height:36px;
-    border-radius:50%;display:flex;align-items:center;justify-content:center;
-    color:var(--navy);transition:background .2s;
-  }
-  .controls button:hover{background:var(--light)}
-  .controls button:disabled{opacity:.3;cursor:not-allowed}
-  .counter{font-size:.85rem;color:var(--muted);font-weight:500;min-width:40px;text-align:center}
-
-  /* Progress bar */
-  .progress{
-    position:fixed;top:0;left:0;height:3px;background:var(--blue);
-    transition:width .4s;z-index:100;
-  }
-
-  /* Mobile */
-  @media (max-width:768px){
-    .slide{padding:4vh 6vw}
-    .slide h1{font-size:1.8rem}
-    .brand{font-size:2.2rem}
-    .hero-text{font-size:1.1rem}
-    .grid-3,.features-grid,.stats-grid{grid-template-columns:1fr}
-    .grid-2{grid-template-columns:1fr}
-    .product-wrap{grid-template-columns:1fr}
-    .flow{flex-direction:column}
-    .flow-arrow{transform:rotate(90deg)}
-    .stack-row{grid-template-columns:40px 1fr;gap:.5rem}
-    .stack-row .it{grid-column:1/-1;padding-left:48px}
-  }
+:root{--navy:#0B1F3B;--blue:#2563EB;--blue-light:#3B82F6;--blue-dark:#1D4ED8;--green:#22C55E;--amber:#F59E0B;--light:#F8FAFC;--border:#E2E8F0;--white:#FFFFFF;--dark:#0F172A;--text:#1E293B;--muted:#64748B}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--text);background:var(--white);line-height:1.6;-webkit-font-smoothing:antialiased}
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);height:68px;display:flex;align-items:center}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 2rem;width:100%;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:.65rem;text-decoration:none}
+.nav-logo-mark{width:36px;height:36px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.95rem}
+.nav-logo-name{font-size:1.2rem;font-weight:800;color:var(--navy);letter-spacing:-.02em}
+.nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+.nav-links a{font-size:.9rem;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--navy)}
+.nav-cta{background:var(--blue);color:#fff !important;padding:.5rem 1.25rem;border-radius:8px;font-weight:600 !important;transition:background .2s !important}
+.nav-cta:hover{background:var(--blue-dark) !important;color:#fff !important}
+.nav-mobile-btn{display:none;background:none;border:none;cursor:pointer;color:var(--navy);font-size:1.25rem;padding:.25rem}
+.nav-mobile-menu{display:none;position:fixed;top:68px;left:0;right:0;background:#fff;border-bottom:1px solid var(--border);padding:1rem 2rem;flex-direction:column;gap:1rem;z-index:999}
+.nav-mobile-menu.open{display:flex}
+.nav-mobile-menu a{font-size:1rem;font-weight:500;color:var(--text);text-decoration:none;padding:.5rem 0;border-bottom:1px solid var(--border)}
+section{padding:100px 2rem}
+.container{max-width:1200px;margin:0 auto}
+.section-label{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.2em;color:var(--blue);text-transform:uppercase;background:rgba(37,99,235,.08);padding:.35rem .85rem;border-radius:100px;margin-bottom:1.25rem}
+.section-title{font-size:clamp(2rem,4vw,3rem);font-weight:900;color:var(--navy);line-height:1.15;letter-spacing:-.02em;margin-bottom:1rem}
+.section-sub{font-size:1.15rem;color:var(--muted);max-width:580px;line-height:1.7}
+.section-header{text-align:center;margin-bottom:4rem}
+.section-header .section-sub{margin:0 auto}
+#hero{padding-top:140px;padding-bottom:100px;background:linear-gradient(180deg,#F0F5FF 0%,#FFFFFF 100%);position:relative;overflow:hidden}
+#hero::before{content:'';position:absolute;top:-200px;right:-200px;width:700px;height:700px;background:radial-gradient(circle,rgba(37,99,235,.12) 0%,transparent 65%);pointer-events:none}
+.hero-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4rem}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(37,99,235,.1);color:var(--blue);font-size:.8rem;font-weight:600;padding:.4rem 1rem;border-radius:100px;margin-bottom:1.5rem;border:1px solid rgba(37,99,235,.2)}
+.hero-title{font-size:clamp(2.4rem,5vw,3.8rem);font-weight:900;color:var(--navy);line-height:1.1;letter-spacing:-.03em;margin-bottom:1.5rem}
+.hero-title span{color:var(--blue)}
+.hero-sub{font-size:1.2rem;color:var(--muted);line-height:1.7;margin-bottom:2.5rem;max-width:480px}
+.hero-actions{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.btn-primary{display:inline-flex;align-items:center;gap:.6rem;background:var(--blue);color:#fff;padding:.875rem 2rem;border-radius:10px;font-weight:600;font-size:1rem;text-decoration:none;transition:transform .2s,box-shadow .2s,background .2s;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+.btn-primary:hover{background:var(--blue-dark);transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,.45)}
+.btn-secondary{display:inline-flex;align-items:center;gap:.6rem;color:var(--navy);font-weight:600;font-size:1rem;text-decoration:none;padding:.875rem 1.5rem;border:1.5px solid var(--border);border-radius:10px;transition:border-color .2s,background .2s}
+.btn-secondary:hover{border-color:var(--blue);background:rgba(37,99,235,.04)}
+.hero-stats{display:flex;gap:2.5rem;margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border)}
+.hero-stat-num{font-size:2rem;font-weight:900;color:var(--navy);line-height:1}
+.hero-stat-label{font-size:.85rem;color:var(--muted);margin-top:.25rem}
+.hero-visual{background:var(--white);border:1px solid var(--border);border-radius:20px;box-shadow:0 24px 64px rgba(0,0,0,.1);overflow:hidden}
+.dash-topbar{background:var(--navy);color:#fff;padding:.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between;font-size:.82rem;font-weight:500}
+.dash-topbar-dots{display:flex;gap:.4rem}
+.dash-topbar-dot{width:10px;height:10px;border-radius:50%}
+.dash-body{padding:1.5rem}
+.dash-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem}
+.dash-metric{background:var(--light);border-radius:10px;padding:1rem;text-align:center;border:1px solid var(--border)}
+.dash-metric-val{font-size:1.6rem;font-weight:900;line-height:1}
+.dash-metric-label{font-size:.7rem;color:var(--muted);margin-top:.3rem}
+.dash-section-title{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+.dash-task{display:flex;align-items:center;gap:.65rem;padding:.6rem .5rem;border-radius:7px;font-size:.82rem}
+.dash-task:nth-child(odd){background:var(--light)}
+.dash-task i{color:var(--green);font-size:.85rem}
+.dash-task-status{margin-left:auto;font-size:.7rem;font-weight:600;padding:.2rem .5rem;border-radius:4px}
+.status-done{background:rgba(34,197,94,.12);color:var(--green)}
+.status-ai{background:rgba(37,99,235,.12);color:var(--blue)}
+.status-pending{background:rgba(245,158,11,.12);color:var(--amber)}
+#logos{padding:48px 2rem;background:var(--white);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.logos-label{text-align:center;font-size:.82rem;color:var(--muted);font-weight:500;margin-bottom:1.75rem;text-transform:uppercase;letter-spacing:.1em}
+.logos-row{display:flex;align-items:center;justify-content:center;gap:3rem;flex-wrap:wrap}
+.logo-item{font-size:1.1rem;font-weight:800;color:#CBD5E1;letter-spacing:-.02em;white-space:nowrap}
+#problem{background:var(--white)}
+.problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center}
+.problem-cards{display:flex;flex-direction:column;gap:1rem}
+.problem-card{display:flex;gap:1.25rem;align-items:flex-start;background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1.5rem;transition:box-shadow .3s,transform .3s}
+.problem-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-2px)}
+.problem-icon{width:46px;height:46px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.problem-icon.amber{background:rgba(245,158,11,.1);color:var(--amber)}
+.problem-icon.red{background:rgba(239,68,68,.1);color:#EF4444}
+.problem-icon.purple{background:rgba(139,92,246,.1);color:#8B5CF6}
+.problem-card h3{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:.3rem}
+.problem-card p{font-size:.9rem;color:var(--muted);line-height:1.5}
+.problem-highlight{background:linear-gradient(135deg,var(--navy) 0%,#1E3A6E 100%);border-radius:20px;padding:3rem;display:flex;flex-direction:column;justify-content:center}
+.problem-highlight-stat{font-size:5rem;font-weight:900;color:#fff;line-height:1;margin-bottom:.5rem}
+.problem-highlight-stat span{color:var(--blue-light)}
+.problem-highlight p{font-size:1.1rem;color:rgba(255,255,255,.7);line-height:1.6;margin-bottom:2rem}
+.ph-item{display:flex;align-items:center;gap:.75rem;font-size:.9rem;color:rgba(255,255,255,.85);margin-bottom:.75rem}
+.ph-item i{color:var(--green)}
+#solution{background:var(--light)}
+.flow-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative}
+.flow-steps::before{content:'';position:absolute;top:52px;left:calc(16.66% + 1rem);right:calc(16.66% + 1rem);height:2px;background:linear-gradient(90deg,var(--blue),var(--blue-light));z-index:0}
+.flow-step{text-align:center;padding:0 1.5rem;position:relative;z-index:1}
+.flow-step-num{width:104px;height:104px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-light));display:flex;align-items:center;justify-content:center;margin:0 auto 1.75rem;font-size:2.2rem;color:#fff;box-shadow:0 8px 24px rgba(37,99,235,.3)}
+.flow-step h3{font-size:1.2rem;font-weight:700;color:var(--navy);margin-bottom:.5rem}
+.flow-step p{font-size:.92rem;color:var(--muted);line-height:1.6}
+.solution-features{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-top:5rem}
+.sol-feature{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1.75rem;display:flex;gap:1.25rem;transition:box-shadow .2s}
+.sol-feature:hover{box-shadow:0 6px 20px rgba(0,0,0,.07)}
+.sol-feature-icon{width:48px;height:48px;border-radius:12px;background:rgba(37,99,235,.1);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0}
+.sol-feature h4{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:.3rem}
+.sol-feature p{font-size:.88rem;color:var(--muted);line-height:1.5}
+#features{background:var(--white)}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.feature-card{border:1px solid var(--border);border-radius:16px;padding:2rem;transition:box-shadow .3s,transform .3s,border-color .3s;cursor:default}
+.feature-card:hover{box-shadow:0 12px 32px rgba(0,0,0,.08);transform:translateY(-4px);border-color:var(--blue)}
+.feature-card-icon{width:52px;height:52px;border-radius:13px;background:rgba(37,99,235,.1);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:1.25rem}
+.feature-card h3{font-size:1.05rem;font-weight:700;color:var(--navy);margin-bottom:.5rem}
+.feature-card p{font-size:.9rem;color:var(--muted);line-height:1.6}
+#impact{background:linear-gradient(135deg,var(--navy) 0%,#1A3A6E 100%);padding:100px 2rem;position:relative;overflow:hidden}
+#impact::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(37,99,235,.3) 0%,transparent 65%)}
+#impact::after{content:'';position:absolute;bottom:-200px;left:-150px;width:500px;height:500px;background:radial-gradient(circle,rgba(37,99,235,.2) 0%,transparent 65%)}
+.impact-inner{position:relative;z-index:1}
+#impact .section-label{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9)}
+#impact .section-title{color:#fff}
+#impact .section-sub{color:rgba(255,255,255,.65)}
+.impact-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:4rem}
+.impact-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:2rem 1.5rem;text-align:center;backdrop-filter:blur(10px);transition:background .3s,transform .3s}
+.impact-stat:hover{background:rgba(255,255,255,.14);transform:translateY(-4px)}
+.impact-stat-num{font-size:3rem;font-weight:900;color:#fff;line-height:1;margin-bottom:.5rem}
+.impact-stat-num span{color:var(--blue-light)}
+.impact-stat-label{font-size:.9rem;color:rgba(255,255,255,.7);line-height:1.4}
+.impact-stat-icon{font-size:1.5rem;color:rgba(255,255,255,.3);margin-bottom:1rem}
+#tech{background:var(--light)}
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+.tech-stack{display:flex;flex-direction:column;gap:.75rem}
+.tech-row{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.5rem;display:grid;grid-template-columns:44px 130px 1fr;align-items:center;gap:1rem;transition:box-shadow .2s,border-color .2s}
+.tech-row:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);border-color:var(--blue)}
+.tech-row-icon{font-size:1.2rem;color:var(--blue);text-align:center}
+.tech-row-name{font-size:.95rem;font-weight:700;color:var(--navy)}
+.tech-row-items{font-size:.88rem;color:var(--muted)}
+.tech-info{display:flex;flex-direction:column;gap:1.5rem}
+.tech-info-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1.75rem}
+.tech-info-card h3{font-size:1.05rem;font-weight:700;color:var(--navy);margin-bottom:.75rem}
+.tech-info-card p{font-size:.9rem;color:var(--muted);line-height:1.6}
+.tech-badges{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
+.tech-badge{font-size:.78rem;font-weight:600;padding:.3rem .75rem;border-radius:100px;border:1px solid var(--border);color:var(--muted)}
+#cta{background:var(--white);padding:120px 2rem}
+.cta-box{max-width:760px;margin:0 auto;text-align:center;background:linear-gradient(135deg,var(--navy) 0%,#1A3A6E 100%);border-radius:28px;padding:5rem 4rem;position:relative;overflow:hidden}
+.cta-box::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(37,99,235,.4) 0%,transparent 65%)}
+.cta-box::after{content:'';position:absolute;bottom:-100px;left:-100px;width:350px;height:350px;background:radial-gradient(circle,rgba(37,99,235,.25) 0%,transparent 65%)}
+.cta-box > *{position:relative;z-index:1}
+.cta-box .section-label{background:rgba(255,255,255,.12);color:rgba(255,255,255,.9)}
+.cta-box h2{font-size:clamp(2rem,4vw,2.8rem);font-weight:900;color:#fff;line-height:1.15;letter-spacing:-.02em;margin:1rem 0 1.25rem}
+.cta-box p{font-size:1.1rem;color:rgba(255,255,255,.7);margin-bottom:2.5rem;line-height:1.6}
+.cta-buttons{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+.btn-white{display:inline-flex;align-items:center;gap:.6rem;background:#fff;color:var(--navy);padding:.9rem 2rem;border-radius:10px;font-weight:700;font-size:1rem;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.btn-white:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.btn-outline-white{display:inline-flex;align-items:center;gap:.6rem;background:transparent;color:#fff;padding:.9rem 2rem;border-radius:10px;font-weight:600;font-size:1rem;text-decoration:none;border:1.5px solid rgba(255,255,255,.35);transition:background .2s,border-color .2s}
+.btn-outline-white:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.6)}
+footer{background:var(--dark);color:rgba(255,255,255,.6);padding:4rem 2rem 2rem}
+.footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;padding-bottom:3rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.footer-brand-name{font-size:1.3rem;font-weight:800;color:#fff;margin-bottom:.75rem}
+.footer-brand-desc{font-size:.88rem;line-height:1.6;margin-bottom:1.25rem}
+.footer-social{display:flex;gap:.75rem}
+.footer-social a{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:.9rem;text-decoration:none;transition:background .2s,color .2s}
+.footer-social a:hover{background:var(--blue);color:#fff}
+.footer-col-title{font-size:.82rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.25rem}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.65rem}
+.footer-col a{font-size:.88rem;color:rgba(255,255,255,.55);text-decoration:none;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:2rem;font-size:.83rem}
+.footer-bottom a{color:rgba(255,255,255,.4);text-decoration:none}
+.footer-bottom a:hover{color:#fff}
+@media(max-width:1024px){.hero-inner{grid-template-columns:1fr;max-width:680px}.hero-visual{display:none}.problem-grid{grid-template-columns:1fr}.tech-grid{grid-template-columns:1fr}.footer-inner{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){section{padding:72px 1.25rem}.nav-links{display:none}.nav-mobile-btn{display:block}.flow-steps{grid-template-columns:1fr;gap:3rem}.flow-steps::before{display:none}.solution-features{grid-template-columns:1fr}.features-grid{grid-template-columns:1fr}.impact-stats{grid-template-columns:repeat(2,1fr)}.hero-stats{gap:1.5rem}.footer-inner{grid-template-columns:1fr;gap:2rem}.footer-bottom{flex-direction:column;gap:.75rem;text-align:center}.cta-box{padding:3rem 1.75rem}.tech-row{grid-template-columns:36px 100px 1fr;gap:.75rem}}
+@media(max-width:480px){.impact-stats{grid-template-columns:1fr}.hero-actions{flex-direction:column;align-items:flex-start}}
+.fade-up{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
 </style>
 </head>
 <body>
 
-<div class="progress" id="progress"></div>
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#">
+      <div class="nav-logo-mark"><i class="fa-solid fa-bolt"></i></div>
+      <span class="nav-logo-name">SmartFlow</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#problem">Problem</a></li>
+      <li><a href="#solution">Solution</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#impact">Impact</a></li>
+      <li><a href="#tech">Tech</a></li>
+      <li><a href="#cta" class="nav-cta">Get Early Access</a></li>
+    </ul>
+    <button class="nav-mobile-btn" id="mobileBtn" aria-label="Menu">
+      <i class="fa-solid fa-bars" id="mobileBtnIcon"></i>
+    </button>
+  </div>
+</nav>
 
-<div class="deck" id="deck">
+<div class="nav-mobile-menu" id="mobileMenu">
+  <a href="#problem" onclick="closeMobile()">Problem</a>
+  <a href="#solution" onclick="closeMobile()">Solution</a>
+  <a href="#features" onclick="closeMobile()">Features</a>
+  <a href="#impact" onclick="closeMobile()">Impact</a>
+  <a href="#tech" onclick="closeMobile()">Tech Stack</a>
+  <a href="#cta" onclick="closeMobile()" style="color:var(--blue);font-weight:700">Get Early Access</a>
+</div>
 
-  <!-- 1. COVER -->
-  <section class="slide cover active">
-    <div class="logo-row">
-      <div class="logo-mark"><i class="fa-solid fa-bolt"></i></div>
-      <div class="brand">SmartFlow</div>
-    </div>
-    <div class="tagline">AI-Powered Workflow Automation</div>
-    <p class="hero-text">Transform emails into actions.<br/>Automate workflows with intelligence.</p>
-    <div class="cover-footer">Investor Pitch &nbsp;|&nbsp; 2026</div>
-  </section>
-
-  <!-- 2. PROBLEM -->
-  <section class="slide">
-    <div class="label">THE PROBLEM</div>
-    <h1>Teams waste 40% of their time<br/>on repetitive manual tasks</h1>
-    <div class="grid grid-3">
-      <div class="card">
-        <div class="icon amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <h3>Email Overload</h3>
-        <p>Teams spend 2.5 hours daily sorting and responding to emails manually.</p>
+<section id="hero">
+  <div class="hero-inner container">
+    <div class="fade-up">
+      <div class="hero-badge"><i class="fa-solid fa-circle" style="color:var(--green);font-size:.6rem"></i> Now in Beta — Join 500+ Teams</div>
+      <h1 class="hero-title">Transform Emails<br/>into <span>Smart Actions</span></h1>
+      <p class="hero-sub">SmartFlow uses AI to automatically classify, prioritize, and convert incoming emails into tasks — so your team spends time doing work, not managing it.</p>
+      <div class="hero-actions">
+        <a href="#cta" class="btn-primary"><i class="fa-solid fa-rocket"></i> Start Free Trial</a>
+        <a href="#solution" class="btn-secondary"><i class="fa-solid fa-play"></i> See How It Works</a>
       </div>
-      <div class="card">
-        <div class="icon amber"><i class="fa-solid fa-clock"></i></div>
-        <h3>Missed Deadlines</h3>
-        <p>28% of tasks fall through cracks due to lack of automated tracking.</p>
-      </div>
-      <div class="card">
-        <div class="icon amber"><i class="fa-solid fa-chart-line"></i></div>
-        <h3>No Visibility</h3>
-        <p>Managers lack real-time dashboards to track team performance.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3. SOLUTION -->
-  <section class="slide">
-    <div class="label">THE SOLUTION</div>
-    <h1>From inbox chaos to organized action</h1>
-    <div class="flow">
-      <div class="flow-card">
-        <div class="icon blue-solid"><i class="fa-solid fa-envelope"></i></div>
-        <h3>Email In</h3>
-        <p>Any source</p>
-      </div>
-      <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-      <div class="flow-card">
-        <div class="icon blue-solid"><i class="fa-solid fa-robot"></i></div>
-        <h3>AI Process</h3>
-        <p>Classify &amp; extract</p>
-      </div>
-      <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-      <div class="flow-card">
-        <div class="icon blue-solid"><i class="fa-solid fa-chart-bar"></i></div>
-        <h3>Auto Action</h3>
-        <p>Tasks created</p>
+      <div class="hero-stats">
+        <div><div class="hero-stat-num">70%</div><div class="hero-stat-label">Less manual work</div></div>
+        <div><div class="hero-stat-num">3x</div><div class="hero-stat-label">Faster response</div></div>
+        <div><div class="hero-stat-num">5min</div><div class="hero-stat-label">Setup time</div></div>
       </div>
     </div>
-    <div class="flow-summary">Email &nbsp;→&nbsp; AI &nbsp;→&nbsp; Action</div>
-  </section>
+    <div class="hero-visual fade-up" style="transition-delay:.2s">
+      <div class="dash-topbar">
+        <div style="display:flex;align-items:center;gap:.5rem"><i class="fa-solid fa-bolt"></i> SmartFlow Dashboard</div>
+        <div class="dash-topbar-dots">
+          <div class="dash-topbar-dot" style="background:#EF4444"></div>
+          <div class="dash-topbar-dot" style="background:var(--amber)"></div>
+          <div class="dash-topbar-dot" style="background:var(--green)"></div>
+        </div>
+      </div>
+      <div class="dash-body">
+        <div class="dash-metrics">
+          <div class="dash-metric"><div class="dash-metric-val" style="color:var(--blue)">127</div><div class="dash-metric-label">Active Tasks</div></div>
+          <div class="dash-metric"><div class="dash-metric-val" style="color:var(--green)">94%</div><div class="dash-metric-label">On Time</div></div>
+          <div class="dash-metric"><div class="dash-metric-val" style="color:var(--amber)">23</div><div class="dash-metric-label">AI Actions</div></div>
+        </div>
+        <div class="dash-section-title">Recent AI Actions</div>
+        <div class="dash-task"><i class="fa-solid fa-circle-check"></i> Process vendor invoices <span class="dash-task-status status-done">Done</span></div>
+        <div class="dash-task"><i class="fa-solid fa-circle-check"></i> Schedule team standup <span class="dash-task-status status-ai">AI</span></div>
+        <div class="dash-task"><i class="fa-solid fa-circle-check"></i> Review client proposal <span class="dash-task-status status-pending">Pending</span></div>
+        <div class="dash-task"><i class="fa-solid fa-circle-check"></i> Send follow-up to leads <span class="dash-task-status status-done">Done</span></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <!-- 4. PRODUCT -->
-  <section class="slide" style="background:var(--light)">
-    <div class="label">PRODUCT</div>
-    <h1>Smart Dashboard &amp; Workflow Engine</h1>
-    <div class="product-wrap">
-      <div class="mock">
-        <div class="mock-nav"><i class="fa-solid fa-bolt"></i> &nbsp; SmartFlow Dashboard</div>
-        <div class="mock-body">
-          <div class="mock-metrics">
-            <div class="mock-metric"><div class="n" style="color:var(--blue)">127</div><div class="l">Active Tasks</div></div>
-            <div class="mock-metric"><div class="n" style="color:var(--green)">94%</div><div class="l">On Time</div></div>
-            <div class="mock-metric"><div class="n" style="color:var(--amber)">23</div><div class="l">AI Actions</div></div>
+<section id="logos">
+  <div class="container">
+    <p class="logos-label">Trusted by teams at</p>
+    <div class="logos-row">
+      <span class="logo-item">Acme Corp</span>
+      <span class="logo-item">NovaTech</span>
+      <span class="logo-item">Axiom</span>
+      <span class="logo-item">Meridian</span>
+      <span class="logo-item">Crestline</span>
+      <span class="logo-item">Skybridge</span>
+    </div>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="container">
+    <div class="problem-grid">
+      <div class="fade-up">
+        <div class="section-label">The Problem</div>
+        <h2 class="section-title">Your team is drowning in manual work</h2>
+        <p class="section-sub" style="margin-bottom:2.5rem">Repetitive email processing, missed follow-ups, and zero visibility are killing productivity.</p>
+        <div class="problem-cards">
+          <div class="problem-card">
+            <div class="problem-icon amber"><i class="fa-solid fa-envelope-open"></i></div>
+            <div><h3>Email Overload</h3><p>Teams spend 2.5+ hours daily sorting and responding to emails manually, without any prioritization.</p></div>
           </div>
-          <div class="mock-task"><i class="fa-solid fa-circle-check"></i> Process vendor invoices</div>
-          <div class="mock-task"><i class="fa-solid fa-circle-check"></i> Schedule team standup</div>
-          <div class="mock-task"><i class="fa-solid fa-circle-check"></i> Review client proposal</div>
-          <div class="mock-task"><i class="fa-solid fa-circle-check"></i> Send follow-up to leads</div>
+          <div class="problem-card">
+            <div class="problem-icon red"><i class="fa-solid fa-clock"></i></div>
+            <div><h3>Missed Deadlines</h3><p>28% of tasks fall through the cracks because there is no automatic system to track and route them.</p></div>
+          </div>
+          <div class="problem-card">
+            <div class="problem-icon purple"><i class="fa-solid fa-chart-bar"></i></div>
+            <div><h3>Zero Visibility</h3><p>Managers have no real-time view of what is happening, leading to poor decisions and reactive firefighting.</p></div>
+          </div>
         </div>
       </div>
-      <div class="side-features">
-        <div class="side-feat">
-          <div class="icn"><i class="fa-solid fa-brain"></i></div>
-          <div><h4>AI Classification</h4><p>Auto-categorize emails by intent and urgency.</p></div>
-        </div>
-        <div class="side-feat">
-          <div class="icn"><i class="fa-solid fa-bolt"></i></div>
-          <div><h4>Instant Actions</h4><p>Convert emails to tasks in one click.</p></div>
-        </div>
-        <div class="side-feat">
-          <div class="icn"><i class="fa-solid fa-cloud"></i></div>
-          <div><h4>Cloud Sync</h4><p>Real-time sync across all devices.</p></div>
+      <div class="problem-highlight fade-up" style="transition-delay:.15s">
+        <div class="problem-highlight-stat"><span>40%</span></div>
+        <p>of a knowledge worker's time is spent on low-value, repetitive tasks that could be fully automated.</p>
+        <div>
+          <div class="ph-item"><i class="fa-solid fa-check"></i> Manually triaging 120+ emails per day</div>
+          <div class="ph-item"><i class="fa-solid fa-check"></i> Re-entering data across multiple tools</div>
+          <div class="ph-item"><i class="fa-solid fa-check"></i> Writing the same status updates repeatedly</div>
+          <div class="ph-item"><i class="fa-solid fa-check"></i> Chasing colleagues for approvals manually</div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- 5. FEATURES -->
-  <section class="slide">
-    <div class="label">FEATURES</div>
-    <h1>Built for modern teams</h1>
-    <div class="grid features-grid">
-      <div class="card feature-card"><div class="icon blue"><i class="fa-solid fa-envelope"></i></div><div><h3>Smart Inbox</h3><p>AI-powered email triage</p></div></div>
-      <div class="card feature-card"><div class="icon blue"><i class="fa-solid fa-robot"></i></div><div><h3>Auto-Assign</h3><p>Route tasks to right people</p></div></div>
-      <div class="card feature-card"><div class="icon blue"><i class="fa-solid fa-chart-bar"></i></div><div><h3>Analytics</h3><p>Real-time performance data</p></div></div>
-      <div class="card feature-card"><div class="icon blue"><i class="fa-solid fa-gears"></i></div><div><h3>Integrations</h3><p>Connect 50+ tools</p></div></div>
-      <div class="card feature-card"><div class="icon blue"><i class="fa-solid fa-shield-halved"></i></div><div><h3>Enterprise Security</h3><p>SOC 2 &amp; GDPR ready</p></div></div>
-      <div class="card feature-card"><div class="icon blue"><i class="fa-solid fa-bolt"></i></div><div><h3>Instant Setup</h3><p>Live in under 5 minutes</p></div></div>
+<section id="solution">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-label">The Solution</div>
+      <h2 class="section-title">From inbox to action in seconds</h2>
+      <p class="section-sub">SmartFlow sits between your inbox and your team, automatically turning every relevant email into an organized, tracked, actionable task.</p>
     </div>
-  </section>
-
-  <!-- 6. TECH STACK -->
-  <section class="slide">
-    <div class="label">TECH STACK</div>
-    <h1>Enterprise-grade architecture</h1>
-    <div class="stack">
-      <div class="stack-row"><div class="ic"><i class="fa-solid fa-layer-group"></i></div><div class="lb">Frontend</div><div class="it">React &nbsp;•&nbsp; TypeScript &nbsp;•&nbsp; Tailwind</div></div>
-      <div class="stack-row"><div class="ic"><i class="fa-solid fa-code"></i></div><div class="lb">Backend</div><div class="it">Node.js &nbsp;•&nbsp; Python &nbsp;•&nbsp; FastAPI</div></div>
-      <div class="stack-row"><div class="ic"><i class="fa-solid fa-microchip"></i></div><div class="lb">AI Engine</div><div class="it">GPT-4 &nbsp;•&nbsp; LangChain &nbsp;•&nbsp; Custom NLP</div></div>
-      <div class="stack-row"><div class="ic"><i class="fa-solid fa-database"></i></div><div class="lb">Data</div><div class="it">PostgreSQL &nbsp;•&nbsp; Redis &nbsp;•&nbsp; S3</div></div>
-      <div class="stack-row"><div class="ic"><i class="fa-solid fa-cloud"></i></div><div class="lb">Infrastructure</div><div class="it">AWS &nbsp;•&nbsp; Docker &nbsp;•&nbsp; Kubernetes</div></div>
-    </div>
-  </section>
-
-  <!-- 7. IMPACT -->
-  <section class="slide impact">
-    <div class="label">IMPACT</div>
-    <h1 class="light">Measurable results from day one</h1>
-    <div class="grid stats-grid">
-      <div class="stat-card">
-        <div><div class="num">70%</div><div class="lab">Reduction in manual work</div></div>
-        <div class="sic"><i class="fa-solid fa-clock"></i></div>
+    <div class="flow-steps fade-up">
+      <div class="flow-step">
+        <div class="flow-step-num"><i class="fa-solid fa-envelope"></i></div>
+        <h3>Email Arrives</h3>
+        <p>SmartFlow connects to any inbox — Gmail, Outlook, or custom IMAP. No forwarding or redirects needed.</p>
       </div>
-      <div class="stat-card">
-        <div><div class="num">50%</div><div class="lab">Fewer errors in task routing</div></div>
-        <div class="sic"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="flow-step">
+        <div class="flow-step-num"><i class="fa-solid fa-brain"></i></div>
+        <h3>AI Processes It</h3>
+        <p>Our AI classifies intent, extracts key data, assigns priority, and identifies the right owner automatically.</p>
       </div>
-      <div class="stat-card">
-        <div><div class="num">3x</div><div class="lab">Faster response to clients</div></div>
-        <div class="sic"><i class="fa-solid fa-rocket"></i></div>
-      </div>
-      <div class="stat-card">
-        <div><div class="num">5min</div><div class="lab">Setup time to go live</div></div>
-        <div class="sic"><i class="fa-solid fa-bolt"></i></div>
+      <div class="flow-step">
+        <div class="flow-step-num"><i class="fa-solid fa-bolt"></i></div>
+        <h3>Action Created</h3>
+        <p>A task is created, assigned, and synced to Slack, Jira, Asana, or Notion instantly — no manual step.</p>
       </div>
     </div>
-  </section>
+    <div class="solution-features fade-up">
+      <div class="sol-feature">
+        <div class="sol-feature-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <div><h4>Smart Classification</h4><p>AI understands context, urgency, and intent — not just keywords. Trained on 50M+ business emails.</p></div>
+      </div>
+      <div class="sol-feature">
+        <div class="sol-feature-icon"><i class="fa-solid fa-arrows-split-up-and-left"></i></div>
+        <div><h4>Intelligent Routing</h4><p>Tasks are routed to the right person based on role, workload, and historical patterns.</p></div>
+      </div>
+      <div class="sol-feature">
+        <div class="sol-feature-icon"><i class="fa-solid fa-plug"></i></div>
+        <div><h4>Deep Integrations</h4><p>Connects with 50+ tools out of the box. Webhooks and API available for custom workflows.</p></div>
+      </div>
+      <div class="sol-feature">
+        <div class="sol-feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+        <div><h4>Live Analytics</h4><p>Real-time dashboards showing task flow, team performance, and bottlenecks as they happen.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <!-- 8. VISION -->
-  <section class="slide vision">
-    <div class="label">OUR VISION</div>
-    <h1 class="light">Every team deserves<br/>an AI co-pilot.</h1>
-    <p class="vision-text">SmartFlow is building the future of work automation —<br/>where AI handles the routine so humans focus on what matters.</p>
-    <a class="cta" href="mailto:hello@smartflow.ai">Let's Build Together <i class="fa-solid fa-arrow-right"></i></a>
-    <div class="contact">hello@smartflow.ai &nbsp;|&nbsp; smartflow.ai</div>
-  </section>
+<section id="features">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Everything modern teams need</h2>
+      <p class="section-sub">Built from the ground up for speed, reliability, and enterprise-grade security.</p>
+    </div>
+    <div class="features-grid fade-up">
+      <div class="feature-card">
+        <div class="feature-card-icon"><i class="fa-solid fa-envelope"></i></div>
+        <h3>Smart Inbox</h3>
+        <p>AI-powered triage that reads, classifies, and prioritizes every incoming message automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon"><i class="fa-solid fa-robot"></i></div>
+        <h3>Auto-Assign</h3>
+        <p>Intelligently routes tasks to the right team member based on context, skills, and availability.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon"><i class="fa-solid fa-chart-bar"></i></div>
+        <h3>Real-Time Analytics</h3>
+        <p>Track team performance, response times, and bottlenecks with live dashboards and alerts.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon"><i class="fa-solid fa-gears"></i></div>
+        <h3>50+ Integrations</h3>
+        <p>Connect Slack, Jira, Asana, HubSpot, Salesforce, Notion, and more — no code required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>Enterprise Security</h3>
+        <p>SOC 2 Type II certified, GDPR compliant, end-to-end encryption, and SSO/SAML support.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon"><i class="fa-solid fa-bolt"></i></div>
+        <h3>5-Minute Setup</h3>
+        <p>Connect your inbox, set your rules, and SmartFlow is live — no engineering needed.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-</div>
+<section id="impact">
+  <div class="container impact-inner">
+    <div class="section-header fade-up">
+      <div class="section-label">Impact</div>
+      <h2 class="section-title">Measurable results from day one</h2>
+      <p class="section-sub">Teams using SmartFlow see dramatic improvements in productivity within the first week.</p>
+    </div>
+    <div class="impact-stats fade-up">
+      <div class="impact-stat">
+        <div class="impact-stat-icon"><i class="fa-solid fa-clock"></i></div>
+        <div class="impact-stat-num"><span>70</span>%</div>
+        <div class="impact-stat-label">Reduction in manual email processing time</div>
+      </div>
+      <div class="impact-stat">
+        <div class="impact-stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="impact-stat-num"><span>50</span>%</div>
+        <div class="impact-stat-label">Fewer errors in task routing and assignment</div>
+      </div>
+      <div class="impact-stat">
+        <div class="impact-stat-icon"><i class="fa-solid fa-rocket"></i></div>
+        <div class="impact-stat-num"><span>3</span>x</div>
+        <div class="impact-stat-label">Faster response time to clients and partners</div>
+      </div>
+      <div class="impact-stat">
+        <div class="impact-stat-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="impact-stat-num"><span>5</span>min</div>
+        <div class="impact-stat-label">Average setup time to go fully live</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<div class="controls">
-  <button id="prev" title="Previous (←)"><i class="fa-solid fa-chevron-left"></i></button>
-  <span class="counter" id="counter">1 / 8</span>
-  <button id="next" title="Next (→)"><i class="fa-solid fa-chevron-right"></i></button>
-  <button id="fs" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
-</div>
+<section id="tech">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-label">Tech Stack</div>
+      <h2 class="section-title">Enterprise-grade architecture</h2>
+      <p class="section-sub">Built for scale, reliability, and security from day one.</p>
+    </div>
+    <div class="tech-grid fade-up">
+      <div class="tech-stack">
+        <div class="tech-row"><div class="tech-row-icon"><i class="fa-solid fa-layer-group"></i></div><div class="tech-row-name">Frontend</div><div class="tech-row-items">React · TypeScript · Tailwind</div></div>
+        <div class="tech-row"><div class="tech-row-icon"><i class="fa-solid fa-code"></i></div><div class="tech-row-name">Backend</div><div class="tech-row-items">Node.js · Python · FastAPI</div></div>
+        <div class="tech-row"><div class="tech-row-icon"><i class="fa-solid fa-microchip"></i></div><div class="tech-row-name">AI Engine</div><div class="tech-row-items">GPT-4 · LangChain · Custom NLP</div></div>
+        <div class="tech-row"><div class="tech-row-icon"><i class="fa-solid fa-database"></i></div><div class="tech-row-name">Data</div><div class="tech-row-items">PostgreSQL · Redis · S3</div></div>
+        <div class="tech-row"><div class="tech-row-icon"><i class="fa-solid fa-cloud"></i></div><div class="tech-row-name">Infrastructure</div><div class="tech-row-items">AWS · Docker · Kubernetes</div></div>
+      </div>
+      <div class="tech-info">
+        <div class="tech-info-card">
+          <h3><i class="fa-solid fa-shield-halved" style="color:var(--green);margin-right:.5rem"></i>Security &amp; Compliance</h3>
+          <p>All data encrypted in transit and at rest. Regular penetration testing. Full audit logs available.</p>
+          <div class="tech-badges">
+            <span class="tech-badge">SOC 2 Type II</span>
+            <span class="tech-badge">GDPR</span>
+            <span class="tech-badge">HIPAA Ready</span>
+            <span class="tech-badge">ISO 27001</span>
+          </div>
+        </div>
+        <div class="tech-info-card">
+          <h3><i class="fa-solid fa-gauge-high" style="color:var(--blue);margin-right:.5rem"></i>Performance</h3>
+          <p>99.9% uptime SLA. Sub-100ms API response. Processes 10M+ emails per day across our customer base.</p>
+          <div class="tech-badges">
+            <span class="tech-badge">99.9% Uptime</span>
+            <span class="tech-badge">&lt;100ms API</span>
+            <span class="tech-badge">Global CDN</span>
+          </div>
+        </div>
+        <div class="tech-info-card">
+          <h3><i class="fa-solid fa-plug" style="color:var(--amber);margin-right:.5rem"></i>Open API</h3>
+          <p>Full REST API + webhooks. SDKs for Python, Node.js, and Go. Build custom integrations in minutes.</p>
+          <div class="tech-badges">
+            <span class="tech-badge">REST API</span>
+            <span class="tech-badge">Webhooks</span>
+            <span class="tech-badge">Python SDK</span>
+            <span class="tech-badge">Node SDK</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="container">
+    <div class="cta-box fade-up">
+      <div class="section-label">Get Started</div>
+      <h2>Ready to automate your workflow?</h2>
+      <p>Join 500+ teams already using SmartFlow to reclaim hours every week. No credit card required.</p>
+      <div class="cta-buttons">
+        <a href="mailto:hello@smartflow.ai" class="btn-white"><i class="fa-solid fa-rocket"></i> Start Free Trial</a>
+        <a href="mailto:hello@smartflow.ai" class="btn-outline-white"><i class="fa-solid fa-envelope"></i> Contact Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner container">
+    <div>
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem">
+        <div class="nav-logo-mark"><i class="fa-solid fa-bolt"></i></div>
+        <span class="footer-brand-name">SmartFlow</span>
+      </div>
+      <p class="footer-brand-desc">AI-powered workflow automation that turns your inbox into a productivity engine.</p>
+      <div class="footer-social">
+        <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">Product</p>
+      <ul>
+        <li><a href="#solution">How it Works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#impact">Results</a></li>
+        <li><a href="#tech">Tech Stack</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">Company</p>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="mailto:hello@smartflow.ai">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">Legal</p>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Security</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom container">
+    <span>&copy; 2026 SmartFlow. All rights reserved.</span>
+    <span>hello@smartflow.ai &nbsp;&middot;&nbsp; <a href="#">smartflow.ai</a></span>
+  </div>
+</footer>
 
 <script>
-  const slides = document.querySelectorAll('.slide');
-  const prev = document.getElementById('prev');
-  const next = document.getElementById('next');
-  const counter = document.getElementById('counter');
-  const progress = document.getElementById('progress');
-  const fsBtn = document.getElementById('fs');
-  let current = 0;
-
-  function show(idx){
-    if(idx < 0 || idx >= slides.length) return;
-    slides[current].classList.remove('active');
-    current = idx;
-    slides[current].classList.add('active');
-    counter.textContent = (current+1) + ' / ' + slides.length;
-    progress.style.width = ((current+1)/slides.length*100) + '%';
-    prev.disabled = current === 0;
-    next.disabled = current === slides.length - 1;
+  const mobileBtn = document.getElementById('mobileBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const mobileBtnIcon = document.getElementById('mobileBtnIcon');
+  mobileBtn.addEventListener('click', () => {
+    const open = mobileMenu.classList.toggle('open');
+    mobileBtnIcon.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+  });
+  function closeMobile() {
+    mobileMenu.classList.remove('open');
+    mobileBtnIcon.className = 'fa-solid fa-bars';
   }
-
-  prev.addEventListener('click', () => show(current-1));
-  next.addEventListener('click', () => show(current+1));
-
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') show(current+1);
-    else if(e.key === 'ArrowLeft' || e.key === 'PageUp') show(current-1);
-    else if(e.key === 'Home') show(0);
-    else if(e.key === 'End') show(slides.length-1);
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    nav.style.boxShadow = window.scrollY > 10 ? '0 2px 16px rgba(0,0,0,.08)' : 'none';
   });
-
-  // Touch swipe
-  let touchStartX = 0;
-  document.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
-  document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if(dx > 50) show(current-1);
-    else if(dx < -50) show(current+1);
-  });
-
-  fsBtn.addEventListener('click', () => {
-    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
-    else document.exitFullscreen();
-  });
-
-  show(0);
 </script>
 </body>
 </html>
