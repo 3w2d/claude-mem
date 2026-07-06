@@ -1,1349 +1,889 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Routes, Route, Navigate, Link, NavLink, Outlet,
-  useNavigate, useLocation,
-} from 'react-router-dom';
-import {
-  Brain, Globe, Mail, FileSpreadsheet,
-  Layout, Zap, Lock, Bell, Settings as SettingsIcon,
-  BarChart3, Smartphone, Monitor, Laptop,
-  LogIn, LogOut, Fingerprint, ChevronRight, CheckCircle2,
-  User, Sun, Moon, Shield, AlertTriangle,
-  MapPin, Send, FileDown, Wifi, WifiOff, Crosshair,
-  Menu, X, Plus, Trash2, Check,
+  Home, CalendarDays, FolderOpen, Sparkles, Settings,
+  Plus, Search, Bell, CheckCircle2, Circle, Clock,
+  FileText, Image as ImageIcon, Video, File, Send, Mic,
+  TrendingUp, Target, ChevronLeft, ChevronRight, MoreVertical,
+  Star, Brain, BarChart3, Moon, Globe, LogOut,
+  Filter, Tag, Paperclip, Flame,
+  BookOpen, Music, Archive, Upload,
+  Wifi, Battery, Signal, Layers, Zap,
 } from 'lucide-react';
-import { APP, FIELD_STATS, AI_MESSAGE, SECTIONS } from './config.js';
-import { useFieldStats, useClaims, useOffices, useStaff, useTasks } from './data/useData.js';
 import { useAuth } from './auth/AuthProvider.jsx';
-import { isAuthConfigured } from './auth/msalConfig.js';
-import { useGeolocation } from './lib/useGeolocation.js';
+import { useTasks } from './data/useData.js';
 import { ask } from './lib/aiMock.js';
-import { generateReport } from './lib/pdfReport.js';
+import { APP } from './config.js';
 
-// --- Theme tokens (dark + light) ---
-const THEMES = {
-  dark: {
-    page: 'bg-[#070A12] text-white',
-    overlay: 'bg-[#070A12]',
-    navBg: 'bg-[#070A12]/80 border-purple-900/20',
-    surface: 'bg-[#150E2B] border-gray-800',
-    surfaceAlt: 'bg-[#0D081D] border-gray-800',
-    surfaceFrom: 'from-[#1E1B4B] to-[#070A12] border-purple-500/20',
-    chip: 'bg-white/5 border border-white/10 hover:bg-white/10',
-    chipMuted: 'bg-white/5 border border-white/10',
-    textMain: 'text-white',
-    textMuted: 'text-gray-400',
-    textFaint: 'text-gray-500',
-    headline: 'bg-gradient-to-b from-white via-white to-purple-500 bg-clip-text text-transparent',
-    inputBorder: 'border-gray-800',
-    divider: 'border-white/5',
-    heroGlow: 'bg-[#8B5CF6]/10',
-    bottomBar: 'bg-[#150E2B]/95 border-t border-purple-900/30',
-  },
-  light: {
-    page: 'bg-[#F5F3FF] text-slate-900',
-    overlay: 'bg-[#F5F3FF]',
-    navBg: 'bg-white/80 border-purple-200',
-    surface: 'bg-white border-slate-200',
-    surfaceAlt: 'bg-[#FAF9FF] border-slate-200',
-    surfaceFrom: 'from-[#EDE9FE] to-white border-purple-300',
-    chip: 'bg-white border border-slate-200 hover:bg-slate-50 text-slate-700',
-    chipMuted: 'bg-slate-100 border border-slate-200 text-slate-700',
-    textMain: 'text-slate-900',
-    textMuted: 'text-slate-600',
-    textFaint: 'text-slate-500',
-    headline: 'bg-gradient-to-b from-slate-900 via-slate-900 to-[#8B5CF6] bg-clip-text text-transparent',
-    inputBorder: 'border-slate-200',
-    divider: 'border-slate-200',
-    heroGlow: 'bg-[#8B5CF6]/20',
-    bottomBar: 'bg-white/95 border-t border-purple-200',
-  },
-};
+const NAV = [
+  { id: 'dashboard', label: 'لوحة نَظْم',    icon: Home },
+  { id: 'tasks',     label: 'المهام والزمن', icon: CalendarDays },
+  { id: 'library',   label: 'المكتبة',       icon: FolderOpen },
+  { id: 'assistant', label: 'المساعد الذكي', icon: Sparkles },
+  { id: 'settings',  label: 'الإعدادات',    icon: Settings },
+];
 
-const STORAGE_KEYS = { theme: 'nazm.theme', lang: 'nazm.lang' };
+const FILES = [
+  { id: 1, name: 'عرض الهوية البصرية',     type: 'doc',   size: '4.2 MB', date: 'اليوم',        tag: 'تصميم' },
+  { id: 2, name: 'ميزانية الربع الثاني',    type: 'sheet', size: '1.8 MB', date: 'أمس',         tag: 'مالي'  },
+  { id: 3, name: 'فيديو تعريفي — نَظْم',    type: 'video', size: '58 MB',  date: 'قبل يومين',   tag: 'تسويق' },
+  { id: 4, name: 'Logo-NAZM-Final.png',    type: 'image', size: '320 KB', date: 'قبل ٣ أيام',  tag: 'تصميم' },
+  { id: 5, name: 'محاضر الاجتماعات',       type: 'doc',   size: '960 KB', date: 'هذا الأسبوع', tag: 'أرشيف' },
+  { id: 6, name: 'بودكاست الإنتاجية',      type: 'audio', size: '22 MB',  date: 'هذا الأسبوع', tag: 'تعلم'  },
+];
 
-const SECTION_ICONS = {
-  home: Layout,
-  ai: Brain,
-  field: MapPin,
-  mail: Mail,
-  sheets: FileSpreadsheet,
-  analytics: BarChart3,
-  profile: User,
-  settings: SettingsIcon,
-};
+function toViewTask(raw) {
+  const time = raw.due
+    ? new Intl.DateTimeFormat('ar-SA-u-nu-arab', { month: 'short', day: 'numeric' }).format(new Date(raw.due))
+    : 'غير محدد';
+  return {
+    id: raw.id,
+    title: raw.titleAr || raw.titleEn || raw.title || '',
+    time,
+    tag: raw.source || 'عام',
+    priority: raw.priority || 'medium',
+    done: !!raw.done,
+  };
+}
 
 export default function NazmFullSystem() {
-  const [isRtl, setIsRtl] = useState(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.lang) : null;
-    return saved ? saved === 'ar' : true;
-  });
-  const [theme, setTheme] = useState(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.theme) : null;
-    return saved === 'light' || saved === 'dark' ? saved : 'dark';
-  });
+  const { isAuthenticated, signIn, signOut, profile, busy } = useAuth();
+  const [showSplash, setShowSplash] = useState(true);
+  const [fadeSplash, setFadeSplash] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.theme, theme);
-  }, [theme]);
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.lang, isRtl ? 'ar' : 'en');
-  }, [isRtl]);
+    const t1 = setTimeout(() => setFadeSplash(true), 2300);
+    const t2 = setTimeout(() => setShowSplash(false), 3100);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
 
-  const T = THEMES[theme];
-  const isDark = theme === 'dark';
-
-  const toggleLang = () => setIsRtl((v) => !v);
-  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
-
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <div
-      className={`min-h-screen overflow-x-hidden transition-colors duration-300 ${T.page} ${isRtl ? 'font-arabic' : 'font-sans'}`}
-      dir={isRtl ? 'rtl' : 'ltr'}
-    >
-      <TopBar T={T} isDark={isDark} isRtl={isRtl} toggleLang={toggleLang} toggleTheme={toggleTheme} onOpenMenu={() => setMenuOpen(true)} />
-
-      <Routes>
-        <Route path="/" element={<LandingPage T={T} isRtl={isRtl} />} />
-        <Route path="/auth" element={<AuthPage T={T} isRtl={isRtl} />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute T={T} isRtl={isRtl}>
-              <DashboardLayout T={T} isRtl={isRtl} theme={theme} setTheme={setTheme} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="home" replace />} />
-          <Route path="home" element={<HomeSection T={T} isRtl={isRtl} />} />
-          <Route path="ai" element={<AISection T={T} isRtl={isRtl} />} />
-          <Route path="field" element={<FieldSection T={T} isRtl={isRtl} />} />
-          <Route path="mail" element={<MailSection T={T} isRtl={isRtl} />} />
-          <Route path="sheets" element={<SheetsSection T={T} isRtl={isRtl} />} />
-          <Route path="analytics" element={<AnalyticsSection T={T} isRtl={isRtl} />} />
-          <Route path="profile" element={<ProfileSection T={T} isRtl={isRtl} />} />
-          <Route
-            path="settings"
-            element={<SettingsSection T={T} isRtl={isRtl} theme={theme} setTheme={setTheme} />}
-          />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
-  );
-}
-
-// --- Top Bar (always rendered) ---
-function TopBar({ T, isDark, isRtl, toggleLang, toggleTheme, onOpenMenu }) {
-  const { isAuthenticated, signOut } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const hideSignIn = location.pathname.startsWith('/dashboard') || location.pathname === '/auth';
-  const onDashboard = location.pathname.startsWith('/dashboard');
-
-  return (
-    <nav className={`p-5 border-b flex justify-between items-center backdrop-blur-xl sticky top-0 z-50 ${T.navBg}`}>
-      <div className="flex items-center gap-3">
-        {onDashboard && (
-          <button
-            type="button"
-            onClick={onOpenMenu}
-            aria-label={isRtl ? 'فتح القائمة' : 'Open menu'}
-            className={`lg:hidden p-2 rounded-xl transition ${T.chip}`}
-          >
-            <Menu size={18} />
-          </button>
-        )}
-      <Link
-        to="/"
-        className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] rounded-xl"
-        aria-label={isRtl ? 'العودة إلى الصفحة الرئيسية' : 'Go to landing'}
-      >
-        <div className="bg-gradient-to-tr from-[#8B5CF6] to-[#A5F3FC] p-2 rounded-xl shadow-lg shadow-purple-500/20">
-          <Brain className="text-black" size={24} />
-        </div>
-        <div className="flex flex-col text-start">
-          <span className={`text-xl font-black tracking-tight ${T.textMain}`}>
-            {APP.brandAr} | {APP.brandEn}
-          </span>
-          <span className="text-[8px] text-purple-400 uppercase tracking-widest leading-none">
-            {APP.tagline}
-          </span>
-        </div>
-      </Link>
-      </div>
-
-      <div className="flex items-center gap-2 md:gap-3">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className={`text-[10px] md:text-xs px-3 py-1.5 rounded-full transition flex items-center gap-1 ${T.chip}`}
-          aria-label={isDark ? (isRtl ? 'تفعيل الوضع النهاري' : 'Switch to light mode') : (isRtl ? 'تفعيل الوضع الليلي' : 'Switch to dark mode')}
-        >
-          {isDark ? <Sun size={14} /> : <Moon size={14} />}
-          <span>{isDark ? (isRtl ? 'نهاري' : 'Light') : (isRtl ? 'ليلي' : 'Dark')}</span>
-        </button>
-        <button
-          type="button"
-          onClick={toggleLang}
-          className={`text-[10px] md:text-xs px-3 py-1.5 rounded-full transition flex items-center gap-1 ${T.chip}`}
-        >
-          <Globe size={14} /> {isRtl ? 'English' : 'العربية'}
-        </button>
-
-        {isAuthenticated ? (
-          <button
-            type="button"
-            onClick={async () => { await signOut(); navigate('/'); }}
-            className={`text-[10px] md:text-xs px-3 py-1.5 rounded-full transition flex items-center gap-1 ${T.chip}`}
-          >
-            <LogOut size={14} /> {isRtl ? 'خروج' : 'Sign Out'}
-          </button>
-        ) : (
-          !hideSignIn && (
-            <Link
-              to="/auth"
-              className="bg-[#8B5CF6] text-white px-5 py-2 rounded-full text-xs font-bold hover:brightness-110 transition shadow-lg shadow-purple-500/20"
-            >
-              {isRtl ? 'دخول' : 'Sign In'}
-            </Link>
-          )
-        )}
-      </div>
-    </nav>
-  );
-}
-
-// --- Protected Route Guard ---
-function ProtectedRoute({ T, isRtl, children }) {
-  const { isAuthenticated } = useAuth();
-  const location = useLocation();
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace state={{ from: location }} />;
+  if (showSplash) {
+    return (
+      <PageChrome>
+        <SplashOverlay fading={fadeSplash} />
+      </PageChrome>
+    );
   }
-  return children;
-}
-
-// --- Landing Page ---
-function LandingPage({ T, isRtl }) {
-  const navigate = useNavigate();
+  if (!isAuthenticated) {
+    return (
+      <PageChrome>
+        <LoginGate signIn={signIn} busy={busy} />
+      </PageChrome>
+    );
+  }
   return (
-    <div className="relative pt-20 pb-32 px-6">
-      <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-96 blur-[120px] rounded-full -z-10 ${T.heroGlow}`} />
-
-      <div className="max-w-5xl mx-auto text-center">
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 animate-bounce ${T.chipMuted}`}>
-          <Zap size={14} className="text-[#8B5CF6]" />
-          <span className="text-[10px] uppercase font-bold tracking-widest">
-            {isRtl ? 'الجيل القادم من الإنتاجية' : 'Next-Gen Productivity'}
-          </span>
-        </div>
-
-        <h1 className={`text-5xl md:text-8xl font-black mb-8 leading-[1.1] ${T.headline}`}>
-          {isRtl ? 'ذكاء يرتب حياتك' : 'Intelligence That Organizes Your Life'}
-        </h1>
-
-        <p className={`text-lg md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed ${T.textMuted}`}>
-          {isRtl
-            ? 'نظام نَظْم يتعلم من عاداتك، يدير ملفاتك، ويربط بريدك بجدول أعمالك وتقاريرك الميدانية بهدوء واحترافية مطلقة.'
-            : 'NAZM learns your habits, manages your files, and syncs your mail with your schedule and field reports with total professionalism.'}
-        </p>
-
-        <div className="flex flex-col md:flex-row justify-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate('/auth')}
-            className="bg-[#8B5CF6] text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-105 transition duration-300 shadow-lg shadow-purple-500/30"
-          >
-            {isRtl ? 'ابدأ كـ مؤسس الآن' : 'Start as Founder'}
-          </button>
-          <button type="button" className={`px-12 py-5 rounded-2xl font-bold text-xl transition ${T.chip}`}>
-            {isRtl ? 'مشاهدة العرض' : 'Watch Demo'}
-          </button>
-        </div>
-
-        <div className={`mt-20 flex justify-center items-center gap-8 ${T.textFaint}`}>
-          <div className="flex flex-col items-center gap-2"><Laptop size={32} />     <span className="text-[10px]">Web</span></div>
-          <div className="flex flex-col items-center gap-2"><Smartphone size={32} /> <span className="text-[10px]">Mobile</span></div>
-          <div className="flex flex-col items-center gap-2"><Monitor size={32} />    <span className="text-[10px]">Desktop</span></div>
-        </div>
-      </div>
-    </div>
+    <PageChrome>
+      <NazmApp profile={profile} signOut={signOut} />
+    </PageChrome>
   );
 }
 
-// --- Auth Page ---
-function AuthPage({ T, isRtl }) {
-  const { signIn, busy, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/dashboard';
-  const [error, setError] = useState('');
+function NazmApp({ profile, signOut }) {
+  const [activeView, setActiveView] = useState('dashboard');
+  const { tasks: rawTasks, add, toggle, remove } = useTasks();
+  const tasks = rawTasks.map(toViewTask);
 
-  useEffect(() => {
-    if (isAuthenticated) navigate(from, { replace: true });
-  }, [isAuthenticated, from, navigate]);
+  const [messages, setMessages] = useState([
+    { from: 'ai', text: 'مرحباً بك 👋 أنا نَظْم — مساعدك الذكي. أخبرني كيف أساعدك اليوم.' },
+  ]);
+  const [input, setInput] = useState('');
+  const [thinking, setThinking] = useState(false);
 
-  const onMicrosoft = async () => {
-    setError('');
+  const addTask = (title) => {
+    if (!title.trim()) return;
+    add({ titleAr: title, priority: 'medium' });
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim() || thinking) return;
+    const userText = input;
+    setInput('');
+    setMessages((m) => [...m, { from: 'me', text: userText }]);
+    setThinking(true);
     try {
-      await signIn();
-    } catch (err) {
-      setError(err?.errorMessage || err?.message || String(err));
+      const reply = await ask(userText, { isRtl: true });
+      setMessages((m) => [...m, { from: 'ai', text: reply }]);
+    } finally {
+      setThinking(false);
     }
   };
 
-  return (
-    <div className={`max-w-md mx-auto mt-20 mb-24 p-8 rounded-[40px] shadow-2xl border ${T.surface}`}>
-      <div className="text-center mb-8">
-        <Fingerprint size={48} className="mx-auto text-[#8B5CF6] mb-4" />
-        <h2 className={`text-3xl font-black mb-2 ${T.textMain}`}>
-          {isRtl ? 'دخول آمن' : 'Secure Login'}
-        </h2>
-        <p className={`text-sm ${T.textMuted}`}>
-          {isRtl ? 'الوصول مقيد للموظفين المعتمدين فقط' : 'Access restricted to authorized personnel'}
-        </p>
-      </div>
+  const userName = profile?.name || APP.userName;
+  const userInitial = userName ? userName.trim().charAt(0) : 'ن';
 
-      {!isAuthConfigured && (
-        <div className="mb-6 p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-500 flex gap-2 items-start text-[11px]">
-          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-          <span>
-            {isRtl
-              ? 'Microsoft Entra غير مفعّل بعد (Dev mode). اضبط VITE_AZURE_CLIENT_ID لتفعيل الدخول الحقيقي.'
-              : 'Microsoft Entra not configured yet (dev mode). Set VITE_AZURE_CLIENT_ID to enable real sign-in.'}
-          </span>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        <AuthButton
-          T={T}
-          icon={<Mail size={20} className="text-blue-500" />}
-          label={isRtl ? 'متابعة عبر Microsoft 365' : 'Continue with Microsoft 365'}
-          onClick={onMicrosoft}
-          disabled={busy}
-        />
-        <AuthButton
-          T={T}
-          icon={<span className="text-red-500 font-bold italic">G</span>}
-          label={isRtl ? 'Google (قريباً)' : 'Google (soon)'}
-          disabled
-        />
-        <AuthButton
-          T={T}
-          icon={<LogIn size={20} />}
-          label={isRtl ? 'Apple (قريباً)' : 'Apple (soon)'}
-          disabled
-        />
-      </div>
-
-      {error && (
-        <p className="text-[11px] text-center text-red-500 mt-4 leading-relaxed">{error}</p>
-      )}
-
-      <p className={`text-[10px] text-center mt-8 leading-relaxed ${T.textFaint}`}>
-        {isRtl
-          ? 'الدخول يمنحك وصولاً إلى 142 مطالبة، 32 مكتباً، و63 موظفاً. الصلاحية تنتهي تلقائياً بعد انتهاء الجلسة.'
-          : 'Sign-in grants access to 142 claims, 32 offices, and 63 staff. Session expires automatically.'}
-      </p>
-    </div>
-  );
-}
-
-function AuthButton({ icon, label, onClick, disabled = false, T }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`w-full flex items-center gap-4 p-4 rounded-2xl transition group ${T.chip} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-    >
-      <div className="bg-black/10 p-2 rounded-lg group-hover:scale-110 transition">{icon}</div>
-      <span className="font-bold text-sm">{label}</span>
-      <ChevronRight size={16} className="ms-auto opacity-40" />
-    </button>
-  );
-}
-
-// --- Dashboard Layout ---
-function DashboardLayout({ T, isRtl, menuOpen, setMenuOpen }) {
-  const location = useLocation();
-  const activeKey = location.pathname.split('/')[2] || 'home';
-
-  useEffect(() => { setMenuOpen?.(false); }, [location.pathname, setMenuOpen]);
-
-  return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 pb-28 lg:pb-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <aside className="hidden lg:block lg:col-span-3 space-y-6">
-        <SidebarProfile T={T} isRtl={isRtl} />
-        <SidebarNav T={T} isRtl={isRtl} activeKey={activeKey} />
-        {APP.userRole === 'founder' && <SidebarStats T={T} isRtl={isRtl} />}
-      </aside>
-
-      <main className="lg:col-span-9 space-y-6">
-        <Outlet />
-      </main>
-
-      {menuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
-          onClick={() => setMenuOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-label={isRtl ? 'قائمة التنقل' : 'Navigation menu'}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} h-full w-[82%] max-w-xs overflow-y-auto p-4 space-y-4 ${T.page}`}
-          >
-            <div className="flex items-center justify-between">
-              <span className={`text-xs font-bold ${T.textFaint}`}>
-                {isRtl ? 'القائمة' : 'Menu'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setMenuOpen(false)}
-                aria-label={isRtl ? 'إغلاق' : 'Close'}
-                className={`p-2 rounded-xl ${T.chip}`}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <SidebarProfile T={T} isRtl={isRtl} />
-            <SidebarNav T={T} isRtl={isRtl} activeKey={activeKey} />
-            {APP.userRole === 'founder' && <SidebarStats T={T} isRtl={isRtl} />}
-          </div>
-        </div>
-      )}
-
-      <MobileBottomNav T={T} isRtl={isRtl} activeKey={activeKey} />
-    </div>
-  );
-}
-
-// --- Sidebar ---
-function SidebarProfile({ T, isRtl }) {
-  const { profile } = useAuth();
-  const name = profile?.name || APP.userName;
-  return (
-    <div className={`p-6 rounded-[32px] border ${T.surface}`}>
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
-          <User size={20} className="text-[#8B5CF6]" />
-        </div>
-        <div className="flex-1">
-          <p className={`text-[10px] uppercase ${T.textFaint}`}>
-            {isRtl ? APP.userTitle : APP.userTitleEn}
-          </p>
-          <p className={`font-bold text-sm ${T.textMain}`}>{name}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SidebarNav({ T, isRtl, activeKey }) {
-  return (
-    <div className={`p-4 rounded-[32px] border ${T.surface}`}>
-      <nav className="space-y-2">
-        {SECTIONS.map((s) => {
-          const Icon = SECTION_ICONS[s.key] || Layout;
-          return (
-            <NavLink
-              key={s.key}
-              to={`/dashboard/${s.path}`}
-              className={({ isActive }) =>
-                `w-full flex items-center gap-3 p-3 rounded-xl transition text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] ${
-                  isActive
-                    ? 'bg-[#8B5CF6] text-white shadow-lg shadow-purple-500/20'
-                    : `${T.textMuted} hover:bg-black/5`
-                }`
-              }
-            >
-              <Icon size={18} />
-              <span className="text-xs font-bold">{isRtl ? s.labelAr : s.labelEn}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-    </div>
-  );
-}
-
-function SidebarStats({ T, isRtl }) {
-  const { data: stats, loading } = useFieldStats();
-  const list = stats || FIELD_STATS;
-  return (
-    <div className={`bg-gradient-to-br p-6 rounded-[32px] border ${T.surfaceFrom}`}>
-      <h3 className={`text-xs font-bold mb-4 flex items-center gap-2 ${T.textMain}`}>
-        <Lock size={12} className="text-[#8B5CF6]" /> {isRtl ? 'إحصائيات الميدان' : 'Field Stats'}
-        {loading && <span className="text-[9px] text-slate-400">· {isRtl ? 'جارٍ التحميل' : 'loading'}</span>}
-      </h3>
-      <div className="space-y-4">
-        {list.map((s) => (
-          <StatItem
-            key={s.key}
-            label={isRtl ? s.labelAr : s.labelEn}
-            value={s.value}
-            accent={s.accent}
-            T={T}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MobileBottomNav({ T, isRtl }) {
-  const items = SECTIONS.filter((s) => ['home', 'ai', 'field', 'analytics', 'profile'].includes(s.key));
-  return (
-    <nav
-      className={`lg:hidden fixed bottom-0 inset-x-0 backdrop-blur-xl p-3 flex justify-around items-center z-50 ${T.bottomBar}`}
-      aria-label={isRtl ? 'التنقل السفلي' : 'Bottom navigation'}
-    >
-      {items.map((s) => {
-        const Icon = SECTION_ICONS[s.key] || Layout;
-        return (
-          <NavLink
-            key={s.key}
-            to={`/dashboard/${s.path}`}
-            className={({ isActive }) =>
-              `flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] ${
-                isActive ? 'text-[#8B5CF6]' : 'text-slate-400'
-              }`
-            }
-          >
-            <Icon size={22} />
-            <span className="text-[9px] font-bold">
-              {(isRtl ? s.labelAr : s.labelEn).split(' ')[0]}
-            </span>
-          </NavLink>
-        );
-      })}
-    </nav>
-  );
-}
-
-// --- Dashboard Sections ---
-function HomeSection({ T, isRtl }) {
   return (
     <>
-      <div className={`p-8 rounded-[40px] relative overflow-hidden border ${T.surface}`}>
-        <div className="absolute top-0 left-0 w-2 h-full bg-[#8B5CF6]" />
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <Brain className="text-[#8B5CF6] animate-pulse" />
-            <h2 className={`text-2xl font-black ${T.textMain}`}>
-              {isRtl ? 'نظم يفكر معك الآن' : 'Nazm AI Thinking'}
-            </h2>
+      <div className="hidden md:flex min-h-screen text-white">
+        <aside className="order-2 w-[260px] lg:w-[280px] shrink-0 p-5 flex flex-col gap-6">
+          <Logo />
+          <nav className="flex flex-col gap-1">
+            {NAV.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveView(id)}
+                className={`group flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+                  activeView === id
+                    ? 'glass-strong text-white shadow-lg shadow-purple-900/30'
+                    : 'text-purple-200/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${activeView === id ? 'text-purple-200' : 'text-purple-300/60 group-hover:text-purple-200'}`} />
+                <span>{label}</span>
+                {activeView === id && <span className="ms-auto w-1.5 h-1.5 rounded-full bg-purple-200 pulse-soft" />}
+              </button>
+            ))}
+          </nav>
+          <UserCard name={userName} initial={userInitial} onSignOut={signOut} />
+        </aside>
+        <main className="order-1 flex-1 min-w-0 p-5 lg:p-8">
+          <TopBar activeView={activeView} />
+          <div className="mt-6 fade-in" key={activeView}>
+            {activeView === 'dashboard' && <DashboardView tasks={tasks} setActiveView={setActiveView} />}
+            {activeView === 'tasks'     && <TasksView tasks={tasks} toggleTask={toggle} addTask={addTask} removeTask={remove} />}
+            {activeView === 'library'   && <LibraryView files={FILES} />}
+            {activeView === 'assistant' && <AssistantView messages={messages} input={input} setInput={setInput} sendMessage={sendMessage} thinking={thinking} />}
+            {activeView === 'settings'  && <SettingsView profile={profile} userName={userName} onSignOut={signOut} />}
           </div>
-          {APP.office365Connected && (
-            <div className="flex items-center gap-2 bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-[10px]">
-              <CheckCircle2 size={12} /> Office 365 Connected
-            </div>
-          )}
-        </div>
-        <p className={`text-lg md:text-xl leading-relaxed ${T.textMuted}`}>
-          {isRtl ? AI_MESSAGE.ar : AI_MESSAGE.en}
-        </p>
-        <div className="mt-6 flex gap-3 flex-wrap">
-          <button type="button" className="bg-[#8B5CF6] text-white px-6 py-2 rounded-xl text-xs font-bold hover:brightness-110 transition">
-            {isRtl ? 'نعم، نفذ' : 'Yes, Proceed'}
-          </button>
-          <button type="button" className={`px-6 py-2 rounded-xl text-xs font-bold transition ${T.chip}`}>
-            {isRtl ? 'عرض التفاصيل' : 'View Details'}
-          </button>
-        </div>
+        </main>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PlaceholderCard
-          T={T}
-          icon={<BarChart3 size={40} className="text-[#8B5CF6] mb-4 opacity-60" />}
-          title={isRtl ? 'تقرير الأداء الأسبوعي' : 'Weekly Performance'}
-          subtitle="Power BI Embedded View"
-        />
-        <PlaceholderCard
-          T={T}
-          icon={<FileSpreadsheet size={40} className="text-[#8B5CF6] mb-4 opacity-60" />}
-          title={isRtl ? 'سجل المطالبات المالية' : 'Financial Claims Log'}
-          subtitle="Excel Live Sync"
-        />
+      <div className="md:hidden min-h-screen text-white flex flex-col">
+        <div className="flex items-center justify-between px-5 pt-3 pb-1 text-xs text-purple-100/80">
+          <span className="font-medium">9:41</span>
+          <div className="flex items-center gap-1.5">
+            <Signal className="w-3.5 h-3.5" />
+            <Wifi className="w-3.5 h-3.5" />
+            <Battery className="w-4 h-4" />
+          </div>
+        </div>
+        <header className="px-5 pt-3 pb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <NazmLogoSvg size={38} />
+            <div>
+              <div className="text-base font-bold font-display">نَظْم</div>
+              <div className="text-[10px] text-purple-200/60 -mt-0.5">ذكاء يرتّب حياتك</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="w-9 h-9 rounded-full glass flex items-center justify-center">
+              <Search className="w-4 h-4" />
+            </button>
+            <button className="w-9 h-9 rounded-full glass flex items-center justify-center relative">
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-pink-400 rounded-full" />
+            </button>
+          </div>
+        </header>
+        <div className="flex-1 px-4 pb-28 overflow-y-auto scrollbar-thin fade-in" key={'m-' + activeView}>
+          {activeView === 'dashboard' && <DashboardView tasks={tasks} setActiveView={setActiveView} mobile />}
+          {activeView === 'tasks'     && <TasksView tasks={tasks} toggleTask={toggle} addTask={addTask} removeTask={remove} mobile />}
+          {activeView === 'library'   && <LibraryView files={FILES} mobile />}
+          {activeView === 'assistant' && <AssistantView messages={messages} input={input} setInput={setInput} sendMessage={sendMessage} thinking={thinking} mobile />}
+          {activeView === 'settings'  && <SettingsView profile={profile} userName={userName} onSignOut={signOut} mobile />}
+        </div>
+        <nav className="fixed bottom-0 left-0 right-0 px-3 pb-3 pt-2 z-30">
+          <div className="glass-strong rounded-3xl flex items-center justify-between px-2 py-2 shadow-2xl shadow-black/40">
+            {NAV.map(({ id, label, icon: Icon }) => {
+              const active = activeView === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveView(id)}
+                  className="flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-2xl transition-all"
+                >
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${active ? 'brand-grad shadow-lg shadow-purple-900/50' : ''}`}>
+                    <Icon className={`w-5 h-5 ${active ? 'text-white' : 'text-purple-200/60'}`} />
+                  </div>
+                  <span className={`text-[10px] font-medium ${active ? 'text-white' : 'text-purple-200/50'}`}>{label.split(' ')[0]}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       </div>
     </>
   );
 }
 
-function MailSection({ T, isRtl }) {
-  const { tasks, loading, add, toggle, remove } = useTasks();
-  const [filter, setFilter] = useState('open');
-  const [draftAr, setDraftAr] = useState('');
-  const [draftEn, setDraftEn] = useState('');
-  const [priority, setPriority] = useState('medium');
-
-  const visible = tasks.filter((t) =>
-    filter === 'all' ? true : filter === 'done' ? t.done : !t.done,
-  );
-  const openCount = tasks.filter((t) => !t.done).length;
-
-  const submit = (e) => {
-    e.preventDefault();
-    const ar = draftAr.trim();
-    const en = draftEn.trim();
-    if (!ar && !en) return;
-    add({ titleAr: ar || en, titleEn: en || ar, priority });
-    setDraftAr(''); setDraftEn('');
-  };
-
-  const priorityClass = {
-    high:   'bg-red-500/10 text-red-500',
-    medium: 'bg-amber-500/10 text-amber-500',
-    low:    'bg-slate-500/10 text-slate-400',
-  };
-  const priorityLabel = (p) => isRtl
-    ? ({ high: 'عاجل', medium: 'متوسط', low: 'منخفض' }[p] || p)
-    : ({ high: 'High', medium: 'Medium', low: 'Low' }[p] || p);
-  const sourceIcon = { email: Mail, ai: Brain, manual: Plus };
-
+function PageChrome({ children }) {
   return (
-    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
-      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
-        <div className="flex items-center gap-3">
-          <Mail className="text-[#8B5CF6]" size={28} />
-          <h2 className={`text-2xl font-black ${T.textMain}`}>
-            {isRtl ? 'البريد والمهام' : 'Mail & Tasks'}
-          </h2>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full ${T.chipMuted}`}>
-            {openCount} {isRtl ? 'مفتوحة' : 'open'}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {['open', 'done', 'all'].map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
-                filter === f ? 'bg-[#8B5CF6] text-white' : T.chip
-              }`}
-            >
-              {f === 'open' ? (isRtl ? 'مفتوحة' : 'Open')
-                : f === 'done' ? (isRtl ? 'منجزة' : 'Done')
-                : (isRtl ? 'الكل' : 'All')}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div
+      dir="rtl"
+      className="min-h-screen w-full overflow-hidden relative"
+      style={{ fontFamily: "'Tajawal','Noto Sans Arabic',system-ui,sans-serif" }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Reem+Kufi:wght@400;500;600;700&family=Pacifico&display=swap');
+        .font-display { font-family: 'Reem Kufi','Tajawal',system-ui,sans-serif; letter-spacing: -0.01em; }
+        .font-brand   { font-family: 'Pacifico', cursive; letter-spacing: 0.01em; }
+        .glass        { background: linear-gradient(135deg, rgba(167,139,250,0.14), rgba(167,139,250,0.06)); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(196,181,253,0.18); }
+        .glass-strong { background: linear-gradient(135deg, rgba(167,139,250,0.22), rgba(107,33,168,0.18)); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(196,181,253,0.22); }
+        .brand-grad      { background: linear-gradient(135deg, #c084fc 0%, #a855f7 40%, #7c3aed 100%); }
+        .brand-grad-soft { background: linear-gradient(135deg, rgba(167,139,250,0.35), rgba(76,29,149,0.35)); }
+        .halo { filter: blur(80px); opacity: 0.5; }
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.35); border-radius: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .fade-in { animation: fadeUp .5s ease both; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        .pulse-soft { animation: pulseSoft 2.6s ease-in-out infinite; }
+        @keyframes pulseSoft { 0%,100% { opacity:.7; } 50% { opacity:1; } }
+        .wave-line { stroke: rgba(196,181,253,0.25); stroke-width: 1; fill: none; }
+        input, textarea, button { font-family: inherit; }
+        ::selection { background: rgba(167,139,250,0.35); color: #fff; }
 
-      <form onSubmit={submit} className={`p-4 rounded-3xl border mb-6 ${T.inputBorder}`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input
-            type="text"
-            value={draftAr}
-            onChange={(e) => setDraftAr(e.target.value)}
-            placeholder={isRtl ? 'مهمة جديدة بالعربية' : 'New task (Arabic)'}
-            dir="rtl"
-            className={`px-3 py-2 rounded-xl text-sm border ${T.inputBorder} ${T.textMain} bg-transparent`}
-          />
-          <input
-            type="text"
-            value={draftEn}
-            onChange={(e) => setDraftEn(e.target.value)}
-            placeholder={isRtl ? 'مهمة جديدة بالإنجليزية' : 'New task (English)'}
-            dir="ltr"
-            className={`px-3 py-2 rounded-xl text-sm border ${T.inputBorder} ${T.textMain} bg-transparent`}
-          />
-        </div>
-        <div className="flex items-center gap-2 mt-3 flex-wrap">
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className={`px-3 py-2 rounded-xl text-xs border ${T.inputBorder} ${T.textMain} bg-transparent`}
-          >
-            <option value="high">{priorityLabel('high')}</option>
-            <option value="medium">{priorityLabel('medium')}</option>
-            <option value="low">{priorityLabel('low')}</option>
-          </select>
-          <button
-            type="submit"
-            className="px-5 py-2 rounded-xl text-xs font-bold bg-[#8B5CF6] text-white hover:brightness-110 transition flex items-center gap-2"
-          >
-            <Plus size={14} /> {isRtl ? 'إضافة' : 'Add'}
-          </button>
-        </div>
-      </form>
-
-      {loading && <p className={`text-xs ${T.textMuted}`}>{isRtl ? 'جاري التحميل…' : 'Loading…'}</p>}
-
-      <ul className="space-y-2">
-        {visible.map((t) => {
-          const SrcIcon = sourceIcon[t.source] || Mail;
-          return (
-            <li
-              key={t.id}
-              className={`flex items-center gap-3 p-3 rounded-2xl border ${T.inputBorder} ${t.done ? 'opacity-60' : ''}`}
-            >
-              <button
-                type="button"
-                onClick={() => toggle(t.id)}
-                aria-label={isRtl ? 'تبديل الإنجاز' : 'Toggle done'}
-                className={`shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center transition ${
-                  t.done ? 'bg-[#8B5CF6] border-[#8B5CF6] text-white' : `${T.inputBorder} ${T.textFaint}`
-                }`}
-              >
-                {t.done && <Check size={14} />}
-              </button>
-              <SrcIcon size={14} className={T.textFaint} />
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-bold truncate ${t.done ? 'line-through' : ''} ${T.textMain}`}>
-                  {isRtl ? t.titleAr : t.titleEn}
-                </p>
-                {t.due && (
-                  <p className={`text-[11px] ${T.textFaint}`}>
-                    {isRtl ? 'مستحق: ' : 'Due: '}{new Date(t.due).toLocaleDateString()}
-                  </p>
-                )}
-              </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${priorityClass[t.priority] || ''}`}>
-                {priorityLabel(t.priority)}
-              </span>
-              <button
-                type="button"
-                onClick={() => remove(t.id)}
-                aria-label={isRtl ? 'حذف' : 'Delete'}
-                className={`shrink-0 p-1 rounded-lg transition hover:text-red-500 ${T.textFaint}`}
-              >
-                <Trash2 size={14} />
-              </button>
-            </li>
-          );
-        })}
-        {!loading && visible.length === 0 && (
-          <li className={`p-6 text-center text-xs ${T.textMuted}`}>
-            {isRtl ? 'لا توجد مهام في هذا التصنيف.' : 'No tasks in this view.'}
-          </li>
-        )}
-      </ul>
-    </div>
-  );
-}
-
-function SheetsSection({ T, isRtl }) {
-  const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const { data: claims, total, pageCount, loading, error } = useClaims({ page, pageSize: 10 });
-  const filtered = statusFilter === 'all' ? claims : claims.filter((c) => c.status === statusFilter);
-  const totalAmount = filtered.reduce((sum, c) => sum + (c.amount || 0), 0);
-
-  const statusBadge = {
-    pending:  'bg-amber-500/10 text-amber-500',
-    approved: 'bg-green-500/10 text-green-500',
-    rejected: 'bg-red-500/10 text-red-500',
-  };
-  const statusLabel = (s) => isRtl
-    ? ({ pending: 'قيد المراجعة', approved: 'معتمدة', rejected: 'مرفوضة' }[s] || s)
-    : ({ pending: 'Pending',      approved: 'Approved', rejected: 'Rejected' }[s] || s);
-
-  return (
-    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
-      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
-        <div className="flex items-center gap-3">
-          <FileSpreadsheet className="text-[#8B5CF6]" size={28} />
-          <h2 className={`text-2xl font-black ${T.textMain}`}>
-            {isRtl ? 'جداول البيانات — المطالبات' : 'Spreadsheets — Claims'}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {['all', 'pending', 'approved', 'rejected'].map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => { setStatusFilter(s); setPage(1); }}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
-                statusFilter === s ? 'bg-[#8B5CF6] text-white' : T.chip
-              }`}
-            >
-              {s === 'all' ? (isRtl ? 'الكل' : 'All') : statusLabel(s)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {loading && <p className={`text-xs mb-4 ${T.textMuted}`}>{isRtl ? 'جاري التحميل…' : 'Loading…'}</p>}
-      {error && <p className="text-xs text-red-500 mb-4">{error}</p>}
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-xs">
-          <thead>
-            <tr className={`text-[10px] uppercase ${T.textFaint}`}>
-              <th className="text-start p-2">{isRtl ? 'المعرّف' : 'ID'}</th>
-              <th className="text-start p-2">{isRtl ? 'العنوان' : 'Title'}</th>
-              <th className="text-start p-2">{isRtl ? 'المنطقة' : 'Region'}</th>
-              <th className="text-end p-2">{isRtl ? 'المبلغ' : 'Amount'}</th>
-              <th className="text-start p-2">{isRtl ? 'الحالة' : 'Status'}</th>
-              <th className="text-start p-2">{isRtl ? 'التاريخ' : 'Date'}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((c) => (
-              <tr key={c.id} className={`border-t ${T.inputBorder}`}>
-                <td className={`p-2 font-mono ${T.textMuted}`}>{c.id}</td>
-                <td className={`p-2 ${T.textMain}`}>{isRtl ? c.titleAr : c.titleEn}</td>
-                <td className={`p-2 ${T.textMuted}`}>{c.region}</td>
-                <td className={`p-2 text-end font-bold ${T.textMain}`}>
-                  {c.amount.toLocaleString()} {c.currency}
-                </td>
-                <td className="p-2">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusBadge[c.status] || ''}`}>
-                    {statusLabel(c.status)}
-                  </span>
-                </td>
-                <td className={`p-2 ${T.textFaint}`}>
-                  {new Date(c.submittedAt).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-            {!loading && filtered.length === 0 && (
-              <tr>
-                <td colSpan={6} className={`p-6 text-center text-xs ${T.textMuted}`}>
-                  {isRtl ? 'لا توجد مطالبات مطابقة.' : 'No matching claims.'}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-between mt-4 flex-wrap gap-3">
-        <div className={`text-[11px] ${T.textMuted}`}>
-          {isRtl
-            ? `إجمالي المعروض: ${totalAmount.toLocaleString()} ر.س · ${total} مطالبة كلياً`
-            : `Visible total: ${totalAmount.toLocaleString()} SAR · ${total} claims overall`}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className={`px-3 py-1 rounded-full text-xs ${T.chip} ${page <= 1 ? 'opacity-40' : ''}`}
-          >
-            {isRtl ? 'السابق' : 'Prev'}
-          </button>
-          <span className={`text-[11px] ${T.textMuted}`}>{page} / {pageCount}</span>
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-            disabled={page >= pageCount}
-            className={`px-3 py-1 rounded-full text-xs ${T.chip} ${page >= pageCount ? 'opacity-40' : ''}`}
-          >
-            {isRtl ? 'التالي' : 'Next'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AnalyticsSection({ T, isRtl }) {
-  const reportRef = useRef(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const { data: stats } = useFieldStats();
-  const statsList = stats || FIELD_STATS;
-
-  const handleGenerate = async () => {
-    setError('');
-    setBusy(true);
-    try {
-      await generateReport(reportRef.current, {
-        fileName: `nazm-report-${new Date().toISOString().slice(0, 10)}.pdf`,
-        brand: `${APP.brandEn} · ${APP.brandAr}`,
-      });
-    } catch (e) {
-      setError(e?.message || String(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
-      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
-        <div className="flex items-center gap-3">
-          <BarChart3 className="text-[#8B5CF6]" size={28} />
-          <h2 className={`text-2xl font-black ${T.textMain}`}>
-            {isRtl ? 'تقارير الأداء' : 'Analytics'}
-          </h2>
-        </div>
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={busy}
-          className={`px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-[#8B5CF6] text-white hover:brightness-110 ${busy ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <FileDown size={14} />
-          {busy
-            ? (isRtl ? 'جاري التوليد…' : 'Generating…')
-            : (isRtl ? 'تقرير PDF احترافي' : 'Professional PDF Report')}
-        </button>
-      </div>
-
-      {error && (
-        <p className="text-xs text-red-500 mb-4">{error}</p>
-      )}
-
-      <div ref={reportRef} className={`p-6 rounded-3xl border ${T.inputBorder}`}>
-        <h3 className={`text-lg font-black mb-4 ${T.textMain}`}>
-          {isRtl ? 'ملخص الحالة الميدانية' : 'Field Status Summary'}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {statsList.map((s) => (
-            <div key={s.key} className={`p-4 rounded-2xl border ${T.surfaceAlt}`}>
-              <p className={`text-[10px] uppercase ${T.textFaint}`}>
-                {isRtl ? s.labelAr : s.labelEn}
-              </p>
-              <p className={`text-3xl font-black ${T.textMain}`}>{s.value}</p>
-            </div>
-          ))}
-        </div>
-        <p className={`text-sm mt-6 leading-relaxed ${T.textMuted}`}>
-          {isRtl ? AI_MESSAGE.ar : AI_MESSAGE.en}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function AISection({ T, isRtl }) {
-  const [messages, setMessages] = useState(() => [
-    { role: 'assistant', text: isRtl
-      ? 'أهلاً عوض. اسألني عن المطالبات، المكاتب، الموظفين، أو تداخل المواعيد.'
-      : 'Hi Awadh. Ask me about claims, offices, staff, or scheduling conflicts.' },
-  ]);
-  const [input, setInput] = useState('');
-  const [thinking, setThinking] = useState(false);
-  const listRef = useRef(null);
-
-  useEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [messages, thinking]);
-
-  const onSend = async (e) => {
-    e?.preventDefault();
-    const text = input.trim();
-    if (!text || thinking) return;
-    setInput('');
-    setMessages((m) => [...m, { role: 'user', text }]);
-    setThinking(true);
-    const reply = await ask(text, { isRtl });
-    setMessages((m) => [...m, { role: 'assistant', text: reply }]);
-    setThinking(false);
-  };
-
-  const suggestions = isRtl
-    ? ['هل يوجد تداخل في المواعيد؟', 'ملخص المطالبات', 'حالة المكاتب']
-    : ['Any scheduling conflicts?', 'Claims summary', 'Office status'];
-
-  return (
-    <div className={`p-8 rounded-[40px] border ${T.surface} flex flex-col`} style={{ minHeight: 480 }}>
-      <div className="flex items-center gap-3 mb-4">
-        <Brain className="text-[#8B5CF6] animate-pulse" size={28} />
-        <h2 className={`text-2xl font-black ${T.textMain}`}>
-          {isRtl ? 'المساعد الذكي' : 'AI Assistant'}
-        </h2>
-      </div>
+        .splash-bg       { background: radial-gradient(ellipse at center, #d8b4fe 0%, #a855f7 40%, #6b21a8 100%); }
+        .brand-reveal    { animation: brandReveal 1.4s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes brandReveal { 0% { opacity: 0; transform: scale(0.7); filter: blur(10px); } 60% { opacity: 1; filter: blur(0); } 100% { opacity: 1; transform: scale(1); } }
+        .splash-fade-out { animation: fadeOut .7s ease forwards; }
+        @keyframes fadeOut { to { opacity: 0; transform: scale(1.05); } }
+        .progress-bar    { animation: grow 1.8s ease both; animation-delay: .4s; }
+        @keyframes grow { from { width: 0; } to { width: 100%; } }
+        .flow-wave       { animation: flow 8s ease-in-out infinite; }
+        @keyframes flow { 0%,100% { transform: translateX(0); } 50% { transform: translateX(20px); } }
+        .tagline-in      { animation: tagIn 1s ease both; animation-delay: .8s; opacity: 0; }
+        @keyframes tagIn { to { opacity: 1; } }
+      `}</style>
 
       <div
-        ref={listRef}
-        className={`flex-1 overflow-y-auto space-y-3 mb-4 pr-1 ${T.textMain}`}
-        style={{ maxHeight: 360 }}
+        className="fixed inset-0 -z-10"
+        style={{ background: 'radial-gradient(ellipse at top right, #3b0d5f 0%, #1a0b2e 45%, #0d0620 100%)' }}
       >
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                m.role === 'user'
-                  ? 'bg-[#8B5CF6] text-white'
-                  : `${T.chipMuted}`
-              }`}
-            >
-              {m.text}
-            </div>
-          </div>
-        ))}
-        {thinking && (
-          <div className="flex justify-start">
-            <div className={`px-4 py-3 rounded-2xl text-sm ${T.chipMuted}`}>
-              <span className="animate-pulse">{isRtl ? 'يفكر…' : 'Thinking…'}</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-3">
-        {suggestions.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setInput(s)}
-            className={`text-[11px] px-3 py-1.5 rounded-full ${T.chip}`}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-
-      <form onSubmit={onSend} className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={isRtl ? 'اكتب سؤالك…' : 'Type your question…'}
-          className={`flex-1 px-4 py-3 rounded-2xl outline-none text-sm border ${T.inputBorder} ${T.surfaceAlt} ${T.textMain}`}
-          aria-label={isRtl ? 'سؤال للمساعد الذكي' : 'Question for the AI assistant'}
-        />
-        <button
-          type="submit"
-          disabled={thinking || !input.trim()}
-          className={`px-4 py-3 rounded-2xl bg-[#8B5CF6] text-white transition ${thinking || !input.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:brightness-110'}`}
-          aria-label={isRtl ? 'إرسال' : 'Send'}
-        >
-          <Send size={16} />
-        </button>
-      </form>
-    </div>
-  );
-}
-
-function FieldSection({ T, isRtl }) {
-  const { position, error, loading, capture } = useGeolocation();
-  const [visits, setVisits] = useState([]);
-  const online = useOnlineStatus();
-  const { data: offices, loading: officesLoading } = useOffices();
-
-  const saveVisit = () => {
-    if (!position) return;
-    setVisits((v) => [{ ...position, capturedAt: new Date().toISOString() }, ...v]);
-  };
-
-  return (
-    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
-      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <MapPin className="text-[#8B5CF6]" size={28} />
-          <h2 className={`text-2xl font-black ${T.textMain}`}>
-            {isRtl ? 'العمليات الميدانية' : 'Field Operations'}
-          </h2>
-        </div>
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] ${
-          online ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'
-        }`}>
-          {online ? <Wifi size={12} /> : <WifiOff size={12} />}
-          {online ? (isRtl ? 'متصل' : 'Online') : (isRtl ? 'غير متصل' : 'Offline')}
-        </div>
-      </div>
-
-      <p className={`text-sm mb-6 leading-relaxed ${T.textMuted}`}>
-        {isRtl
-          ? 'التقط موقع الزيارة لتوثيق عمليات التفقد في 137,000 كم² من المنطقة. تُحفظ البيانات محلياً وتعمل دون اتصال بالشبكة.'
-          : 'Capture visit coordinates to verify field audits across the 137,000 km² region. Data stays local and works offline.'}
-      </p>
-
-      <button
-        type="button"
-        onClick={capture}
-        disabled={loading}
-        className={`w-full px-6 py-4 rounded-2xl font-black text-base bg-[#8B5CF6] text-white hover:brightness-110 transition flex items-center justify-center gap-3 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        <Crosshair size={18} />
-        {loading
-          ? (isRtl ? 'جاري تحديد الموقع…' : 'Acquiring location…')
-          : (isRtl ? 'التقاط إحداثيات الزيارة' : 'Capture visit coordinates')}
-      </button>
-
-      {error && (
-        <p className="text-xs text-red-500 mt-3">
-          {isRtl ? 'خطأ في الموقع: ' : 'Location error: '}{error.message}
-        </p>
-      )}
-
-      {position && (
-        <div className={`mt-6 p-5 rounded-3xl border ${T.inputBorder}`}>
-          <h3 className={`font-bold text-sm mb-3 ${T.textMain}`}>
-            {isRtl ? 'آخر قراءة GPS' : 'Latest GPS fix'}
-          </h3>
-          <dl className="grid grid-cols-2 gap-3 text-xs">
-            <FieldRow T={T} label={isRtl ? 'خط العرض' : 'Latitude'}  value={position.latitude.toFixed(6)} />
-            <FieldRow T={T} label={isRtl ? 'خط الطول' : 'Longitude'} value={position.longitude.toFixed(6)} />
-            <FieldRow T={T} label={isRtl ? 'الدقة' : 'Accuracy'}     value={`±${Math.round(position.accuracy)} m`} />
-            <FieldRow T={T} label={isRtl ? 'الوقت' : 'Captured'}
-                             value={new Date(position.timestamp).toLocaleTimeString()} />
-          </dl>
-          <button
-            type="button"
-            onClick={saveVisit}
-            className={`mt-4 px-5 py-2 rounded-xl text-xs font-bold transition ${T.chip}`}
-          >
-            {isRtl ? 'حفظ زيارة' : 'Save visit'}
-          </button>
-        </div>
-      )}
-
-      {visits.length > 0 && (
-        <div className="mt-6">
-          <h3 className={`font-bold text-sm mb-3 ${T.textMain}`}>
-            {isRtl ? 'سجل الزيارات' : 'Visit log'}
-          </h3>
-          <ul className="space-y-2">
-            {visits.map((v, i) => (
-              <li
-                key={i}
-                className={`flex items-center justify-between p-3 rounded-xl border ${T.inputBorder}`}
-              >
-                <span className={`text-xs font-mono ${T.textMuted}`}>
-                  {v.latitude.toFixed(4)}, {v.longitude.toFixed(4)}
-                </span>
-                <span className={`text-[11px] ${T.textFaint}`}>
-                  {new Date(v.capturedAt).toLocaleTimeString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="mt-8">
-        <h3 className={`font-bold text-sm mb-3 ${T.textMain}`}>
-          {isRtl ? 'المكاتب الميدانية' : 'Field Offices'}
-          {officesLoading && <span className={`text-[10px] ms-2 ${T.textFaint}`}>· {isRtl ? 'تحميل' : 'loading'}</span>}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {(offices || []).map((o) => (
-            <div key={o.id} className={`p-4 rounded-2xl border ${T.inputBorder} flex items-start justify-between gap-3`}>
-              <div>
-                <p className={`font-bold text-sm ${T.textMain}`}>{isRtl ? o.nameAr : o.nameEn}</p>
-                <p className={`text-[11px] mt-1 ${T.textMuted}`}>
-                  {o.region} · {o.staff} {isRtl ? 'موظف' : 'staff'} · {o.activeTasks} {isRtl ? 'مهمة' : 'tasks'}
-                </p>
-              </div>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                o.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'
-              }`}>
-                {o.status === 'active' ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'صيانة' : 'Maintenance')}
-              </span>
-            </div>
+        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full halo" style={{ background: '#a855f7' }} />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full halo" style={{ background: '#4c1d95' }} />
+        <svg className="absolute inset-0 w-full h-full opacity-40" preserveAspectRatio="none">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <path
+              key={i}
+              className="wave-line"
+              d={`M0,${80 + i * 40} Q 400,${40 + i * 35} 800,${90 + i * 38} T 1600,${60 + i * 40}`}
+            />
           ))}
+        </svg>
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+function SplashOverlay({ fading }) {
+  return (
+    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center splash-bg ${fading ? 'splash-fade-out' : ''}`}>
+      <svg className="absolute inset-0 w-full h-full opacity-30" preserveAspectRatio="none" viewBox="0 0 400 800">
+        <defs>
+          <linearGradient id="wGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stopColor="#fff" stopOpacity="0"   />
+            <stop offset="50%"  stopColor="#fff" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#fff" stopOpacity="0"   />
+          </linearGradient>
+        </defs>
+        <g className="flow-wave">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <path
+              key={i}
+              d={`M-50,${200 + i * 50} Q 150,${150 + i * 45} 300,${210 + i * 48} T 600,${180 + i * 50}`}
+              stroke="url(#wGrad)"
+              strokeWidth="1"
+              fill="none"
+              opacity={0.6 - i * 0.06}
+            />
+          ))}
+        </g>
+      </svg>
+
+      <div className="absolute top-10 right-10 w-60 h-60 rounded-full halo bg-white/40" />
+      <div className="absolute bottom-20 left-10 w-72 h-72 rounded-full halo bg-purple-300/60" />
+
+      <div className="relative flex flex-col items-center brand-reveal">
+        <NazmLogoSvg size={140} />
+        <div className="mt-6 font-display font-bold text-white text-3xl md:text-4xl drop-shadow">نَظْم</div>
+        <div className="mt-2 text-white/90 text-sm md:text-base font-medium tracking-wide tagline-in">ذكاء يرتّب حياتك</div>
+        <div className="mt-1 text-white/60 text-[11px] md:text-xs tracking-[0.25em] uppercase tagline-in">Intelligence that organizes</div>
+        <div className="mt-10 w-56 h-1.5 rounded-full bg-white/20 overflow-hidden">
+          <div className="h-full bg-white rounded-full progress-bar" />
         </div>
       </div>
     </div>
   );
 }
 
-function FieldRow({ T, label, value }) {
+function LoginGate({ signIn, busy }) {
   return (
-    <div>
-      <dt className={`text-[10px] uppercase mb-1 ${T.textFaint}`}>{label}</dt>
-      <dd className={`font-bold ${T.textMain}`}>{value}</dd>
-    </div>
-  );
-}
-
-function useOnlineStatus() {
-  const [online, setOnline] = useState(() =>
-    typeof navigator === 'undefined' ? true : navigator.onLine,
-  );
-  useEffect(() => {
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
-    return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
-    };
-  }, []);
-  return online;
-}
-
-function ProfileSection({ T, isRtl }) {
-  const { profile, isAuthConfigured: configured, signOut } = useAuth();
-  const navigate = useNavigate();
-  const { data: staff } = useStaff();
-  const team = (staff || []).filter((s) => s.id !== 'EMP-001');
-
-  const displayName = profile?.name || APP.userName;
-  const displayTitle = isRtl ? APP.userTitle : APP.userTitleEn;
-  const email = profile?.email || '—';
-  const source = profile?.source === 'entra' ? 'Microsoft Entra' : (isRtl ? 'وضع تطوير محلي' : 'Local dev mode');
-
-  return (
-    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
-          <User size={32} className="text-[#8B5CF6]" />
+    <div className="min-h-screen flex items-center justify-center px-6 text-white">
+      <div className="glass-strong rounded-3xl p-8 md:p-10 w-full max-w-md text-center">
+        <div className="flex justify-center mb-6">
+          <NazmLogoSvg size={96} />
         </div>
-        <div>
-          <h2 className={`text-2xl font-black ${T.textMain}`}>{displayName}</h2>
-          <p className={`text-sm ${T.textMuted}`}>{displayTitle}</p>
-        </div>
-      </div>
-
-      <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ProfileRow T={T} label={isRtl ? 'البريد الإلكتروني' : 'Email'}        value={email} />
-        <ProfileRow T={T} label={isRtl ? 'مصدر المصادقة' : 'Auth source'}      value={source} />
-        <ProfileRow T={T} label={isRtl ? 'الدور' : 'Role'}                     value={isRtl ? 'المؤسس' : 'Founder'} />
-        <ProfileRow T={T} label={isRtl ? 'المنطقة' : 'Region'}                 value={isRtl ? 'مكة المكرمة' : 'Makkah'} />
-      </dl>
-
-      <div className="mt-8 flex gap-3 flex-wrap">
+        <h1 className="font-display text-3xl font-bold">نَظْم</h1>
+        <p className="text-purple-200/70 text-sm mt-2">ذكاء يرتّب حياتك</p>
+        <p className="text-purple-100/80 text-sm mt-6 leading-relaxed">
+          سجّل الدخول بحساب Microsoft لبدء العمل. بياناتك تبقى مشفّرة ولا تُشارك.
+        </p>
         <button
-          type="button"
-          onClick={async () => { await signOut(); navigate('/'); }}
-          className="bg-red-500/90 text-white px-6 py-2 rounded-xl text-xs font-bold hover:brightness-110 transition flex items-center gap-2"
+          onClick={signIn}
+          disabled={busy}
+          className="mt-8 w-full brand-grad px-6 py-3 rounded-2xl font-semibold shadow-lg shadow-purple-900/40 disabled:opacity-50"
         >
-          <LogOut size={14} /> {isRtl ? 'تسجيل الخروج' : 'Sign out'}
+          {busy ? 'جارٍ الدخول…' : 'الدخول إلى نَظْم'}
         </button>
-        {!configured && (
-          <span className="text-[11px] text-amber-500 self-center">
-            {isRtl ? 'لتفعيل Microsoft Entra: اضبط VITE_AZURE_CLIENT_ID' : 'Configure VITE_AZURE_CLIENT_ID to enable Entra'}
-          </span>
-        )}
+        <p className="mt-4 text-[11px] text-purple-200/50">Microsoft Entra ID · وضع التطوير</p>
+      </div>
+    </div>
+  );
+}
+
+function NazmLogoSvg({ size = 48 }) {
+  const r = size * 0.22;
+  return (
+    <div
+      className="relative flex items-center justify-center shadow-xl shadow-purple-900/40 overflow-hidden"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: r,
+        background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #7c3aed 100%)',
+      }}
+    >
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.35) 0%, transparent 55%)' }}
+      />
+      <span
+        className="relative font-brand text-white leading-none"
+        style={{
+          fontSize: size * 0.42,
+          fontFamily: "'Pacifico', cursive",
+          textShadow: '0 1px 3px rgba(0,0,0,0.15)',
+          transform: 'translateY(-2%)',
+        }}
+      >
+        Nazm
+      </span>
+      <svg
+        className="absolute"
+        style={{ bottom: size * 0.22, left: size * 0.22, width: size * 0.56, height: size * 0.08 }}
+        viewBox="0 0 100 15"
+        preserveAspectRatio="none"
+      >
+        <path d="M 2 8 Q 30 2, 50 7 T 98 6" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.95" />
+      </svg>
+    </div>
+  );
+}
+
+function Logo() {
+  return (
+    <div className="flex items-center gap-3 px-2 pt-1">
+      <NazmLogoSvg size={46} />
+      <div>
+        <div className="font-display font-bold text-lg leading-none">نَظْم</div>
+        <div className="text-[11px] text-purple-200/60 mt-1 tracking-wide">INTELLIGENCE THAT ORGANIZES</div>
+      </div>
+    </div>
+  );
+}
+
+function UserCard({ name, initial, onSignOut }) {
+  return (
+    <div className="mt-auto glass rounded-2xl p-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl brand-grad flex items-center justify-center font-bold text-white font-display">
+          {initial}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold truncate">{name}</div>
+          <div className="text-xs text-purple-200/60 truncate">{APP.userTitle}</div>
+        </div>
+        <button onClick={onSignOut} className="ms-auto text-purple-200/50 hover:text-white" title="خروج">
+          <LogOut className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TopBar({ activeView }) {
+  const titles = {
+    dashboard: { ar: 'صباح الخير',       sub: 'إليك ملخص يومك' },
+    tasks:     { ar: 'المهام والزمن',     sub: 'نظّم مهامك، ورتّب جدولك بذكاء' },
+    library:   { ar: 'المكتبة',           sub: 'ملفاتك مرتّبة، ومربوطة بمشاريعك' },
+    assistant: { ar: 'المساعد الذكي',     sub: 'نَظْم يفكر معك' },
+    settings:  { ar: 'الإعدادات',         sub: 'خصّص تجربتك' },
+  };
+  const t = titles[activeView] || titles.dashboard;
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <h1 className="font-display text-2xl lg:text-3xl font-bold">{t.ar}</h1>
+        <p className="text-sm text-purple-200/60 mt-1">{t.sub}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="glass rounded-2xl px-4 py-2.5 flex items-center gap-2 w-[280px]">
+          <Search className="w-4 h-4 text-purple-200/60" />
+          <input placeholder="ابحث في نَظْم..." className="bg-transparent outline-none text-sm flex-1 placeholder-purple-200/40" />
+          <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded border border-white/10">⌘K</kbd>
+        </div>
+        <button className="w-10 h-10 rounded-2xl glass flex items-center justify-center relative">
+          <Bell className="w-4 h-4" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-pink-400 rounded-full" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DashboardView({ tasks, setActiveView, mobile }) {
+  const done = tasks.filter((t) => t.done).length;
+  const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+  return (
+    <div className="space-y-4 md:space-y-6">
+      <div className="glass-strong rounded-3xl p-5 md:p-7 relative overflow-hidden">
+        <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full brand-grad opacity-40 blur-3xl" />
+        <div className="flex items-start justify-between gap-4 relative">
+          <div className="flex-1">
+            <div className="text-xs text-purple-200/70 mb-1">
+              {new Intl.DateTimeFormat('ar-SA-u-nu-arab', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}
+            </div>
+            <h2 className="font-display text-xl md:text-3xl font-bold leading-tight">يومك منظّم بنسبة {pct}٪</h2>
+            <p className="text-sm text-purple-100/70 mt-2 max-w-md">
+              أكملت {done} من {tasks.length} مهام. اقتراح نَظْم: ابدأ بالمهام العاجلة أولاً.
+            </p>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setActiveView('tasks')} className="brand-grad px-4 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-purple-900/40">ابدأ الآن</button>
+              <button onClick={() => setActiveView('assistant')} className="glass px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> اسأل نَظْم
+              </button>
+            </div>
+          </div>
+          {!mobile && (
+            <div className="relative w-28 h-28">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
+                <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g)" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${pct * 2.64} 300`} />
+                <defs>
+                  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%"   stopColor="#e9d5ff" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center font-display text-2xl font-bold">{pct}٪</div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {team.length > 0 && (
-        <div className="mt-8">
-          <h3 className={`font-bold text-sm mb-3 ${T.textMain}`}>
-            {isRtl ? 'الفريق' : 'Team'}
-          </h3>
-          <ul className="space-y-2">
-            {team.map((m) => (
-              <li
-                key={m.id}
-                className={`flex items-center justify-between gap-3 p-3 rounded-xl border ${T.inputBorder}`}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-purple-500/15 flex items-center justify-center border border-purple-500/30 shrink-0">
-                    <User size={16} className="text-[#8B5CF6]" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className={`text-sm font-bold truncate ${T.textMain}`}>
-                      {isRtl ? m.nameAr : m.nameEn}
-                    </p>
-                    <p className={`text-[11px] truncate ${T.textMuted}`}>
-                      {isRtl ? m.roleAr : m.roleEn}
-                    </p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <StatCard icon={Target}       label="مهام اليوم"    value={tasks.length} hint="مجموع" />
+        <StatCard icon={CheckCircle2} label="مكتملة"       value={done}          hint={`${pct}٪ من اليوم`} />
+        <StatCard icon={Clock}        label="وقت مركّز"     value="٤ س ٢٠ د"      hint="أفضل من المعتاد" />
+        <StatCard icon={Flame}        label="سلسلة متواصلة" value="١٢ يوم"        hint="استمر 🔥" />
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 md:gap-6">
+        <div className="md:col-span-2 glass rounded-3xl p-5 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display font-bold text-lg">جدول اليوم</h3>
+            <button onClick={() => setActiveView('tasks')} className="text-xs text-purple-200/70 hover:text-white">عرض الكل ←</button>
+          </div>
+          <div className="space-y-2">
+            {tasks.slice(0, 4).map((t) => <TaskRow key={t.id} task={t} compact />)}
+            {tasks.length === 0 && <div className="text-sm text-purple-200/60 py-4 text-center">لا توجد مهام لهذا اليوم.</div>}
+          </div>
+        </div>
+        <div className="glass rounded-3xl p-5 md:p-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full brand-grad-soft opacity-30" />
+          <div className="relative">
+            <div className="w-11 h-11 rounded-2xl brand-grad flex items-center justify-center mb-3"><Brain className="w-5 h-5" /></div>
+            <h3 className="font-display font-bold text-lg mb-1">رؤية نَظْم</h3>
+            <p className="text-sm text-purple-100/75 leading-relaxed">
+              لاحظت أن إنتاجيتك ترتفع ٢٨٪ في الصباح الباكر. أقترح نقل المهام العاجلة إلى ٨ صباحاً.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button className="text-xs brand-grad px-3 py-1.5 rounded-lg font-medium">تطبيق</button>
+              <button className="text-xs glass px-3 py-1.5 rounded-lg font-medium">لاحقاً</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass rounded-3xl p-5 md:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display font-bold text-lg">مشاريعك النشطة</h3>
+          <Plus className="w-5 h-5 text-purple-200/60 cursor-pointer hover:text-white" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <ProjectCard name="هوية نَظْم البصرية" progress={85} tag="تصميم" members={3} />
+          <ProjectCard name="حملة الربع الثاني"  progress={42} tag="تسويق" members={5} />
+          <ProjectCard name="أتمتة التقارير"      progress={60} tag="تقني"  members={2} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, hint }) {
+  return (
+    <div className="glass rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="w-9 h-9 rounded-xl brand-grad-soft flex items-center justify-center"><Icon className="w-4 h-4" /></div>
+        <TrendingUp className="w-3.5 h-3.5 text-green-300/80" />
+      </div>
+      <div className="text-xs text-purple-200/60 mb-0.5">{label}</div>
+      <div className="font-display font-bold text-xl">{value}</div>
+      <div className="text-[10px] text-purple-200/50 mt-0.5">{hint}</div>
+    </div>
+  );
+}
+
+function ProjectCard({ name, progress, tag, members }) {
+  return (
+    <div className="glass rounded-2xl p-4 hover:bg-white/5 transition-colors cursor-pointer">
+      <div className="flex items-start justify-between mb-3">
+        <div className="w-9 h-9 rounded-xl brand-grad flex items-center justify-center"><Layers className="w-4 h-4" /></div>
+        <span className="text-[10px] glass px-2 py-0.5 rounded-full">{tag}</span>
+      </div>
+      <div className="font-semibold text-sm mb-2 truncate">{name}</div>
+      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-2">
+        <div className="h-full brand-grad rounded-full" style={{ width: `${progress}%` }} />
+      </div>
+      <div className="flex items-center justify-between text-[11px] text-purple-200/60">
+        <span>{progress}٪ منجز</span>
+        <span>{members} أعضاء</span>
+      </div>
+    </div>
+  );
+}
+
+function TasksView({ tasks, toggleTask, addTask, removeTask }) {
+  const [filter, setFilter] = useState('all');
+  const [newTask, setNewTask] = useState('');
+  const filtered = tasks.filter((t) => (filter === 'all' ? true : filter === 'active' ? !t.done : t.done));
+  const handleAdd = () => { addTask(newTask); setNewTask(''); };
+  return (
+    <div className="grid md:grid-cols-3 gap-6">
+      <div className="md:col-span-2 space-y-4">
+        <div className="glass rounded-2xl p-2 flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl brand-grad flex items-center justify-center shrink-0"><Plus className="w-5 h-5" /></div>
+          <input
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+            placeholder="أضف مهمة جديدة..."
+            className="flex-1 bg-transparent outline-none text-sm placeholder-purple-200/40"
+          />
+          <button onClick={handleAdd} className="brand-grad px-4 py-2 rounded-xl text-sm font-medium">إضافة</button>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { id: 'all',    label: `الكل (${tasks.length})` },
+            { id: 'active', label: `نشطة (${tasks.filter((t) => !t.done).length})` },
+            { id: 'done',   label: `مكتملة (${tasks.filter((t) => t.done).length})` },
+          ].map((f) => (
+            <button key={f.id} onClick={() => setFilter(f.id)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${filter === f.id ? 'brand-grad' : 'glass text-purple-200/70'}`}>
+              {f.label}
+            </button>
+          ))}
+          <button className="glass px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 ms-auto"><Filter className="w-3 h-3" /> تصفية</button>
+        </div>
+        <div className="space-y-2">
+          {filtered.map((t) => <TaskRow key={t.id} task={t} onToggle={() => toggleTask(t.id)} onRemove={() => removeTask(t.id)} />)}
+          {filtered.length === 0 && <div className="glass rounded-2xl p-8 text-center text-purple-200/60">لا توجد مهام هنا ✨</div>}
+        </div>
+      </div>
+      <div className="space-y-4">
+        <MiniCalendar />
+        <div className="glass rounded-3xl p-5">
+          <h3 className="font-display font-bold mb-3">وسوم شائعة</h3>
+          <div className="flex flex-wrap gap-2">
+            {['عمل', 'اجتماعات', 'شخصي', 'صحة', 'تعلم', 'تسويق'].map((tag) => (
+              <span key={tag} className="glass px-3 py-1 rounded-full text-xs flex items-center gap-1"><Tag className="w-3 h-3" /> {tag}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TaskRow({ task, onToggle, onRemove, compact }) {
+  const priorityColors = { high: 'bg-pink-400', medium: 'bg-amber-300', low: 'bg-emerald-300' };
+  return (
+    <div className={`glass rounded-2xl ${compact ? 'p-3' : 'p-4'} flex items-center gap-3 group hover:bg-white/5 transition-colors`}>
+      <button onClick={onToggle} className="shrink-0">
+        {task.done
+          ? <CheckCircle2 className="w-5 h-5 text-purple-300" />
+          : <Circle className="w-5 h-5 text-purple-200/50 group-hover:text-purple-200" />}
+      </button>
+      <div className="flex-1 min-w-0">
+        <div className={`text-sm font-medium truncate ${task.done ? 'line-through text-purple-200/40' : ''}`}>{task.title}</div>
+        <div className="flex items-center gap-3 mt-0.5">
+          <span className="text-[11px] text-purple-200/60 flex items-center gap-1"><Clock className="w-3 h-3" /> {task.time}</span>
+          <span className="text-[11px] text-purple-200/60 flex items-center gap-1"><Tag className="w-3 h-3" /> {task.tag}</span>
+        </div>
+      </div>
+      <span className={`w-2 h-2 rounded-full ${priorityColors[task.priority] || 'bg-purple-300'}`} />
+      {!compact && onRemove && (
+        <button onClick={onRemove} className="text-purple-200/40 hover:text-pink-300"><MoreVertical className="w-4 h-4" /></button>
+      )}
+    </div>
+  );
+}
+
+function MiniCalendar() {
+  const today = new Date();
+  const month = today.toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+  return (
+    <div className="glass rounded-3xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-display font-bold">{month}</h3>
+        <div className="flex gap-1">
+          <button className="w-7 h-7 glass rounded-lg flex items-center justify-center"><ChevronRight className="w-4 h-4" /></button>
+          <button className="w-7 h-7 glass rounded-lg flex items-center justify-center"><ChevronLeft className="w-4 h-4" /></button>
+        </div>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-purple-200/60 mb-2">
+        {['أح', 'إث', 'ثل', 'أر', 'خم', 'جم', 'سب'].map((d) => <div key={d}>{d}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: firstDay }).map((_, i) => <div key={'e' + i} />)}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1;
+          const isToday = day === today.getDate();
+          const hasEvent = [3, 10, 15, 19, 22, 28].includes(day);
+          return (
+            <button key={day} className={`aspect-square rounded-lg text-xs font-medium flex items-center justify-center relative ${isToday ? 'brand-grad' : 'hover:bg-white/5'}`}>
+              {day}
+              {hasEvent && !isToday && <span className="absolute bottom-1 w-1 h-1 rounded-full bg-purple-300" />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function LibraryView({ files }) {
+  const typeIcon = { doc: FileText, sheet: BarChart3, video: Video, image: ImageIcon, audio: Music, other: File };
+  const typeColor = {
+    doc:   'from-purple-500 to-indigo-600',
+    sheet: 'from-emerald-500 to-teal-600',
+    video: 'from-pink-500 to-rose-600',
+    image: 'from-amber-400 to-orange-500',
+    audio: 'from-cyan-400 to-blue-600',
+    other: 'from-slate-400 to-slate-600',
+  };
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { icon: Upload,     label: 'رفع ملف' },
+          { icon: FolderOpen, label: 'مجلد جديد' },
+          { icon: Star,       label: 'المفضلة' },
+          { icon: Archive,    label: 'الأرشيف' },
+        ].map((a, i) => (
+          <button key={i} className="glass rounded-2xl p-4 flex items-center gap-3 hover:bg-white/5 transition-colors">
+            <div className="w-10 h-10 rounded-xl brand-grad-soft flex items-center justify-center"><a.icon className="w-4 h-4" /></div>
+            <span className="text-sm font-medium">{a.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="glass rounded-3xl p-5 md:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display font-bold text-lg">الملفات الأخيرة</h3>
+          <button className="glass px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5"><Filter className="w-3 h-3" /> فلترة</button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {files.map((f) => {
+            const Icon = typeIcon[f.type] || File;
+            return (
+              <div key={f.id} className="glass rounded-2xl p-4 flex items-center gap-3 hover:bg-white/5 transition-colors cursor-pointer group">
+                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${typeColor[f.type]} flex items-center justify-center shrink-0`}><Icon className="w-5 h-5" /></div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate">{f.name}</div>
+                  <div className="text-[11px] text-purple-200/60 mt-0.5 flex items-center gap-2">
+                    <span>{f.size}</span>
+                    <span>•</span>
+                    <span>{f.date}</span>
+                    <span className="glass px-1.5 py-0.5 rounded text-[10px]">{f.tag}</span>
                   </div>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                  m.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-slate-500/10 text-slate-400'
-                }`}>
-                  {m.status === 'active' ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'إجازة' : 'On leave')}
-                </span>
-              </li>
-            ))}
-          </ul>
+                <MoreVertical className="w-4 h-4 text-purple-200/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            );
+          })}
         </div>
-      )}
-    </div>
-  );
-}
-
-function ProfileRow({ T, label, value }) {
-  return (
-    <div className={`p-3 rounded-xl border ${T.inputBorder}`}>
-      <dt className={`text-[10px] uppercase mb-1 ${T.textFaint}`}>{label}</dt>
-      <dd className={`text-sm font-bold ${T.textMain}`}>{value}</dd>
-    </div>
-  );
-}
-
-function SettingsSection({ T, isRtl, theme, setTheme }) {
-  return (
-    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
-      <div className="flex items-center gap-3 mb-6">
-        <SettingsIcon className="text-[#8B5CF6]" size={28} />
-        <h2 className={`text-2xl font-black ${T.textMain}`}>{isRtl ? 'الإعدادات' : 'Settings'}</h2>
       </div>
-
-      <div className="space-y-3">
-        <SettingRow
-          T={T}
-          label={isRtl ? 'المظهر' : 'Appearance'}
-          hint={isRtl ? 'تبديل بين الوضع الليلي والنهاري' : 'Toggle dark and light'}
-          control={
-            <button
-              type="button"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className={`text-xs px-3 py-1.5 rounded-full transition ${T.chip}`}
-            >
-              {theme === 'dark' ? (isRtl ? 'ليلي' : 'Dark') : (isRtl ? 'نهاري' : 'Light')}
-            </button>
-          }
-        />
-        <SettingRow
-          T={T}
-          label={isRtl ? 'الإشعارات' : 'Notifications'}
-          hint={isRtl ? 'قريباً' : 'Coming soon'}
-          control={<Bell size={16} className={T.textFaint} />}
-        />
-        <SettingRow
-          T={T}
-          label={isRtl ? 'الأمان' : 'Security'}
-          hint={isAuthConfigured ? 'Microsoft Entra' : (isRtl ? 'وضع تطوير محلي' : 'Dev mode')}
-          control={<Shield size={16} className={T.textFaint} />}
-        />
+      <div className="glass-strong rounded-3xl p-5 md:p-6 flex items-start gap-4 relative overflow-hidden">
+        <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full brand-grad opacity-30 blur-3xl" />
+        <div className="w-11 h-11 rounded-2xl brand-grad flex items-center justify-center shrink-0 relative"><Sparkles className="w-5 h-5" /></div>
+        <div className="flex-1 relative">
+          <h4 className="font-display font-bold mb-1">اقتراح ذكي من نَظْم</h4>
+          <p className="text-sm text-purple-100/75">وجدت ٣ ملفات مكررة تستهلك ٨٢ م.ب. أنظّفها نيابةً عنك؟</p>
+        </div>
+        <button className="brand-grad px-4 py-2 rounded-xl text-sm font-medium shrink-0 relative">نعم، رتّب</button>
       </div>
     </div>
   );
 }
 
-function SettingRow({ T, label, hint, control }) {
+function AssistantView({ messages, input, setInput, sendMessage, thinking }) {
+  const endRef = useRef(null);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, thinking]);
+  const suggestions = [
+    'ما ملخص مهام اليوم؟',
+    'ما التعارضات في جدولي؟',
+    'ما حالة المطالبات المالية؟',
+    'كم مكتباً تحت إشرافي؟',
+  ];
   return (
-    <div className={`flex items-center justify-between p-4 rounded-2xl border ${T.inputBorder}`}>
-      <div>
-        <p className={`font-bold text-sm ${T.textMain}`}>{label}</p>
-        <p className={`text-[11px] ${T.textFaint}`}>{hint}</p>
+    <div className="grid md:grid-cols-4 gap-6">
+      <div className="md:col-span-3 glass rounded-3xl p-5 md:p-6 flex flex-col" style={{ minHeight: '60vh' }}>
+        <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+          <div className="relative">
+            <NazmLogoSvg size={44} />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#1a0b2e]" />
+          </div>
+          <div>
+            <div className="font-display font-bold">نَظْم</div>
+            <div className="text-[11px] text-purple-200/60">متصل • يفكر معك</div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto scrollbar-thin py-4 space-y-3">
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.from === 'me' ? 'justify-start' : 'justify-end'}`}>
+              <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.from === 'me' ? 'glass text-white rounded-br-sm' : 'brand-grad text-white rounded-bl-sm shadow-lg shadow-purple-900/30'}`}>
+                {m.text}
+              </div>
+            </div>
+          ))}
+          {thinking && (
+            <div className="flex justify-end">
+              <div className="brand-grad text-white rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm">
+                <span className="pulse-soft">يفكر…</span>
+              </div>
+            </div>
+          )}
+          <div ref={endRef} />
+        </div>
+        <div className="flex flex-wrap gap-2 pb-3">
+          {suggestions.map((s) => (
+            <button key={s} onClick={() => setInput(s)} className="glass px-3 py-1.5 rounded-full text-xs text-purple-200/80 hover:text-white hover:bg-white/10">{s}</button>
+          ))}
+        </div>
+        <div className="glass-strong rounded-2xl p-2 flex items-end gap-2">
+          <button className="w-9 h-9 rounded-xl flex items-center justify-center text-purple-200/70 hover:text-white"><Paperclip className="w-4 h-4" /></button>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            placeholder="اكتب لنَظْم..."
+            rows={1}
+            className="flex-1 bg-transparent outline-none text-sm resize-none py-2 placeholder-purple-200/40"
+          />
+          <button className="w-9 h-9 rounded-xl flex items-center justify-center text-purple-200/70 hover:text-white"><Mic className="w-4 h-4" /></button>
+          <button onClick={sendMessage} disabled={thinking} className="w-9 h-9 rounded-xl brand-grad flex items-center justify-center shadow-lg shadow-purple-900/40 disabled:opacity-50">
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-      {control}
-    </div>
-  );
-}
-
-// --- Helpers ---
-function SectionShell({ icon, title, desc, T }) {
-  return (
-    <div className={`p-8 rounded-[40px] border ${T.surface}`}>
-      <div className="flex items-center gap-3 mb-4">
-        {icon}
-        <h2 className={`text-2xl font-black ${T.textMain}`}>{title}</h2>
+      <div className="space-y-4">
+        <div className="glass rounded-3xl p-5">
+          <h3 className="font-display font-bold mb-3">نَظْم يقدر</h3>
+          <div className="space-y-3">
+            {[
+              { icon: CalendarDays, text: 'يرتّب جدولك تلقائياً' },
+              { icon: Zap,          text: 'يقترح الأولويات' },
+              { icon: FolderOpen,   text: 'يرتّب ملفاتك بذكاء' },
+              { icon: Target,       text: 'يذكّرك في الوقت المناسب' },
+              { icon: BookOpen,     text: 'يلخّص مستنداتك' },
+            ].map((c, i) => (
+              <div key={i} className="flex items-center gap-3 text-sm">
+                <div className="w-8 h-8 rounded-xl glass flex items-center justify-center"><c.icon className="w-4 h-4 text-purple-200" /></div>
+                <span className="text-purple-100/80">{c.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="glass-strong rounded-3xl p-5 relative overflow-hidden">
+          <div className="absolute inset-0 brand-grad-soft opacity-50" />
+          <div className="relative">
+            <Sparkles className="w-6 h-6 mb-2" />
+            <h4 className="font-display font-bold">خصوصيتك أولاً</h4>
+            <p className="text-xs text-purple-100/75 mt-1 leading-relaxed">
+              كل بياناتك مشفّرة، ولا يتم مشاركتها. نَظْم يتعلم منك — ويخدمك وحدك.
+            </p>
+          </div>
+        </div>
       </div>
-      <p className={`text-base md:text-lg leading-relaxed ${T.textMuted}`}>{desc}</p>
     </div>
   );
 }
 
-function PlaceholderCard({ T, icon, title, subtitle }) {
+function SettingsView({ profile, userName, onSignOut }) {
+  const [darkMode, setDarkMode] = useState(true);
+  const [notifications, setNotifications] = useState(true);
+  const [autoSchedule, setAutoSchedule] = useState(true);
+  const initial = userName ? userName.trim().charAt(0) : 'ن';
+  const email = profile?.email || 'user@nazm.ai';
   return (
-    <div className={`h-64 rounded-[32px] p-6 flex flex-col items-center justify-center text-center border ${T.surfaceAlt}`}>
-      {icon}
-      <h4 className={`font-bold text-sm mb-1 ${T.textMain}`}>{title}</h4>
-      <p className={`text-[10px] italic ${T.textFaint}`}>{subtitle}</p>
+    <div className="grid md:grid-cols-3 gap-6">
+      <div className="glass rounded-3xl p-6 md:col-span-1 flex flex-col items-center text-center">
+        <div className="w-20 h-20 rounded-3xl brand-grad flex items-center justify-center text-white font-display font-bold text-3xl mb-3 shadow-xl shadow-purple-900/40">
+          {initial}
+        </div>
+        <h3 className="font-display font-bold text-lg">{userName}</h3>
+        <p className="text-xs text-purple-200/60 mb-4">{email}</p>
+        <div className="glass w-full rounded-xl p-3 text-right">
+          <div className="text-[11px] text-purple-200/60">الخطة الحالية</div>
+          <div className="font-semibold text-sm">نَظْم الذكي — سنوي</div>
+        </div>
+        <button onClick={onSignOut} className="w-full mt-3 brand-grad py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+          <LogOut className="w-4 h-4" /> تسجيل الخروج
+        </button>
+      </div>
+      <div className="md:col-span-2 space-y-4">
+        <div className="glass rounded-3xl p-6">
+          <h3 className="font-display font-bold mb-4">التفضيلات</h3>
+          <Toggle label="الوضع الليلي"      desc="تجربة أهدأ للعين"                          icon={Moon}     value={darkMode}      onChange={setDarkMode} />
+          <Toggle label="الإشعارات الذكية"  desc="نَظْم يختار الوقت المناسب للتنبيه"          icon={Bell}     value={notifications} onChange={setNotifications} />
+          <Toggle label="الجدولة التلقائية" desc="اسمح لنَظْم بإعادة ترتيب مهامك"             icon={Sparkles} value={autoSchedule}  onChange={setAutoSchedule} />
+        </div>
+        <div className="glass rounded-3xl p-6">
+          <h3 className="font-display font-bold mb-4">اللغة والمنطقة</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button className="brand-grad rounded-xl p-3 text-sm font-semibold flex items-center justify-center gap-2"><Globe className="w-4 h-4" /> العربية</button>
+            <button className="glass rounded-xl p-3 text-sm font-semibold flex items-center justify-center gap-2"><Globe className="w-4 h-4" /> English</button>
+          </div>
+        </div>
+        <div className="glass-strong rounded-3xl p-6 relative overflow-hidden">
+          <div className="absolute inset-0 brand-grad-soft opacity-40" />
+          <div className="relative flex items-center justify-between gap-4">
+            <div>
+              <div className="font-display font-bold">ذكاء يرتّب حياتك</div>
+              <div className="text-xs text-purple-100/70 mt-1">نَظْم — الإصدار ٢.٠.٠</div>
+            </div>
+            <NazmLogoSvg size={56} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function StatItem({ label, value, accent, T }) {
-  const accentClass =
-    accent === 'cyan'   ? 'text-[#A5F3FC]' :
-    accent === 'purple' ? 'text-[#8B5CF6]' :
-                          T.textMain;
+function Toggle({ label, desc, icon: Icon, value, onChange }) {
   return (
-    <div className={`flex justify-between items-end border-b pb-2 ${T.divider}`}>
-      <span className={`text-[10px] uppercase ${T.textFaint}`}>{label}</span>
-      <span className={`text-xl font-black ${accentClass}`}>{value}</span>
+    <div className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0">
+      <div className="w-10 h-10 rounded-xl glass flex items-center justify-center shrink-0"><Icon className="w-4 h-4 text-purple-200" /></div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold">{label}</div>
+        <div className="text-[11px] text-purple-200/60 truncate">{desc}</div>
+      </div>
+      <button onClick={() => onChange(!value)} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${value ? 'brand-grad' : 'bg-white/15'}`}>
+        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${value ? 'right-0.5' : 'right-[22px]'}`} />
+      </button>
     </div>
   );
 }
