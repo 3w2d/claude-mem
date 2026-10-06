@@ -101,7 +101,7 @@ struct LinkView: View {
                 Image(systemName: "building.2.crop.circle.fill")
                     .font(.system(size: 72)).foregroundColor(brand).padding(.top, 40)
                 Text("إدارة المشروع").font(.largeTitle.bold())
-                Text("على الكمبيوتر: شغّل «تشغيل_الخادم» ثم اضغط «ربط جوال».\nالجوال والكمبيوتر على نفس الواي فاي.")
+                Text("على الكمبيوتر: شغّل «إدارة_المشروع» ثم اضغط «ربط جوال».\nالجوال والكمبيوتر على نفس الواي فاي.")
                     .multilineTextAlignment(.center).foregroundColor(.secondary)
                 Button { scanning = true } label: {
                     Label("ربط بالكمبيوتر بالكاميرا", systemImage: "qrcode.viewfinder")
@@ -148,7 +148,7 @@ struct WebScreen: View {
                 VStack(spacing: 14) {
                     Image(systemName: "wifi.exclamationmark").font(.system(size: 54)).foregroundColor(.orange)
                     Text("لا يصل التطبيق إلى الكمبيوتر").font(.title3.bold())
-                    Text("تأكد أن الكمبيوتر شغّال ونافذة «تشغيل_الخادم» مفتوحة، وأن الجوال على نفس الواي فاي. إن سألك الآيفون عن «الشبكة المحلية» اختر «السماح».")
+                    Text("تأكد أن الكمبيوتر شغّال ونافذة «إدارة_المشروع» مفتوحة، وأن الجوال على نفس الواي فاي. إن سألك الآيفون عن «الشبكة المحلية» اختر «السماح».")
                         .multilineTextAlignment(.center).foregroundColor(.secondary)
                     Text(f).font(.footnote).foregroundColor(.secondary).multilineTextAlignment(.center)
                     Button("إعادة المحاولة") { store.reload() }.buttonStyle(.borderedProminent).tint(brand)
