@@ -1,0 +1,40 @@
+name: PM
+options:
+  bundleIdPrefix: com.pmapp
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  PM:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - Assets.xcassets
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: إدارة المشروع
+        CFBundleDevelopmentRegion: ar
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSCameraUsageDescription: لتصوير رمز الربط الظاهر على الكمبيوتر، وتصوير المستندات.
+        NSPhotoLibraryUsageDescription: لإرفاق صور المستندات وإثباتات الإرسال والدفع.
+        NSLocalNetworkUsageDescription: للاتصال ببرنامج «إدارة المشروع» على كمبيوترك عبر الواي فاي.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pmapp.projectmanagement
+        PRODUCT_NAME: PM
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_VERSION: "5.0"
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: ""

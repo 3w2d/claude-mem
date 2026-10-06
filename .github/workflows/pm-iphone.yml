@@ -1,0 +1,60 @@
+name: PM iPhone app (unsigned IPA)
+
+on:
+  push:
+    paths:
+      - 'pm-iphone/**'
+      - '.github/workflows/pm-iphone.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: pm-iphone
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build for iPhone (unsigned; Sideloadly/AltStore signs it with the user's Apple ID)
+        run: |
+          set -o pipefail
+          xcodebuild -project PM.xcodeproj -target PM -configuration Release -sdk iphoneos \
+            SYMROOT="$PWD/build" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build | tail -80
+
+      - name: Package IPA
+        run: |
+          rm -rf Payload && mkdir Payload
+          cp -R build/Release-iphoneos/PM.app Payload/
+          zip -qry PM.ipa Payload
+          ls -la PM.ipa
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' Payload/PM.app/Info.plist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PM-ipa
+          path: pm-iphone/PM.ipa
+
+      - name: Publish IPA to branch pm-iphone-build
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          out="$RUNNER_TEMP/out"; rm -rf "$out"; mkdir -p "$out"; cp PM.ipa "$out/"
+          cd "$out"
+          git init -q && git checkout -q -b pm-iphone-build
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf 'Built from %s\n' "$GITHUB_SHA" > BUILD.txt
+          git add PM.ipa BUILD.txt && git commit -qm "PM.ipa from $GITHUB_SHA"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" pm-iphone-build
